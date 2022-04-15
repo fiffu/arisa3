@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -47,7 +46,9 @@ func Main(configPath string) error {
 	if err != nil {
 		return err
 	}
+
 	ctx := a.ContextWithValue(context.Background(), "system", "init")
+
 	if err = cogs.SetupCogs(ctx, a, sess); err != nil {
 		return err
 	}
@@ -84,11 +85,11 @@ func newApp(configPath string) (*app, *discordgo.Session, error) {
 }
 
 func setupLogger() {
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC822Z}
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "02-Jan-06 15:04:05.000 -0700"}
 	output.FormatMessage = func(i interface{}) string {
 		return fmt.Sprintf("%-5s   ", i)
 	}
-	log.Logger = log.Output(output)
+	log.Logger = log.Output(output).Level(zerolog.InfoLevel)
 }
 
 func getCogsConfigs(cfg *Config) map[string]interface{} {

@@ -1,12 +1,12 @@
 package engine
 
 import (
+	"arisa3/app/types"
 	"encoding/json"
 	"errors"
 	"fmt"
 
 	dgo "github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -14,14 +14,12 @@ var (
 	ErrUnexpectedConfigValue = errors.New("config type assert failed")
 )
 
-func ParseConfig(in interface{}, out interface{}) error {
+// ParseConfig decodes input data and assigns it to output.
+func ParseConfig(in types.CogConfig, out types.StructPointer) error {
 	if out == nil {
 		return nil
 	}
-	log.Warn().Msgf("ParseConfig-tgt: %#v, nil? %v", out, out == nil)
-	log.Warn().Msgf("ParseConfig-in:  %#v", in)
 	bytes, err := json.Marshal(in)
-	log.Warn().Msgf("ParseConfig-byt:  %#v", string(bytes))
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
 	}
@@ -29,10 +27,10 @@ func ParseConfig(in interface{}, out interface{}) error {
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
 	}
-	log.Warn().Msgf("ParseConfig-out: %#v, nil? %v", out, out == nil)
 	return nil
 }
 
+// UnexpectedConfigType is shorthand to create an error based on ErrUnexpectedConfigValue.
 func UnexpectedConfigType(wanted interface{}, got interface{}) error {
 	return fmt.Errorf("%w, wanted: %T, got: %#v", ErrUnexpectedConfigValue, wanted, got)
 }

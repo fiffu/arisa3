@@ -1,3 +1,5 @@
+// package types contains custom types and their factories.
+
 package types
 
 import (

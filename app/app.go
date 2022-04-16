@@ -55,14 +55,14 @@ func Main(configPath string) error {
 		return err
 	}
 	if err := sess.Open(); err != nil {
-		engine.SystemLog(log.Error()).Err(err).Msg("Failed to open session")
+		engine.AppLog(log.Error()).Err(err).Msg("Failed to open session")
 		return err
 	}
 
-	engine.SystemLog(log.Info()).Msg("Gateway session established")
+	engine.AppLog(log.Info()).Msg("Gateway session established")
 	defer sess.Close()
 
-	engine.SystemLog(log.Info()).Msg("Press Ctrl+C to exit")
+	engine.AppLog(log.Info()).Msg("Press Ctrl+C to exit")
 	waitUntilInterrupt()
 
 	return err

@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// IBootable describes a method set a cog should implement to be supported by Bootstrap()
 type IBootable interface {
 	Name() string
 	ConfigPointer() types.StructPointer

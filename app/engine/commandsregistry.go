@@ -26,6 +26,7 @@ func NewCommandRegistry() *CommandsRegistry {
 	return &CommandsRegistry{cmds}
 }
 
+// Register creates an ApplicationCommand with the given ICommands.
 func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) error {
 	for _, cmd := range cmds {
 		appID := s.State.User.ID
@@ -39,13 +40,15 @@ func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) erro
 	return nil
 }
 
-func (r *CommandsRegistry) Finalise(s *dgo.Session) {
+// BindCallbacks binds InteractionCreate event to the registry's onInteractionCreate handler.
+func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 	s.AddHandler(func(sess *dgo.Session, i *dgo.InteractionCreate) {
-		r.rootHandler(sess, i)
+		r.onInteractionCreate(sess, i)
 	})
 }
 
-func (r *CommandsRegistry) rootHandler(s *dgo.Session, i *dgo.InteractionCreate) {
+// onInteractionCreate logs errors from registryHandler.
+func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
 	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", i.User, i.Data)
 	if err := r.registryHandler(s, i); err != nil {
 		registryLog(log.Error()).Err(err).Msgf("Error handling interaction")
@@ -59,6 +62,7 @@ func (r *CommandsRegistry) rootHandler(s *dgo.Session, i *dgo.InteractionCreate)
 	}
 }
 
+// registryHandler routes the InteractionCreate event to the appropriate command's handler.
 func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (err error) {
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
@@ -78,6 +82,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	return r.runHandler(s, i, cmd, handler, args)
 }
 
+// runHandler executes a command's handler, trapping and logging any panics/errors.
 func (r *CommandsRegistry) runHandler(
 	s *dgo.Session, i *dgo.InteractionCreate,
 	cmd types.ICommand, handler types.Handler, args types.IArgs) (err error) {
@@ -98,11 +103,13 @@ func (r *CommandsRegistry) runHandler(
 	return
 }
 
+// fallbackHandler is invoked in lieu of runHandler if a command has no associated handler.
 func (r *CommandsRegistry) fallbackHandler(s *dgo.Session, i *dgo.InteractionCreate, cmd types.ICommand) error {
 	log.Error().Str("registry::command", cmd.Name()).Msgf("Missing interaction handler")
 	return fmt.Errorf("%w: %s", errNoHandler, cmd.Name())
 }
 
+// parseArgs wraps user-supplied options in the InteractionCreate payload inside IArgs.
 func parseArgs(cmd types.ICommand, opts []*dgo.ApplicationCommandInteractionDataOption) types.IArgs {
 	args := make(map[string]*dgo.ApplicationCommandInteractionDataOption)
 	for _, opt := range opts {

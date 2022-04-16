@@ -1,4 +1,4 @@
-package cogs
+package engine
 
 import (
 	"arisa3/app/types"
@@ -19,14 +19,12 @@ var (
 )
 
 type CommandsRegistry struct {
-	cog  ICog
-	app  IApp
 	cmds map[string]types.ICommand
 }
 
-func NewCommandRegistry(cog ICog, app IApp) *CommandsRegistry {
+func NewCommandRegistry() *CommandsRegistry {
 	cmds := make(map[string]types.ICommand)
-	return &CommandsRegistry{cog, app, cmds}
+	return &CommandsRegistry{cmds}
 }
 
 func (r *CommandsRegistry) Register(ctx context.Context, s *dgo.Session, cmds ...types.ICommand) error {

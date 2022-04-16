@@ -1,58 +1,45 @@
 package cogs
 
 import (
+	"arisa3/app/cogs/general"
+	"arisa3/app/types"
 	"context"
 	"errors"
 	"fmt"
 
-	"github.com/bwmarrin/discordgo"
+	dgo "github.com/bwmarrin/discordgo"
 )
 
 var (
 	ErrMissingCogConfig = errors.New("missing config for cog")
 )
-var CogsList = []ICog{
-	&generalCog{},
+
+func getCogsList(app types.IApp) []types.ICog {
+	return []types.ICog{
+		general.NewCog(app),
+	}
 }
 
-type CogConfig interface{}
+func SetupCogs(ctx context.Context, app types.IApp, sess *dgo.Session) error {
+	configs := app.Configs()
+	for _, c := range getCogsList(app) {
+		ctx = app.ContextWithValue(ctx, "cog", c.Name())
 
-type IApp interface {
-	Configs() map[string]interface{}
-	Debugf(context.Context, string, ...interface{})
-	Infof(context.Context, string, ...interface{})
-	Warnf(context.Context, string, ...interface{})
-	Errorf(context.Context, error, string, ...interface{})
-	ContextWithValue(ctx context.Context, key, value string) context.Context
-}
-
-type ICog interface {
-	New(IApp) ICog
-	Name() string
-	OnStartup(ctx context.Context, config CogConfig, sess *discordgo.Session) error
-}
-
-func SetupCogs(ctx context.Context, a IApp, sess *discordgo.Session) error {
-	configs := a.Configs()
-	for _, c := range CogsList {
-		cog := c.New(a)
-		ctx = a.ContextWithValue(ctx, "cog", cog.Name())
-
-		cfg, err := findConfig(cog, configs)
+		cfg, err := findConfig(c, configs)
 		if err != nil {
 			return err
 		}
-		if err := cog.OnStartup(ctx, cfg, sess); err != nil {
-			a.Errorf(ctx, err, "Failure to setup cog")
+		if err := c.OnStartup(ctx, sess, cfg); err != nil {
+			app.Errorf(ctx, err, "Failure to setup cog")
 			return err
 		}
 
-		a.Infof(ctx, "Cog started")
+		app.Infof(ctx, "Cog started")
 	}
 	return nil
 }
 
-func findConfig(cog ICog, cogConfigs map[string]interface{}) (CogConfig, error) {
+func findConfig(cog types.ICog, cogConfigs map[string]interface{}) (types.CogConfig, error) {
 	name := cog.Name()
 	if cfg, ok := cogConfigs[name]; ok {
 		return cfg, nil

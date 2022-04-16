@@ -4,7 +4,6 @@ import (
 	"arisa3/app/cogs"
 	"arisa3/app/engine"
 	"arisa3/app/types"
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -21,26 +20,6 @@ type app struct {
 
 func (a *app) Configs() map[string]interface{} {
 	return a.cogsConfigs
-}
-func (a *app) Debugf(ctx context.Context, m string, args ...interface{}) {
-	log.Ctx(ctx).Debug().Msgf(m, args...)
-}
-func (a *app) Infof(ctx context.Context, m string, args ...interface{}) {
-	log.Ctx(ctx).Info().Msgf(m, args...)
-}
-func (a *app) Warnf(ctx context.Context, m string, args ...interface{}) {
-	log.Ctx(ctx).Warn().Msgf(m, args...)
-}
-func (a *app) Errorf(ctx context.Context, err error, m string, args ...interface{}) {
-	log.Ctx(ctx).Error().Err(err).Msgf(m, args...)
-}
-func (a *app) ContextWithValue(ctx context.Context, key, value string) context.Context {
-	l := log.Ctx(ctx)
-	if l.GetLevel() == zerolog.Disabled {
-		l = &log.Logger
-	}
-	sublog := l.With().Str(key, value).Logger() // push key to context
-	return sublog.WithContext(ctx)              // push logger to context
 }
 
 func Main(configPath string) error {

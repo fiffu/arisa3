@@ -1,7 +1,7 @@
 package cogs
 
 import (
-	"arisa3/app/cogs/types"
+	"arisa3/app/types"
 	"context"
 	"errors"
 	"fmt"

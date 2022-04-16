@@ -1,56 +1,40 @@
 package engine
 
 import (
-	"arisa3/app/types"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 
 	dgo "github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 var (
-	ErrCogParseConfig = errors.New("unable to parse cog config")
+	ErrCogParseConfig        = errors.New("unable to parse cog config")
+	ErrUnexpectedConfigValue = errors.New("config type assert failed")
 )
-
-const (
-	ctxFieldCog     = "cog"
-	ctxFieldCommand = "command"
-	ctxFieldUser    = "user"
-	ctxFieldEvent   = "event"
-)
-
-type IDefaultStartup interface {
-	ConfigType() interface{}
-	Configure(ctx context.Context, cfg interface{}) error
-	ReadyCallback(s *dgo.Session, r *dgo.Ready)
-}
 
 func ParseConfig(in interface{}, out interface{}) error {
+	if out == nil {
+		return nil
+	}
+	log.Warn().Msgf("ParseConfig-tgt: %#v, nil? %v", out, out == nil)
+	log.Warn().Msgf("ParseConfig-in:  %#v", in)
 	bytes, err := json.Marshal(in)
+	log.Warn().Msgf("ParseConfig-byt:  %#v", string(bytes))
 	if err != nil {
-		return ErrCogParseConfig
+		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
 	}
 	err = json.Unmarshal(bytes, out)
 	if err != nil {
-		return ErrCogParseConfig
+		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
 	}
+	log.Warn().Msgf("ParseConfig-out: %#v, nil? %v", out, out == nil)
 	return nil
 }
 
-// DefaultStartup parses config and pushes it to cog, and sets up a handler for discordgo.Ready event.
-func DefaultStartup(ctx context.Context, sess *dgo.Session, rawConfig types.CogConfig, cog IDefaultStartup) error {
-	cfg := cog.ConfigType()
-	if err := ParseConfig(rawConfig, &cfg); err != nil {
-		return fmt.Errorf("unable to parse cog config: %w", err)
-	}
-	cog.Configure(ctx, cfg)
-
-	sess.AddHandler(func(s *dgo.Session, r *dgo.Ready) {
-		cog.ReadyCallback(s, r)
-	})
-	return nil
+func UnexpectedConfigType(wanted interface{}, got interface{}) error {
+	return fmt.Errorf("%w, wanted: %T, got: %#v", ErrUnexpectedConfigValue, wanted, got)
 }
 
 // ParseEvent returns the event name based on event handler structs provided by discordgo.

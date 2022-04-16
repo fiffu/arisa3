@@ -2,7 +2,6 @@ package engine
 
 import (
 	"arisa3/app/types"
-	"context"
 	"errors"
 	"fmt"
 	"runtime/debug"
@@ -27,35 +26,35 @@ func NewCommandRegistry() *CommandsRegistry {
 	return &CommandsRegistry{cmds}
 }
 
-func (r *CommandsRegistry) Register(ctx context.Context, s *dgo.Session, cmds ...types.ICommand) error {
+func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) error {
 	for _, cmd := range cmds {
 		appID := s.State.User.ID
 		data := cmd.Data()
 		if _, err := s.ApplicationCommandCreate(appID, "", data); err != nil {
 			return err
 		}
-		log.Ctx(ctx).Info().Msgf("Binding command '%s' -> %+v", cmd.Name(), cmd)
+		registryLog(log.Info()).Msgf("Binding command '%s' -> %+v", cmd.Name(), cmd)
 		r.cmds[cmd.Name()] = cmd
 	}
 	return nil
 }
 
-func (r *CommandsRegistry) Finalise(ctx context.Context, s *dgo.Session) {
+func (r *CommandsRegistry) Finalise(s *dgo.Session) {
 	s.AddHandler(func(sess *dgo.Session, i *dgo.InteractionCreate) {
 		r.rootHandler(sess, i)
 	})
 }
 
 func (r *CommandsRegistry) rootHandler(s *dgo.Session, i *dgo.InteractionCreate) {
-	log.Info().Str("registry", "rootHandler").Msgf("Incoming interaction from '%s': %+v", i.User, i.Data)
+	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", i.User, i.Data)
 	if err := r.registryHandler(s, i); err != nil {
-		log.Error().Str("registry", "rootHandler").Err(err).Msgf("Error handling interaction")
+		registryLog(log.Error()).Err(err).Msgf("Error handling interaction")
 		err = s.InteractionRespond(
 			i.Interaction,
 			types.NewResponse().Content("Hmm, seems like something went wrong. Try again later?").Data(),
 		)
 		if err != nil {
-			log.Error().Str("registry", "rootHandler").Err(err).Msgf("Error sending response")
+			registryLog(log.Error()).Err(err).Msgf("Error sending response")
 		}
 	}
 }
@@ -89,12 +88,12 @@ func (r *CommandsRegistry) runHandler(
 			fmt.Printf("%+v:\n%s\n", r, string(debug.Stack()))
 		}
 	}()
-	log.Debug().Str("registry::command", cmd.Name()).Msgf("Handler executing")
+	registryLog(log.Debug()).Msgf("Handler executing")
 	err = handler(s, i, cmd, args)
 	if err == nil {
-		log.Debug().Str("registry::command", cmd.Name()).Msgf("Handler completed")
+		registryLog(log.Debug()).Msgf("Handler completed")
 	} else {
-		log.Debug().Str("registry::command", cmd.Name()).Err(err).Msgf("Handler errored")
+		registryLog(log.Error()).Err(err).Msgf("Handler errored")
 	}
 	return
 }

@@ -1,46 +1,60 @@
 package cogs
 
 import (
-	"arisa3/app/cogs/general"
+	"arisa3/app/cogs/greeter"
+	"arisa3/app/cogs/rng"
+	"arisa3/app/engine"
 	"arisa3/app/types"
 	"context"
 	"errors"
 	"fmt"
 
 	dgo "github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	ErrMissingCogConfig = errors.New("missing config for cog")
 )
 
+// getCogsList maintains a list of cogs to load when the app starts.
 func getCogsList(app types.IApp) []types.ICog {
 	return []types.ICog{
-		general.NewCog(app),
+		greeter.NewCog(app),
+		rng.NewCog(app),
 	}
 }
 
+// SetupCogs loads cogs.
 func SetupCogs(ctx context.Context, app types.IApp, sess *dgo.Session) error {
 	configs := app.Configs()
+
 	for _, c := range getCogsList(app) {
-		ctx = app.ContextWithValue(ctx, "cog", c.Name())
 
 		cfg, err := findConfig(c, configs)
 		if err != nil {
 			return err
 		}
 		if err := c.OnStartup(ctx, sess, cfg); err != nil {
-			app.Errorf(ctx, err, "Failure to setup cog")
+			engine.StartupLog(log.Error()).
+				Str(engine.CtxCog, c.Name()).
+				Err(err).
+				Msg("Failure to setup cog")
 			return err
 		}
-
-		app.Infof(ctx, "Cog started")
+		engine.StartupLog(log.Info()).
+			Str(engine.CtxCog, c.Name()).
+			Msg("Cog started")
 	}
 	return nil
 }
 
+// findConfig retrieves raw cog config from the app's root config.
 func findConfig(cog types.ICog, cogConfigs map[string]interface{}) (types.CogConfig, error) {
 	name := cog.Name()
+	if cog.ConfigPointer() == nil {
+		return nil, nil
+	}
 	if cfg, ok := cogConfigs[name]; ok {
 		return cfg, nil
 	}

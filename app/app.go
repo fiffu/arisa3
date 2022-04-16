@@ -2,6 +2,8 @@ package app
 
 import (
 	"arisa3/app/cogs"
+	"arisa3/app/engine"
+	"arisa3/app/types"
 	"context"
 	"fmt"
 	"os"
@@ -42,30 +44,31 @@ func (a *app) ContextWithValue(ctx context.Context, key, value string) context.C
 }
 
 func Main(configPath string) error {
-	a, sess, err := newApp(configPath)
+	app, sess, err := newApp(configPath)
 	if err != nil {
 		return err
 	}
 
-	ctx := a.ContextWithValue(context.Background(), "system", "init")
+	ctx := engine.StartupContext()
 
-	if err = cogs.SetupCogs(ctx, a, sess); err != nil {
+	if err = cogs.SetupCogs(ctx, app, sess); err != nil {
 		return err
 	}
 	if err := sess.Open(); err != nil {
-		a.Errorf(ctx, err, "Failed to open session")
+		engine.SystemLog(log.Error()).Err(err).Msg("Failed to open session")
 		return err
 	}
-	a.Infof(ctx, "Gateway session established")
+
+	engine.SystemLog(log.Info()).Msg("Gateway session established")
 	defer sess.Close()
 
-	a.Infof(ctx, "Press Ctrl+C to exit")
+	engine.SystemLog(log.Info()).Msg("Press Ctrl+C to exit")
 	waitUntilInterrupt()
 
 	return err
 }
 
-func newApp(configPath string) (*app, *discordgo.Session, error) {
+func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
 	setupLogger()
 
 	cfg, err := Configure(configPath)

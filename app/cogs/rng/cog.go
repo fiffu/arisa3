@@ -41,7 +41,7 @@ func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
 	if err != nil {
 		return err
 	}
-	c.commands.Finalise(s)
+	c.commands.BindCallbacks(s)
 	return nil
 }
 

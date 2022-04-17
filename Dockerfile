@@ -10,6 +10,6 @@ RUN go mod download
 
 # App code
 COPY . ./
-RUN go build -o arisa3
+RUN go build -o ./arisa3
 
-CMD ["arisa3"]
+CMD ["./arisa3"]

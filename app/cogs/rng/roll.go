@@ -1,15 +1,12 @@
 package rng
 
 import (
-	"arisa3/app/engine"
 	"arisa3/app/types"
 	"fmt"
 	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/rs/zerolog/log"
 )
 
 // Command consts
@@ -20,13 +17,13 @@ const (
 )
 
 // Regex patterns
-var validRollPatterns = []*regexp.Regexp{
-	regexp.MustCompile(`^\d+$`),                 // "20"
-	regexp.MustCompile(`^[dD]\d+$`),             // "d20"
-	regexp.MustCompile(`^[dD]\d+[\+\-]\d+$`),    // "d20+5"
-	regexp.MustCompile(`^\d+[dD]\d+$`),          // "3d20"
-	regexp.MustCompile(`^\d+[dD]\d+[\+\-]\d+$`), // "3d20+5"
-}
+var (
+	_20      *regexp.Regexp = regexp.MustCompile(`^\d+$`)                 // "20"
+	_d20     *regexp.Regexp = regexp.MustCompile(`^[dD]\d+$`)             // "d20"
+	_d20mod  *regexp.Regexp = regexp.MustCompile(`^[dD]\d+[\+\-]\d+$`)    // "d20+5"
+	_3d20    *regexp.Regexp = regexp.MustCompile(`^\d+[dD]\d+$`)          // "3d20"
+	_3d20mod *regexp.Regexp = regexp.MustCompile(`^\d+[dD]\d+[\+\-]\d+$`) // "3d20+5"
+)
 
 // dice describes the dice to be thrown
 type dice struct {
@@ -36,20 +33,9 @@ type dice struct {
 	sides int
 	// Arithmetic modifier (summed after the result of rolling dice*sides)
 	mod int
-	// User's comment
-	comment string
 
 	// Whether this value was parsed successfully from user
 	parsed bool
-}
-
-func (r dice) NewWithDefaults() dice {
-	return dice{
-		// default roll [0-99] i.e. d100-1
-		count: 1,
-		sides: 100,
-		mod:   -1,
-	}
 }
 
 func (c *Cog) rollCommand() *types.Command {
@@ -65,10 +51,6 @@ func (c *Cog) rollCommand() *types.Command {
 }
 
 func (c *Cog) roll(req types.ICommandEvent) error {
-	// resp := types.NewResponse()
-
-	d := dice{}.NewWithDefaults()
-
 	var expression, comment string
 	if value, ok := req.Args().String("expression"); ok {
 		expression = value
@@ -77,74 +59,97 @@ func (c *Cog) roll(req types.ICommandEvent) error {
 		comment = value
 	}
 
-	d = c.parseExpr(req, expression)
+	d := c.parseExpr(req, expression)
 
-	// if parsing failed, we treat the `expression` argument as a comment
+	// if expression couldn't be parsed, treat it as a comment
 	if !d.parsed && comment == "" {
 		comment = expression
 	}
 	result := toss(d)
-	resp := formatResponse(req, d, comment, result)
+	resp := formatResponse(req, d, result, comment)
 	return req.Respond(resp)
 }
 
 func (c *Cog) parseExpr(req types.ICommandEvent, s string) dice {
-	val := dice{}.NewWithDefaults()
-	count, sides, mod, ok := findMatches(s)
-	if !ok {
-		return val
-	}
-	val.parsed = true
-
-	for fld, v := range map[string]string{"c": count, "s": sides, "m": mod} {
-		num, err := strconv.Atoi(v)
-		if err != nil {
-			engine.CommandLog(c, req, log.Error()).Err(err).
-				Msgf("failed converting '%v' to int for %s", v, fld)
-			continue
-		}
-		// assign
-		switch fld {
-		case "c":
-			val.count = num
-		case "s":
-			val.sides = num
-		case "m":
-			val.mod = num
-		}
-	}
-
-	if comment, ok := req.Args().String(RollOptionComment); ok {
-		val.comment = comment
-	}
-	return val
-}
-
-func findMatches(s string) (count, sides, mod string, matched bool) {
 	s = strings.ToLower(s)
 
-	for _, patt := range validRollPatterns {
-		matched = patt.MatchString(s)
-	}
-	if !matched {
-		return
-	}
-
-	// example: "3d12+15"
-	if strings.Contains(s, "d") {
-		count, s = SplitOnce(s, "d")
-	}
-	// remaining is "12+15"
+	var count, sides, mod string
 	switch {
-	case strings.Contains(s, "+"):
-		sides, mod = SplitOnce(s, "+")
-	case strings.Contains(s, "-"):
-		sides, mod = SplitOnce(s, "-")
-	default:
-		sides = s
-	}
 
-	return
+	case _20.MatchString(s):
+		sides = s
+		return dice{
+			count:  1,
+			sides:  Atoi(sides),
+			mod:    0,
+			parsed: true,
+		}
+
+	case _d20.MatchString(s):
+		_, sides = SplitOnce(s, "d")
+		return dice{
+			count:  1,
+			sides:  Atoi(sides),
+			mod:    0,
+			parsed: true,
+		}
+
+	case _d20mod.MatchString(s):
+		_, s = SplitOnce(s, "d")
+		var sides, mod string
+		if strings.Contains(s, "+") {
+			sides, mod = SplitOnce(s, "+")
+		} else {
+			sides, mod = SplitOnce(s, "-")
+			mod = "-" + mod
+		}
+		return dice{
+			count:  1,
+			sides:  Atoi(sides),
+			mod:    Atoi(mod),
+			parsed: true,
+		}
+
+	case _3d20.MatchString(s):
+		count, sides = SplitOnce(s, "d")
+		return dice{
+			count:  Atoi(count),
+			sides:  Atoi(sides),
+			mod:    0,
+			parsed: true,
+		}
+
+	case _3d20mod.MatchString(s):
+		count, s = SplitOnce(s, "d")
+		if strings.Contains(s, "+") {
+			sides, mod = SplitOnce(s, "+")
+		} else {
+			sides, mod = SplitOnce(s, "-")
+			mod = "-" + mod
+		}
+		return dice{
+			count:  Atoi(count),
+			sides:  Atoi(sides),
+			mod:    Atoi(mod),
+			parsed: true,
+		}
+
+	default:
+		return dice{
+			count:  1,
+			sides:  100,
+			mod:    -1,
+			parsed: false,
+		}
+	}
+}
+
+func Atoi(s string) int {
+	if num, err := strconv.Atoi(s); err != nil {
+		return 0
+	} else {
+		return num
+	}
 }
 
 func SplitOnce(s, substr string) (left, right string) {
@@ -157,27 +162,34 @@ func SplitOnce(s, substr string) (left, right string) {
 
 func toss(d dice) (sum int) {
 	count := d.count
-	lo := 1
-	hi := d.sides
 	for i := 0; i < count; i++ {
-		sum += throwDie(lo, hi)
+		sum += throwDie(d.sides)
 	}
+	sum += d.mod
 	return
 }
 
-func throwDie(lo, hi int) int {
-	return rand.Intn(lo+hi) - lo
+func throwDie(sides int) int {
+	if sides <= 0 {
+		return 0
+	}
+	return 1 + rand.Intn(sides)
 }
 
-func formatResponse(req types.ICommandEvent, d dice, comment string, sum int) types.ICommandResponse {
-	whatDice := formatDice(d)
-	msg := fmt.Sprintf("Rolling %s: **%d**\nComment: %s", whatDice, sum, comment)
+func formatResponse(req types.ICommandEvent, d dice, result int, comment string) types.ICommandResponse {
+	whatDice := "0-99"
+	resultStr := fmt.Sprintf("%2d", result)
+	if d.parsed {
+		whatDice = formatDice(d)
+		resultStr = fmt.Sprintf("%d", result)
+	}
+	msg := fmt.Sprintf("Rolling %s: **%s**\nComment: %s\nDice: %+v", whatDice, resultStr, comment, d)
 	return types.NewResponse().Content(msg)
 }
 
 func formatDice(d dice) string {
 	if !d.parsed {
-		return "1-99"
+		return "0-99"
 	}
 	var count, sides, mod, modSign string
 	if d.count != 1 {

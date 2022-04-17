@@ -67,7 +67,11 @@ func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 
 // onInteractionCreate logs errors from registryHandler.
 func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
-	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", i.User, i.Data)
+	who := i.User
+	if who == nil && i.Member != nil {
+		who = i.Message.Interaction.Member.User
+	}
+	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", who, i.Data)
 	if err := r.registryHandler(s, i); err != nil {
 		registryLog(log.Error()).Err(err).Msgf("Error handling interaction")
 		err = s.InteractionRespond(

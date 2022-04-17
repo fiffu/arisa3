@@ -17,7 +17,7 @@ type IOption interface {
 	Desc(s string) IOption
 	Min(n float64) IOption
 	Max(n float64) IOption
-	Required(n float64) IOption
+	Required() IOption
 	typed(t dgo.ApplicationCommandOptionType) IOption
 	Int() IOption
 	String() IOption
@@ -52,7 +52,7 @@ func (co *Option) Default(v interface{}) IOption                    { co.default
 func (co *Option) Desc(s string) IOption                            { co.data.Description = s; return co }
 func (co *Option) Min(n float64) IOption                            { co.data.MinValue = &n; return co }
 func (co *Option) Max(n float64) IOption                            { co.data.MaxValue = n; return co }
-func (co *Option) Required(n float64) IOption                       { co.data.Required = true; return co }
+func (co *Option) Required() IOption                                { co.data.Required = true; return co }
 func (co *Option) typed(t dgo.ApplicationCommandOptionType) IOption { co.data.Type = t; return co }
 func (co *Option) Int() IOption                                     { return co.typed(dgo.ApplicationCommandOptionInteger) }
 func (co *Option) String() IOption                                  { return co.typed(dgo.ApplicationCommandOptionString) }

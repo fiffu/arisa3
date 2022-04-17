@@ -15,6 +15,9 @@ type Config struct {
 func Configure(path string) (*Config, error) {
 	viper.SetConfigFile(path)
 
+	viper.SetEnvPrefix("arisa3") // read env keys prefixed with ARISA3_
+	viper.AutomaticEnv()
+
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, err
 	}

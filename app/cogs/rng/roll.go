@@ -55,8 +55,10 @@ func (c *Cog) rollCommand() *types.Command {
 	return types.NewCommand(RollCommand).ForChat().
 		Desc("Rolls dice (supports algebraic notation)").
 		Options(
-			types.NewOption(RollOptionExpr).String().Desc("dice notation, such as *3d5+10*"),
-			types.NewOption(RollOptionComment).String().Desc("optional comment"),
+			types.NewOption(RollOptionExpr).Desc("dice notation, such as *3d5+10*").
+				String(),
+			types.NewOption(RollOptionComment).Desc("optional comment").
+				String(),
 		).
 		Handler(c.roll)
 }
@@ -66,11 +68,22 @@ func (c *Cog) roll(req types.ICommandEvent) error {
 
 	d := dice{}.NewWithDefaults()
 
-	if expr, ok := req.Args().String("expression"); ok {
-		d = c.parseExpr(req, expr)
+	var expression, comment string
+	if value, ok := req.Args().String("expression"); ok {
+		expression = value
+	}
+	if value, ok := req.Args().String("comment"); ok {
+		comment = value
+	}
+
+	d = c.parseExpr(req, expression)
+
+	// if parsing failed, we treat the `expression` argument as a comment
+	if !d.parsed {
+		comment = expression
 	}
 	result := toss(d)
-	resp := formatResponse(req, d, result)
+	resp := formatResponse(req, d, comment, result)
 	return req.Respond(resp)
 }
 
@@ -155,9 +168,9 @@ func throwDie(lo, hi int) int {
 	return rand.Intn(lo+hi) - lo
 }
 
-func formatResponse(req types.ICommandEvent, d dice, sum int) types.ICommandResponse {
+func formatResponse(req types.ICommandEvent, d dice, comment string, sum int) types.ICommandResponse {
 	whatDice := formatDice(d)
-	msg := fmt.Sprintf("Rolling %s: **%d**", whatDice, sum)
+	msg := fmt.Sprintf("Rolling %s: **%d**\nComment: %s", whatDice, sum, comment)
 	return types.NewResponse().Content(msg)
 }
 

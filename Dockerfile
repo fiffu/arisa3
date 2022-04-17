@@ -12,4 +12,4 @@ RUN go mod download
 COPY . ./
 RUN go build -o ./arisa3
 
-CMD ["./arisa3"]
+ENTRYPOINT ["./arisa3"]

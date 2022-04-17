@@ -45,6 +45,7 @@ type dice struct {
 
 func (r dice) NewWithDefaults() dice {
 	return dice{
+		// default roll [0-99] i.e. d100-1
 		count: 1,
 		sides: 100,
 		mod:   -1,
@@ -79,7 +80,7 @@ func (c *Cog) roll(req types.ICommandEvent) error {
 	d = c.parseExpr(req, expression)
 
 	// if parsing failed, we treat the `expression` argument as a comment
-	if !d.parsed {
+	if !d.parsed && comment == "" {
 		comment = expression
 	}
 	result := toss(d)

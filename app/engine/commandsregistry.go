@@ -53,7 +53,7 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 	if who == nil && i.Member != nil {
 		who = i.Message.Interaction.Member.User
 	}
-	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", who, i.Data)
+	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", who, i.ApplicationCommandData().Options)
 	if err := r.registryHandler(s, i); err != nil {
 		registryLog(log.Error()).Err(err).Msgf("Error handling interaction")
 		err = s.InteractionRespond(

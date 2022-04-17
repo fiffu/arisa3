@@ -193,13 +193,13 @@ func formatResponse(req types.ICommandEvent, d dice, result int, comment string)
 		whatDice = formatDice(d)
 		resultStr = fmt.Sprintf("%d", result)
 	}
-	content := fmt.Sprintf("Rolling %s: **%s**", whatDice, resultStr)
-	footer := fmt.Sprintf("%s: %s", req.User(), engine.PrettifyCustomEmoji(comment))
-	return types.NewResponse().Embeds(
-		types.NewEmbed().
-			Description(content).
-			Footer(footer, ""),
-	)
+	embed := types.NewEmbed().
+		Description(fmt.Sprintf("Rolling %s: **%s**", whatDice, resultStr))
+	if comment != "" {
+		foot := fmt.Sprintf("%s: %s", req.User(), engine.PrettifyCustomEmoji(comment))
+		embed.Footer(foot, "")
+	}
+	return types.NewResponse().Embeds(embed)
 }
 
 func formatDice(d dice) string {

@@ -51,7 +51,7 @@ func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
 	who := i.User
 	if who == nil && i.Member != nil {
-		who = i.Message.Interaction.Member.User
+		who = i.Member.User
 	}
 	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", who, i.ApplicationCommandData().Options)
 	if err := r.registryHandler(s, i); err != nil {

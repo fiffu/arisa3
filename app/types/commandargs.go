@@ -16,18 +16,26 @@ type IArgs interface {
 
 // args implements IArgs
 type args struct {
-	mapping map[string]*dgo.ApplicationCommandInteractionDataOption
+	cmd     ICommand
+	mapping map[IOption]*dgo.ApplicationCommandInteractionDataOption
 }
 
-func NewArgs(m map[string]*dgo.ApplicationCommandInteractionDataOption) IArgs {
-	return &args{mapping: m}
+func NewArgs(cmd ICommand, mapping map[IOption]*dgo.ApplicationCommandInteractionDataOption) IArgs {
+	return &args{cmd, mapping}
 }
+
+// Match key (string) to option (IOption) to given argument (dgo.ApplicationCommandInteractionDataOption).
 func (a *args) fetch(key string) interface{} {
-	if v, ok := a.mapping[key]; ok {
-		return v.Value
-	} else {
-		return v
+	var opt IOption
+	var ok bool
+	if opt, ok = a.cmd.FindOption(key); ok {
+		if given, ok := a.mapping[opt]; ok {
+			return given.Value
+		} else {
+			return opt.DefaultValue()
+		}
 	}
+	return nil
 }
 func (a *args) Int(key string) (int, bool)       { v, ok := a.fetch(key).(int); return v, ok }
 func (a *args) Float(key string) (float64, bool) { v, ok := a.fetch(key).(float64); return v, ok }

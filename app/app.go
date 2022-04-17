@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -44,7 +45,7 @@ func Main(configPath string) error {
 	engine.AppLog(log.Info()).Msg("Press Ctrl+C to exit")
 	waitUntilInterrupt()
 
-	return err
+	return nil
 }
 
 func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
@@ -67,9 +68,13 @@ func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
 }
 
 func setupLogger() {
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "02-Jan-06 15:04:05.000 -0700"}
+	output := zerolog.ConsoleWriter{Out: os.Stdout}
+	output.TimeFormat = "02-Jan-06 15:04:05 -0700"
 	output.FormatMessage = func(i interface{}) string {
 		return fmt.Sprintf("%-5s   ", i)
+	}
+	zerolog.TimestampFunc = func() time.Time {
+		return time.Now().UTC()
 	}
 	log.Logger = log.Output(output).Level(zerolog.InfoLevel)
 }
@@ -86,4 +91,5 @@ func waitUntilInterrupt() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
+	engine.AppLog(log.Info()).Msg("Interrupted! Shutting down...")
 }

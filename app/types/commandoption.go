@@ -5,7 +5,15 @@ import (
 )
 
 type IOption interface {
+	// Getters
+
 	Data() *dgo.ApplicationCommandOption
+	Name() string
+	DefaultValue() interface{}
+
+	// Setters
+
+	Default(interface{}) IOption
 	Desc(s string) IOption
 	Min(n float64) IOption
 	Max(n float64) IOption
@@ -24,7 +32,9 @@ type IOption interface {
 }
 
 type Option struct {
-	data *dgo.ApplicationCommandOption
+	data       *dgo.ApplicationCommandOption
+	name       string
+	defaultVal interface{} // until this is documented by Discord API, discordgo doesn't support this
 }
 
 func NewOption(name string) IOption {
@@ -32,10 +42,13 @@ func NewOption(name string) IOption {
 		Name:        name,
 		Description: "(no description)", // this is mandatory
 	}
-	return &Option{data: d}
+	return &Option{data: d, name: name}
 }
 
 func (co *Option) Data() *dgo.ApplicationCommandOption              { return co.data }
+func (co *Option) Name() string                                     { return co.name }
+func (co *Option) DefaultValue() interface{}                        { return co.defaultVal }
+func (co *Option) Default(v interface{}) IOption                    { co.defaultVal = v; return co }
 func (co *Option) Desc(s string) IOption                            { co.data.Description = s; return co }
 func (co *Option) Min(n float64) IOption                            { co.data.MinValue = &n; return co }
 func (co *Option) Max(n float64) IOption                            { co.data.MaxValue = n; return co }

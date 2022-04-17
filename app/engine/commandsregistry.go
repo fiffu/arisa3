@@ -26,6 +26,24 @@ func NewCommandRegistry() *CommandsRegistry {
 	return &CommandsRegistry{cmds}
 }
 
+// commandEvent implements types.ICommandEvent
+type commandEvent struct {
+	s    *dgo.Session
+	i    *dgo.InteractionCreate
+	cmd  types.ICommand
+	args types.IArgs
+}
+
+func (evt *commandEvent) Session() *dgo.Session               { return evt.s }
+func (evt *commandEvent) Interaction() *dgo.InteractionCreate { return evt.i }
+func (evt *commandEvent) Command() types.ICommand             { return evt.cmd }
+func (evt *commandEvent) Args() types.IArgs                   { return evt.args }
+func (evt *commandEvent) Respond(resp types.ICommandResponse) error {
+	itr := evt.i.Interaction
+	data := resp.Data()
+	return evt.s.InteractionRespond(itr, data)
+}
+
 // Register creates an ApplicationCommand with the given ICommands.
 func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) error {
 	for _, cmd := range cmds {
@@ -74,7 +92,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 		err = fmt.Errorf("%w: %s", errUnrecognisedInteraction, commandName)
 		return
 	}
-	handler := cmd.GetHandler()
+	handler := cmd.HandlerFunc()
 	if handler == nil {
 		return r.fallbackHandler(s, i, cmd)
 	}
@@ -93,8 +111,8 @@ func (r *CommandsRegistry) runHandler(
 			fmt.Printf("%+v:\n%s\n", r, string(debug.Stack()))
 		}
 	}()
-	registryLog(log.Debug()).Msgf("Handler executing")
-	err = handler(s, i, cmd, args)
+	registryLog(log.Debug()).Str(CtxCommand, cmd.Name()).Msgf("Handler executing")
+	err = handler(&commandEvent{s, i, cmd, args})
 	if err == nil {
 		registryLog(log.Debug()).Msgf("Handler completed")
 	} else {
@@ -105,16 +123,18 @@ func (r *CommandsRegistry) runHandler(
 
 // fallbackHandler is invoked in lieu of runHandler if a command has no associated handler.
 func (r *CommandsRegistry) fallbackHandler(s *dgo.Session, i *dgo.InteractionCreate, cmd types.ICommand) error {
-	log.Error().Str("registry::command", cmd.Name()).Msgf("Missing interaction handler")
+	registryLog(log.Error()).Str(CtxCommand, cmd.Name()).Msgf("Missing interaction handler")
 	return fmt.Errorf("%w: %s", errNoHandler, cmd.Name())
 }
 
 // parseArgs wraps user-supplied options in the InteractionCreate payload inside IArgs.
-func parseArgs(cmd types.ICommand, opts []*dgo.ApplicationCommandInteractionDataOption) types.IArgs {
-	args := make(map[string]*dgo.ApplicationCommandInteractionDataOption)
-	for _, opt := range opts {
-		args[opt.Name] = opt
+func parseArgs(cmd types.ICommand, args []*dgo.ApplicationCommandInteractionDataOption) types.IArgs {
+	mapping := make(map[types.IOption]*dgo.ApplicationCommandInteractionDataOption)
+	for _, arg := range args {
+		if opt, ok := cmd.FindOption(arg.Name); ok {
+			mapping[opt] = arg
+		}
 	}
-	log.Debug().Str("registry::command", cmd.Name()).Msgf("Parsed options: %v", args)
-	return types.NewArgs(args)
+	registryLog(log.Debug()).Str(CtxCommand, cmd.Name()).Msgf("Parsed options: %v", args)
+	return types.NewArgs(cmd, mapping)
 }

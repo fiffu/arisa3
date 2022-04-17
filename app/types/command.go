@@ -12,20 +12,35 @@ type ICommand interface {
 	ForMessage() *Command
 	Desc(string) *Command
 	Handler(hdlr Handler) *Command
-	GetHandler() Handler
+	HandlerFunc() Handler
+	FindOption(string) (IOption, bool)
 }
 
-type Handler func(*dgo.Session, *dgo.InteractionCreate, ICommand, IArgs) error
+type ICommandEvent interface {
+	Session() *dgo.Session
+	Interaction() *dgo.InteractionCreate
+	Command() ICommand
+	Args() IArgs
+	Respond(ICommandResponse) error
+}
+
+type Handler func(ICommandEvent) error
 
 type Command struct {
 	name    string
 	data    *dgo.ApplicationCommand
+	opts    map[string]IOption
 	handler Handler
 }
 
 func NewCommand(name string) *Command {
-	d := dgo.ApplicationCommand{Name: name}
-	return &Command{name: name, data: &d}
+	data := dgo.ApplicationCommand{Name: name}
+	opts := make(map[string]IOption)
+	return &Command{
+		name: name,
+		data: &data,
+		opts: opts,
+	}
 }
 
 // Name is command name
@@ -50,13 +65,19 @@ func (c *Command) ForMessage() *Command { c.data.Type = dgo.MessageApplicationCo
 // Handler assigns a callback to this command.
 func (c *Command) Handler(hdlr Handler) *Command { c.handler = hdlr; return c }
 
-// GetHandler returns the callback assigned to this command.
-func (c *Command) GetHandler() Handler { return c.handler }
+// HandlerFunc returns the callback assigned to this command.
+func (c *Command) HandlerFunc() Handler { return c.handler }
 
 // Option defines options accepted by this command.
 func (c *Command) Options(opts ...IOption) *Command {
 	for _, opt := range opts {
+		c.opts[opt.Name()] = opt
 		c.data.Options = append(c.data.Options, opt.Data())
 	}
 	return c
+}
+
+func (c *Command) FindOption(name string) (opt IOption, ok bool) {
+	opt, ok = c.opts[name]
+	return
 }

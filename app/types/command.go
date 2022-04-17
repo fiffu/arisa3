@@ -16,14 +16,6 @@ type ICommand interface {
 	FindOption(string) (IOption, bool)
 }
 
-type ICommandEvent interface {
-	Session() *dgo.Session
-	Interaction() *dgo.InteractionCreate
-	Command() ICommand
-	Args() IArgs
-	Respond(ICommandResponse) error
-}
-
 type Handler func(ICommandEvent) error
 
 type Command struct {

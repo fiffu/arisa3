@@ -1,2 +1,9 @@
+# config file
 config.yml
+
+# app binary
 arisa3.exe
+arisa3
+
+# code coverage
+coverage.out

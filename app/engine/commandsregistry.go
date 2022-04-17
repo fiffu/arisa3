@@ -26,24 +26,6 @@ func NewCommandRegistry() *CommandsRegistry {
 	return &CommandsRegistry{cmds}
 }
 
-// commandEvent implements types.ICommandEvent
-type commandEvent struct {
-	s    *dgo.Session
-	i    *dgo.InteractionCreate
-	cmd  types.ICommand
-	args types.IArgs
-}
-
-func (evt *commandEvent) Session() *dgo.Session               { return evt.s }
-func (evt *commandEvent) Interaction() *dgo.InteractionCreate { return evt.i }
-func (evt *commandEvent) Command() types.ICommand             { return evt.cmd }
-func (evt *commandEvent) Args() types.IArgs                   { return evt.args }
-func (evt *commandEvent) Respond(resp types.ICommandResponse) error {
-	itr := evt.i.Interaction
-	data := resp.Data()
-	return evt.s.InteractionRespond(itr, data)
-}
-
 // Register creates an ApplicationCommand with the given ICommands.
 func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) error {
 	for _, cmd := range cmds {
@@ -52,7 +34,7 @@ func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) erro
 		if _, err := s.ApplicationCommandCreate(appID, "", data); err != nil {
 			return err
 		}
-		registryLog(log.Info()).Msgf("Binding command '%s' -> %+v", cmd.Name(), cmd)
+		registryLog(log.Info()).Msgf("Binding command '%s'", cmd.Name())
 		r.cmds[cmd.Name()] = cmd
 	}
 	return nil
@@ -71,7 +53,7 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 	if who == nil && i.Member != nil {
 		who = i.Message.Interaction.Member.User
 	}
-	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", who, i.Data)
+	registryLog(log.Info()).Msgf("Incoming interaction from '%s': %+v", who, i.ApplicationCommandData().Options)
 	if err := r.registryHandler(s, i); err != nil {
 		registryLog(log.Error()).Err(err).Msgf("Error handling interaction")
 		err = s.InteractionRespond(
@@ -116,7 +98,7 @@ func (r *CommandsRegistry) runHandler(
 		}
 	}()
 	registryLog(log.Debug()).Str(CtxCommand, cmd.Name()).Msgf("Handler executing")
-	err = handler(&commandEvent{s, i, cmd, args})
+	err = handler(types.NewCommandEvent(s, i, cmd, args))
 	if err == nil {
 		registryLog(log.Debug()).Msgf("Handler completed")
 	} else {

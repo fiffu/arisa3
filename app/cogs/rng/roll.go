@@ -1,6 +1,7 @@
 package rng
 
 import (
+	"arisa3/app/engine"
 	"arisa3/app/types"
 	"fmt"
 	"math/rand"
@@ -11,9 +12,10 @@ import (
 
 // Command consts
 const (
-	RollCommand       = "roll"
-	RollOptionExpr    = "expression"
-	RollOptionComment = "comment"
+	RollCommand        = "roll"
+	RollOptionExpr     = "expression"
+	RollOptionComment  = "comment"
+	DefaultRollContent = "0-99"
 )
 
 // Regex patterns
@@ -42,7 +44,7 @@ func (c *Cog) rollCommand() *types.Command {
 	return types.NewCommand(RollCommand).ForChat().
 		Desc("Rolls dice (supports algebraic notation)").
 		Options(
-			types.NewOption(RollOptionExpr).Desc("dice notation, such as *3d5+10*").
+			types.NewOption(RollOptionExpr).Desc("dice notation, such as 3d5+10").
 				String(),
 			types.NewOption(RollOptionComment).Desc("optional comment").
 				String(),
@@ -185,19 +187,24 @@ func throwDie(sides int) int {
 }
 
 func formatResponse(req types.ICommandEvent, d dice, result int, comment string) types.ICommandResponse {
-	whatDice := "0-99"
+	whatDice := DefaultRollContent
 	resultStr := fmt.Sprintf("%2d", result)
 	if d.parsed {
 		whatDice = formatDice(d)
 		resultStr = fmt.Sprintf("%d", result)
 	}
-	msg := fmt.Sprintf("Rolling %s: **%s**\nComment: %s\nDice: %+v", whatDice, resultStr, comment, d)
-	return types.NewResponse().Content(msg)
+	embed := types.NewEmbed().
+		Description(fmt.Sprintf("Rolling %s: **%s**", whatDice, resultStr))
+	if comment != "" {
+		foot := fmt.Sprintf("%s: %s", req.User(), engine.PrettifyCustomEmoji(comment))
+		embed.Footer(foot, "")
+	}
+	return types.NewResponse().Embeds(embed)
 }
 
 func formatDice(d dice) string {
 	if !d.parsed {
-		return "0-99"
+		return ""
 	}
 	var count, sides, modif, modSign string
 	if d.count != 1 {

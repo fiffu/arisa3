@@ -15,6 +15,11 @@ func Test_parseExpr(t *testing.T) {
 	}
 	tests := []testCase{
 		{
+			name:   "optimization case",
+			in:     []string{"dddd"},
+			parsed: false,
+		},
+		{
 			name:   "weird inputs",
 			in:     []string{"", "0d", "d", " "},
 			parsed: false,
@@ -125,7 +130,7 @@ func Test_formatDice(t *testing.T) {
 		{
 			name:   "parse is negative",
 			d:      dice{parsed: false},
-			expect: "0-99",
+			expect: "",
 		},
 		{
 			d:      dice{count: 0, sides: 0, modif: 0, parsed: true},
@@ -134,6 +139,10 @@ func Test_formatDice(t *testing.T) {
 		{
 			d:      dice{count: 0, sides: 0, modif: -1, parsed: true},
 			expect: "0d0-1",
+		},
+		{
+			d:      dice{count: 1, sides: 5, modif: 0, parsed: true},
+			expect: "d5",
 		},
 		{
 			d:      dice{count: 3, sides: 5, modif: 0, parsed: true},

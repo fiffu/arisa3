@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	dgo "github.com/bwmarrin/discordgo"
 )
 
@@ -28,6 +30,10 @@ func NewResponse() ICommandResponse {
 func (r *Response) Data() *dgo.InteractionResponse      { return r.data }
 func (r *Response) TTS() ICommandResponse               { r.data.Data.TTS = true; return r }
 func (r *Response) Content(msg string) ICommandResponse { r.data.Data.Content = msg; return r }
+func (r *Response) Contentf(msg string, v ...interface{}) ICommandResponse {
+	r.data.Data.Content = fmt.Sprintf(msg, v...)
+	return r
+}
 func (r *Response) Embeds(embeds ...IEmbed) ICommandResponse {
 	for _, e := range embeds {
 		r.data.Data.Embeds = append(r.data.Data.Embeds, e.Data())

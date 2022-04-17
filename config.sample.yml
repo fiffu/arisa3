@@ -1,0 +1,4 @@
+botSecret: '' # replace or overwrite from env vars!
+cogs:
+  greeter:
+    motd: "Don't forget to drink water!"

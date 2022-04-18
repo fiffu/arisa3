@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-const ExpectStructTag = "envvar"
+const ExpectStructTag = "env"
 
 var (
 	ErrConvertEnvvarFailed = errors.New("type conversion of environment variable failed")
 )
 
 // MergeEnvVars accepts a pointer to a struct and updates fields tagged with `env`
-// in-place with values from environment variables. A struct field tagged `envvar:"BANANA"`
+// in-place with values from environment variables. A struct field tagged `env:"BANANA"`
 // would be populated with the environment variable BANANA.
 func MergeEnvVars(structPtr interface{}, prefix string) (map[string]reflect.StructField, error) {
 	if structPtr == nil {

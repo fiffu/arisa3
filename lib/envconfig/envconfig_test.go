@@ -8,11 +8,11 @@ import (
 )
 
 type person struct {
-	Name      string  `envvar:"NAME"`
-	Age       int     `envvar:"AGE"`
-	HeightM   float64 `envvar:"HEIGHT"`
-	IsMortal  bool    `envvar:"MORTAL"`
-	faveFruit string  `envvar:"FRUIT"` // private info
+	Name      string  `env:"NAME"`
+	Age       int     `env:"AGE"`
+	HeightM   float64 `env:"HEIGHT"`
+	IsMortal  bool    `env:"MORTAL"`
+	faveFruit string  `env:"FRUIT"` // private info
 }
 
 func Test_MergeEnvVars(t *testing.T) {

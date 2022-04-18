@@ -15,7 +15,7 @@ type Cog struct {
 	cfg *Config
 }
 type Config struct {
-	MOTD string `envvar:"motd"`
+	MOTD string `env:"motd"`
 }
 
 func NewCog(a types.IApp) types.ICog { return &Cog{} }

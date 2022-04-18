@@ -1,4 +1,4 @@
-module arisa3
+module github.com/fiffu/arisa3
 
 go 1.16
 

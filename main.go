@@ -1,12 +1,13 @@
 package main
 
 import (
-	"arisa3/app"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"runtime/debug"
+
+	"github.com/fiffu/arisa3/app"
 )
 
 // Bot parameters

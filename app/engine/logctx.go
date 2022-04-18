@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"arisa3/app/types"
+	"github.com/fiffu/arisa3/app/types"
 
 	"github.com/rs/zerolog"
 )

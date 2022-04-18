@@ -1,10 +1,11 @@
 package engine
 
 import (
-	"arisa3/app/types"
 	"errors"
 	"fmt"
 	"runtime/debug"
+
+	"github.com/fiffu/arisa3/app/types"
 
 	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"

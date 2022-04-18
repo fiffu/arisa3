@@ -1,0 +1,3 @@
+# Turns out somebody already wrote this...
+
+See [sethvargo/go-envconfig](https://github.com/sethvargo/go-envconfig).

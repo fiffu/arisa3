@@ -1,12 +1,13 @@
 package engine
 
 import (
-	"arisa3/app/types"
-	"arisa3/lib/envconfig"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/lib/envconfig"
 
 	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"

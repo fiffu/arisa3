@@ -1,8 +1,9 @@
 package rng
 
 import (
-	"arisa3/app/types"
 	"math/rand"
+
+	"github.com/fiffu/arisa3/app/types"
 )
 
 const (

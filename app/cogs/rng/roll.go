@@ -1,13 +1,14 @@
 package rng
 
 import (
-	"arisa3/app/engine"
-	"arisa3/app/types"
 	"fmt"
 	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/types"
 )
 
 // Command consts

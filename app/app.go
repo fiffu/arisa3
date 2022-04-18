@@ -1,13 +1,14 @@
 package app
 
 import (
-	"arisa3/app/cogs"
-	"arisa3/app/engine"
-	"arisa3/app/types"
 	"fmt"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/fiffu/arisa3/app/cogs"
+	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/types"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"

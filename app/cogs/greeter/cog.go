@@ -1,10 +1,11 @@
 package greeter
 
 import (
-	"arisa3/app/engine"
-	"arisa3/app/types"
 	"context"
 	"fmt"
+
+	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/types"
 
 	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"

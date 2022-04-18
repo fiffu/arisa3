@@ -15,14 +15,14 @@ type Cog struct {
 	cfg *Config
 }
 type Config struct {
-	MOTD string
+	MOTD string `envvar:"motd"`
 }
 
 func NewCog(a types.IApp) types.ICog { return &Cog{} }
 
 func (c *Cog) Name() string                       { return "greeter" }
 func (c *Cog) ConfigPointer() types.StructPointer { return &Config{} }
-func (c *Cog) Configure(ctx context.Context, cfg interface{}) error {
+func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 	if config, ok := cfg.(*Config); ok {
 		c.cfg = config
 		return nil

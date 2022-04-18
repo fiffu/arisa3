@@ -1,47 +1,16 @@
 package engine
 
 import (
-	"arisa3/app/types"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 
 	dgo "github.com/bwmarrin/discordgo"
 )
 
-// Errors
-var (
-	ErrCogParseConfig        = errors.New("unable to parse cog config")
-	ErrUnexpectedConfigValue = errors.New("config type assert failed")
-)
-
 // Misc values
 var (
 	CustomEmojiRegex *regexp.Regexp = regexp.MustCompile(`(<a?)?:\w+:(\d{18}>)?`)
 )
-
-// ParseConfig decodes input data and assigns it to output.
-func ParseConfig(in types.CogConfig, out types.StructPointer) error {
-	if out == nil {
-		return nil
-	}
-	bytes, err := json.Marshal(in)
-	if err != nil {
-		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
-	}
-	err = json.Unmarshal(bytes, out)
-	if err != nil {
-		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
-	}
-	return nil
-}
-
-// UnexpectedConfigType is shorthand to create an error based on ErrUnexpectedConfigValue.
-func UnexpectedConfigType(wanted interface{}, got interface{}) error {
-	return fmt.Errorf("%w, wanted: %T, got: %#v", ErrUnexpectedConfigValue, wanted, got)
-}
 
 // PrettifyCustomEmoji converts "<:birb:924875584004321361>" into ":birb:"
 func PrettifyCustomEmoji(str string) string {

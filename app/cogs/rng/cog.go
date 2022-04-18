@@ -19,9 +19,9 @@ func NewCog(a types.IApp) types.ICog {
 	}
 }
 
-func (c *Cog) Name() string                                         { return "rng" }
-func (c *Cog) ConfigPointer() types.StructPointer                   { return nil }
-func (c *Cog) Configure(ctx context.Context, cfg interface{}) error { return nil }
+func (c *Cog) Name() string                                             { return "rng" }
+func (c *Cog) ConfigPointer() types.StructPointer                       { return nil }
+func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error { return nil }
 
 func (c *Cog) OnStartup(ctx context.Context, sess *dgo.Session, rawConfig types.CogConfig) error {
 	return engine.Bootstrap(ctx, sess, rawConfig, c)

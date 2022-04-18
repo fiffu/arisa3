@@ -31,6 +31,7 @@ func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
 	err := c.commands.Register(
 		s,
 		c.rollCommand(),
+		c.eightBallCommand(),
 	)
 	if err != nil {
 		return err

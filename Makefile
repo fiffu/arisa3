@@ -8,9 +8,9 @@ build: FORCE  ## build app
 
 
 test: ## Run unit tests
-     go test -failfast -covermode=count -coverprofile ${COVERAGE_FILE} ./...
-     @go tool cover -func=${COVERAGE_FILE} | grep 'total' | sed -e 's/\t\+/ /g'
-     @echo ✓ [make test-unit] Done
+	go test -failfast -covermode=count -coverprofile ${COVERAGE_FILE} ./...
+	@go tool cover -func=${COVERAGE_FILE} | grep 'total' | sed -e 's/\t\+/ /g'
+	@echo ✓ [make test-unit] Done
 
 install-dev: install tooling  ## install for dev environments
 

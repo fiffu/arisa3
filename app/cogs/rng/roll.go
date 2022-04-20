@@ -14,7 +14,7 @@ import (
 // Command consts
 const (
 	RollCommand        = "roll"
-	RollOption         = "expression_or_comment"
+	RollExpression     = "expression_or_comment"
 	DefaultRollContent = "0-99"
 )
 
@@ -44,7 +44,7 @@ func (c *Cog) rollCommand() *types.Command {
 	return types.NewCommand(RollCommand).ForChat().
 		Desc("Rolls dice (supports algebraic notation)").
 		Options(
-			types.NewOption(RollOption).Desc("dice expression (e.g. 3d5+10) and/or a comment").
+			types.NewOption(RollExpression).Desc("dice expression (e.g. 3d5+10) and/or a comment").
 				String(),
 		).
 		Handler(c.roll)
@@ -52,7 +52,7 @@ func (c *Cog) rollCommand() *types.Command {
 
 func (c *Cog) roll(req types.ICommandEvent) error {
 	var input string
-	if value, ok := req.Args().String(RollOption); ok {
+	if value, ok := req.Args().String(RollExpression); ok {
 		input = value
 	}
 	d, comment := parse(input)
@@ -197,6 +197,7 @@ func throwDie(sides int) int {
 }
 
 func formatResponse(req types.ICommandEvent, d dice, result int, comment string) types.ICommandResponse {
+	asker := req.User()
 	whatDice := DefaultRollContent
 	resultStr := fmt.Sprintf("%2d", result)
 	if d.parsed {
@@ -206,7 +207,7 @@ func formatResponse(req types.ICommandEvent, d dice, result int, comment string)
 	embed := types.NewEmbed().
 		Description(fmt.Sprintf("Rolling %s: **%s**", whatDice, resultStr))
 	if comment != "" {
-		foot := fmt.Sprintf("%s: %s", req.User(), engine.PrettifyCustomEmoji(comment))
+		foot := fmt.Sprintf("%s: %s", asker, engine.PrettifyCustomEmoji(comment))
 		embed.Footer(foot, "")
 	}
 	return types.NewResponse().Embeds(embed)

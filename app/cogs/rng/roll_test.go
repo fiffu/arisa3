@@ -1,10 +1,46 @@
 package rng
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func Test_parse(t *testing.T) {
+	type testCase struct {
+		input   string
+		parsed  bool
+		comment string
+	}
+	tests := []testCase{
+		{"5 bar", true, "bar"},
+		{"d5 bar", true, "bar"},
+		{"3d5 bar", true, "bar"},
+		{"3d5+2 bar", true, "bar"},
+
+		{"", false, ""},
+		{"nice", false, "nice"},
+		{"foo bar", false, "foo bar"},
+		{" bar bar bar", false, "bar bar bar"},
+		{"\n5 foo bar", false, "5 foo bar"},
+	}
+	for i, tc := range tests {
+		not := ""
+		if !tc.parsed {
+			not = " not"
+		}
+		name := fmt.Sprintf(
+			"#%d Input '%s' should%s parse a dice, and have comment '%s'",
+			i, tc.input, not, tc.comment,
+		)
+		t.Run(name, func(t *testing.T) {
+			d, comment := parse(tc.input)
+			assert.Equal(t, tc.parsed, d.parsed)
+			assert.Equal(t, tc.comment, comment)
+		})
+	}
+}
 
 func Test_parseExpr(t *testing.T) {
 	type testCase struct {
@@ -84,6 +120,32 @@ func Test_Atoi(t *testing.T) {
 	for _, tc := range tests {
 		t.Run("Atoi(%d)", func(t *testing.T) {
 			assert.Equal(t, tc.out, Atoi(tc.in))
+		})
+	}
+}
+
+func Test_SplitOnce(t *testing.T) {
+	type testCase struct {
+		input, delim, left, right string
+	}
+	tests := []testCase{
+		{"left right", " ", "left", "right"},
+		{"left ", " ", "left", ""},
+		{" right", " ", "", "right"},
+		{"left  ", " ", "left", " "},
+		{"  right", " ", "", " right"},
+		{"foo", "x", "foo", ""},
+		{"foo", "", "", "foo"},
+	}
+	for _, tc := range tests {
+		name := fmt.Sprintf(
+			"SplitOnce(%s, %s) should yield '%s' and '%s'",
+			tc.input, tc.delim, tc.left, tc.right,
+		)
+		t.Run(name, func(t *testing.T) {
+			left, right := SplitOnce(tc.input, tc.delim)
+			assert.Equal(t, tc.left, left)
+			assert.Equal(t, tc.right, right)
 		})
 	}
 }

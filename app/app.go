@@ -32,9 +32,12 @@ func Main(configPath string) error {
 
 	ctx := engine.StartupContext()
 
+	engine.AppLog(log.Info()).Msg("Initializing cogs")
 	if err = cogs.SetupCogs(ctx, app, sess); err != nil {
 		return err
 	}
+
+	engine.AppLog(log.Info()).Msg("Opening gateway session")
 	if err := sess.Open(); err != nil {
 		engine.AppLog(log.Error()).Err(err).Msg("Failed to open session")
 		return err

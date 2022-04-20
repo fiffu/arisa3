@@ -1,13 +1,16 @@
 package rng
 
 import (
+	"fmt"
 	"math/rand"
 
+	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 )
 
 const (
-	EightBallCommand = "8ball"
+	EightBallCommand  = "8ball"
+	EightBallQuestion = "a_burning_question"
 )
 
 var eightBallResponses = []string{
@@ -42,14 +45,25 @@ var eightBallResponses = []string{
 func (c *Cog) eightBallCommand() *types.Command {
 	return types.NewCommand(EightBallCommand).ForChat().
 		Desc("Concentrate and ask again").
+		Options(
+			types.NewOption(EightBallQuestion).String().Required(),
+		).
 		Handler(c.eightBall)
 }
 
 func (c *Cog) eightBall(req types.ICommandEvent) error {
+	asker := req.User()
+	question, _ := req.Args().String(EightBallQuestion)
 	reply := randChoice(eightBallResponses)
-	return req.Respond(
-		types.NewResponse().Content(reply),
-	)
+
+	embed := types.NewEmbed().Description(reply)
+
+	title := fmt.Sprintf("%s: %s", asker, engine.PrettifyCustomEmoji(question))
+	msg := fmt.Sprintf("**%s**", reply)
+	embed.Description(title + "\n\n" + msg)
+
+	resp := types.NewResponse().Embeds(embed)
+	return req.Respond(resp)
 }
 
 func randChoice(slc []string) string {

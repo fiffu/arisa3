@@ -14,8 +14,7 @@ import (
 // Command consts
 const (
 	RollCommand        = "roll"
-	RollOptionExpr     = "expression"
-	RollOptionComment  = "comment"
+	RollOption         = "expression_or_comment"
 	DefaultRollContent = "0-99"
 )
 
@@ -45,37 +44,41 @@ func (c *Cog) rollCommand() *types.Command {
 	return types.NewCommand(RollCommand).ForChat().
 		Desc("Rolls dice (supports algebraic notation)").
 		Options(
-			types.NewOption(RollOptionExpr).Desc("dice notation, such as 3d5+10").
-				String(),
-			types.NewOption(RollOptionComment).Desc("optional comment").
+			types.NewOption(RollOption).Desc("dice expression (e.g. 3d5+10) and/or a comment").
 				String(),
 		).
 		Handler(c.roll)
 }
 
 func (c *Cog) roll(req types.ICommandEvent) error {
-	var expression, comment string
-	if value, ok := req.Args().String("expression"); ok {
-		expression = value
+	var input string
+	if value, ok := req.Args().String(RollOption); ok {
+		input = value
 	}
-	if value, ok := req.Args().String("comment"); ok {
-		comment = value
-	}
-
-	d := parseExpr(expression)
+	d, comment := parse(input)
 
 	// if expression couldn't be parsed, treat it as a comment
 	if !d.parsed && comment == "" {
-		comment = expression
+		comment = input
 	}
 	result := toss(d)
 	resp := formatResponse(req, d, result, comment)
 	return req.Respond(resp)
 }
 
+func parse(input string) (dice, string) {
+	delim := " "
+	head, comment := SplitOnce(input, delim)
+	d := parseExpr(head)
+	if !d.parsed && head != "" {
+		comment = head + " " + comment
+	}
+	return d, strings.Trim(comment, " \n\t")
+}
+
 func parseExpr(s string) dice {
 	s = strings.ToUpper(s)
-	s = strings.Trim(s, " \t\n")
+	s = strings.Trim(s, " \t")
 
 	defaultRoll := dice{
 		count:  1,
@@ -163,9 +166,15 @@ func Atoi(s string) int {
 	}
 }
 
-func SplitOnce(s, substr string) (left, right string) {
-	pivot := strings.Index(s, substr)
-	offset := pivot + len(substr)
+func SplitOnce(s, delim string) (left, right string) {
+	if !strings.Contains(s, delim) {
+		return s, ""
+	}
+	if delim == "" {
+		return "", s
+	}
+	pivot := strings.Index(s, delim)
+	offset := pivot + len(delim)
 	left = s[:pivot]
 	right = s[offset:]
 	return

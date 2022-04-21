@@ -8,22 +8,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// pgclient implements IDatabase on PostgreSQL.
+// pgclient implements IData for database/sql + lib/pq.
 type pgclient struct {
 	pool               *sql.DB
 	existingMigrations map[string]bool
-}
-
-type pgtxn struct {
-	*sql.Tx
-}
-
-func (t pgtxn) Query(query string, args ...interface{}) (IRows, error) {
-	return t.Tx.Query(query, args...)
-}
-
-func (t pgtxn) Exec(query string, args ...interface{}) (IResult, error) {
-	return t.Tx.Exec(query, args...)
 }
 
 func NewDBClient(dsn string) (IDatabase, error) {
@@ -62,4 +50,17 @@ func (c *pgclient) Begin() (ITransaction, error) {
 		return nil, err
 	}
 	return pgtxn{t}, nil
+}
+
+// pgtxn implements ITransaction for database/sql + lib/pq.
+type pgtxn struct {
+	*sql.Tx
+}
+
+func (t pgtxn) Query(query string, args ...interface{}) (IRows, error) {
+	return t.Tx.Query(query, args...)
+}
+
+func (t pgtxn) Exec(query string, args ...interface{}) (IResult, error) {
+	return t.Tx.Exec(query, args...)
 }

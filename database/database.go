@@ -22,6 +22,7 @@ type IDatabase interface {
 	ParseMigration(filepath string) (ISchema, error)
 }
 
+// ITransaction describes an interface of a database transaction.
 type ITransaction interface {
 	// Query queries the database, usually a SELECT.
 	Query(query string, args ...interface{}) (IRows, error)
@@ -42,11 +43,13 @@ type IResult interface {
 	RowsAffected() (int64, error)
 }
 
+// IRows represents an iterable cursor over items returned by a database query.
 type IRows interface {
 	Next() bool
 	Scan(dest ...interface{}) error
 }
 
+// ISchema represents a schema used in database migrations.
 type ISchema interface {
 	Version() string
 	Source() string

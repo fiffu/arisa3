@@ -91,6 +91,7 @@ func (c *pgclient) Migrate(schema ISchema) error {
 	return txn.Commit()
 }
 
+// ParseMigration implements parsing of files into sqlSchema.
 func (c *pgclient) ParseMigration(theFile string) (ISchema, error) {
 	name, err := validateFileName(theFile)
 	if err != nil {

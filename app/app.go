@@ -9,6 +9,7 @@ import (
 	"github.com/fiffu/arisa3/app/cogs"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/database"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"
@@ -18,10 +19,20 @@ import (
 // app implements IApp
 type app struct {
 	cogsConfigs map[string]interface{}
+	db          database.IDatabase
+	sess        *discordgo.Session
 }
 
-func (a *app) Configs() map[string]interface{} {
-	return a.cogsConfigs
+func (a *app) Configs() map[string]interface{} { return a.cogsConfigs }
+func (a *app) Database() database.IDatabase    { return a.db }
+func (a *app) BotSession() *discordgo.Session  { return a.sess }
+func (a *app) Shutdown() {
+	if err := a.sess.Close(); err != nil {
+		engine.AppLog(log.Error()).Err(err).Msg("Error while closing session")
+	}
+	if err := a.db.Close(); err != nil {
+		engine.AppLog(log.Error()).Err(err).Msg("Error while closing DB connection")
+	}
 }
 
 func Main(configPath string) error {
@@ -33,7 +44,7 @@ func Main(configPath string) error {
 	ctx := engine.StartupContext()
 
 	engine.AppLog(log.Info()).Msg("Initializing cogs")
-	if err = cogs.SetupCogs(ctx, app, sess); err != nil {
+	if err = cogs.SetupCogs(ctx, app); err != nil {
 		return err
 	}
 
@@ -44,7 +55,7 @@ func Main(configPath string) error {
 	}
 
 	engine.AppLog(log.Info()).Msg("Gateway session established")
-	defer sess.Close()
+	defer app.Shutdown()
 
 	engine.AppLog(log.Info()).Msg("Press Ctrl+C to exit")
 	waitUntilInterrupt()
@@ -61,6 +72,11 @@ func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
 	}
 	cogsCfg := getCogsConfigs(cfg)
 
+	db, err := database.NewDBClient(cfg.DatabaseDSN)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	sess, err := discordgo.New("Bot " + cfg.BotSecret)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid bot parameters: %w", err)
@@ -68,6 +84,7 @@ func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
 
 	return &app{
 		cogsConfigs: cogsCfg,
+		db:          db,
 	}, sess, nil
 }
 

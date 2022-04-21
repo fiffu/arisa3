@@ -1,15 +1,41 @@
 package database
 
+import (
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"regexp"
+
+	"github.com/fiffu/arisa3/lib"
+)
+
 // pgmigrations.go implements migrations for pgclient
 
 const (
-	migrationInsert        string = "INSERT INTO _schema_migrations (version) VALUES ($1);"
-	listMigrations         string = "SELECT version FROM _schema_migrations;"
-	createSchemaMigrations string = `
+	migrationInsert        = "INSERT INTO _schema_migrations (version) VALUES ($1);"
+	listMigrations         = "SELECT version FROM _schema_migrations;"
+	createSchemaMigrations = `
 		CREATE TABLE IF NOT EXISTS "_schema_migrations" (
 			version TEXT PRIMARY KEY
 		);`
 )
+
+var (
+	filenamePattern   = regexp.MustCompile(`\d+_.+\.sql`)
+	ErrParseMigration = errors.New("failed to parse migration")
+)
+
+// sqlSchema implements ISchema for .sql files.
+type sqlSchema struct {
+	source  string
+	version string
+	queries []string
+}
+
+func (s sqlSchema) Source() string    { return s.source }
+func (s sqlSchema) Version() string   { return s.version }
+func (s sqlSchema) Queries() []string { return s.queries }
 
 type MigrationRecord struct {
 	version string
@@ -63,4 +89,37 @@ func (c *pgclient) Migrate(schema ISchema) error {
 		return err
 	}
 	return txn.Commit()
+}
+
+func (c *pgclient) ParseMigration(theFile string) (ISchema, error) {
+	name, err := validateFileName(theFile)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := ioutil.ReadFile(theFile)
+	if err != nil {
+		return nil, err
+	}
+
+	s := string(bytes)
+	version, _ := lib.SplitOnce(name, "_")
+
+	return sqlSchema{
+		source:  theFile,
+		version: version,
+		queries: []string{s},
+	}, nil
+}
+
+func validateFileName(theFile string) (string, error) {
+	name := filepath.Base(theFile)
+	if !filenamePattern.MatchString(name) {
+		return "", fmt.Errorf(
+			"%w: file should have pattern %s, got '%s'",
+			ErrParseMigration,
+			filenamePattern.String(), name,
+		)
+	}
+	return name, nil
 }

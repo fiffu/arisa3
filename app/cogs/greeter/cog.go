@@ -30,9 +30,11 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 	}
 	return engine.UnexpectedConfigType(c.ConfigPointer(), cfg)
 }
+func (c *Cog) RunMigrations() {
 
-func (c *Cog) OnStartup(ctx context.Context, sess *dgo.Session, rawConfig types.CogConfig) error {
-	return engine.Bootstrap(ctx, sess, rawConfig, c)
+}
+func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.CogConfig) error {
+	return engine.Bootstrap(ctx, app, rawConfig, c)
 }
 
 func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {

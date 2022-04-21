@@ -5,8 +5,9 @@ import (
 )
 
 type Config struct {
-	BotSecret string                 `mapstructure:"botSecret"`
-	Cogs      map[string]interface{} `mapstructure:"cogs"`
+	BotSecret   string                 `mapstructure:"botSecret"`
+	DatabaseDSN string                 `mapstructure:"database_dsn" envvar:"DATABASE_URL"`
+	Cogs        map[string]interface{} `mapstructure:"cogs"`
 
 	GuildID        string // flag.String("guild", "", "Test guild ID. If not passed - bot registers commands globally")
 	RemoveCommands bool   // flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")

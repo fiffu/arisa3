@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/lib"
 )
 
 // Command consts
@@ -68,7 +68,7 @@ func (c *Cog) roll(req types.ICommandEvent) error {
 
 func parse(input string) (dice, string) {
 	delim := " "
-	head, comment := SplitOnce(input, delim)
+	head, comment := lib.SplitOnce(input, delim)
 	d := parseExpr(head)
 	if !d.parsed && head != "" {
 		comment = head + " " + comment
@@ -102,82 +102,60 @@ func parseExpr(s string) dice {
 	case _20.MatchString(s):
 		return dice{
 			count:  1,
-			sides:  Atoi(s),
+			sides:  lib.Atoi(s),
 			modif:  0,
 			parsed: true,
 		}
 
 	case _d20.MatchString(s):
-		_, sides = SplitOnce(s, "D")
+		_, sides = lib.SplitOnce(s, "D")
 		return dice{
 			count:  1,
-			sides:  Atoi(sides),
+			sides:  lib.Atoi(sides),
 			modif:  0,
 			parsed: true,
 		}
 
 	case _d20modif.MatchString(s):
-		_, s = SplitOnce(s, "D")
+		_, s = lib.SplitOnce(s, "D")
 		var sides, modif string
 		if strings.Contains(s, "+") {
-			sides, modif = SplitOnce(s, "+")
+			sides, modif = lib.SplitOnce(s, "+")
 		} else {
-			sides, modif = SplitOnce(s, "-")
+			sides, modif = lib.SplitOnce(s, "-")
 			modif = "-" + modif
 		}
 		return dice{
 			count:  1,
-			sides:  Atoi(sides),
-			modif:  Atoi(modif),
+			sides:  lib.Atoi(sides),
+			modif:  lib.Atoi(modif),
 			parsed: true,
 		}
 
 	case _3d20.MatchString(s):
-		count, sides = SplitOnce(s, "D")
+		count, sides = lib.SplitOnce(s, "D")
 		return dice{
-			count:  Atoi(count),
-			sides:  Atoi(sides),
+			count:  lib.Atoi(count),
+			sides:  lib.Atoi(sides),
 			modif:  0,
 			parsed: true,
 		}
 
 	case _3d20modif.MatchString(s):
-		count, s = SplitOnce(s, "D")
+		count, s = lib.SplitOnce(s, "D")
 		if strings.Contains(s, "+") {
-			sides, modif = SplitOnce(s, "+")
+			sides, modif = lib.SplitOnce(s, "+")
 		} else {
-			sides, modif = SplitOnce(s, "-")
+			sides, modif = lib.SplitOnce(s, "-")
 			modif = "-" + modif
 		}
 		return dice{
-			count:  Atoi(count),
-			sides:  Atoi(sides),
-			modif:  Atoi(modif),
+			count:  lib.Atoi(count),
+			sides:  lib.Atoi(sides),
+			modif:  lib.Atoi(modif),
 			parsed: true,
 		}
 	}
-}
-
-func Atoi(s string) int {
-	if num, err := strconv.Atoi(s); err != nil {
-		return 0
-	} else {
-		return num
-	}
-}
-
-func SplitOnce(s, delim string) (left, right string) {
-	if !strings.Contains(s, delim) {
-		return s, ""
-	}
-	if delim == "" {
-		return "", s
-	}
-	pivot := strings.Index(s, delim)
-	offset := pivot + len(delim)
-	left = s[:pivot]
-	right = s[offset:]
-	return
 }
 
 func toss(d dice) (sum int) {

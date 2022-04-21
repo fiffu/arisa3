@@ -4,7 +4,7 @@ package database
 // IDatabase describes the interface of a database client.
 type IDatabase interface {
 	// Close closes the database client.
-	Close()
+	Close() error
 
 	// Query queries the database, usually a SELECT.
 	Query(query string, args ...interface{}) (IRows, error)
@@ -16,7 +16,10 @@ type IDatabase interface {
 	Begin() (ITransaction, error)
 
 	// Migrate executes a schema for database migration.
-	Migrate(schema ISchema) error
+	Migrate(ISchema) error
+
+	// ParseMigration is a helper function for reading migrations.
+	ParseMigration(filepath string) (ISchema, error)
 }
 
 type ITransaction interface {
@@ -46,6 +49,6 @@ type IRows interface {
 
 type ISchema interface {
 	Version() string
-	Queries() []string
 	Source() string
+	Queries() []string
 }

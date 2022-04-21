@@ -10,7 +10,6 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 
-	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
 
@@ -27,7 +26,7 @@ func getCogsList(app types.IApp) []types.ICog {
 }
 
 // SetupCogs loads cogs.
-func SetupCogs(ctx context.Context, app types.IApp, sess *dgo.Session) error {
+func SetupCogs(ctx context.Context, app types.IApp) error {
 	configs := app.Configs()
 
 	for _, c := range getCogsList(app) {
@@ -36,7 +35,7 @@ func SetupCogs(ctx context.Context, app types.IApp, sess *dgo.Session) error {
 		if err != nil {
 			return err
 		}
-		if err := c.OnStartup(ctx, sess, cfg); err != nil {
+		if err := c.OnStartup(ctx, app, cfg); err != nil {
 			engine.StartupLog(log.Error()).
 				Str(engine.CtxCog, c.Name()).
 				Err(err).

@@ -42,8 +42,8 @@ func NewDBClient(dsn string) (IDatabase, error) {
 	return c, err
 }
 
-func (c *pgclient) Close() {
-	c.pool.Close()
+func (c *pgclient) Close() error {
+	return c.pool.Close()
 }
 
 func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {

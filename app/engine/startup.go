@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/types"
-	"github.com/fiffu/arisa3/database"
 	"github.com/fiffu/arisa3/lib/envconfig"
 
 	dgo "github.com/bwmarrin/discordgo"

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/fiffu/arisa3/app/cogs"
+	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
-	"github.com/fiffu/arisa3/database"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog"

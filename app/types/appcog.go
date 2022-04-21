@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/fiffu/arisa3/database"
+	"github.com/fiffu/arisa3/app/database"
 )
 
 type IApp interface {

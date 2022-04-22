@@ -16,7 +16,7 @@ type Cog struct {
 	cfg *Config
 }
 type Config struct {
-	MOTD string `env:"motd"`
+	MOTD string `envvar:"motd"`
 }
 
 func NewCog(a types.IApp) types.ICog { return &Cog{} }
@@ -30,9 +30,7 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 	}
 	return engine.UnexpectedConfigType(c.ConfigPointer(), cfg)
 }
-func (c *Cog) RunMigrations() {
 
-}
 func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.CogConfig) error {
 	return engine.Bootstrap(ctx, app, rawConfig, c)
 }

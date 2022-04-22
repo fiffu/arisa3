@@ -16,6 +16,23 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// IDependencyInjector is an interface for initializing injected dependencies.
+type IDependencyInjector interface {
+	NewDatabase(dsn string) (database.IDatabase, error)
+	Bot(token string) (*discordgo.Session, error)
+}
+
+// DefaultInjector provides default methods satisfying IDependencyInjector.
+type DefaultInjector struct{}
+
+func (d DefaultInjector) NewDatabase(dsn string) (database.IDatabase, error) {
+	return database.NewDBClient(dsn)
+}
+
+func (d DefaultInjector) Bot(token string) (*discordgo.Session, error) {
+	return discordgo.New("Bot " + token)
+}
+
 // app implements IApp
 type app struct {
 	cogsConfigs map[string]interface{}
@@ -35,8 +52,8 @@ func (a *app) Shutdown() {
 	}
 }
 
-func Main(configPath string) error {
-	app, sess, err := newApp(configPath)
+func Main(deps IDependencyInjector, configPath string) error {
+	app, sess, err := newApp(deps, configPath)
 	if err != nil {
 		return err
 	}
@@ -63,7 +80,7 @@ func Main(configPath string) error {
 	return nil
 }
 
-func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
+func newApp(deps IDependencyInjector, configPath string) (types.IApp, *discordgo.Session, error) {
 	setupLogger()
 
 	cfg, err := Configure(configPath)
@@ -72,12 +89,12 @@ func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
 	}
 	cogsCfg := getCogsConfigs(cfg)
 
-	db, err := database.NewDBClient(cfg.DatabaseDSN)
+	db, err := deps.NewDatabase(cfg.DatabaseDSN)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	sess, err := discordgo.New("Bot " + cfg.BotSecret)
+	sess, err := deps.Bot(cfg.BotSecret)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid bot parameters: %w", err)
 	}

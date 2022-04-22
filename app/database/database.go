@@ -2,6 +2,7 @@
 package database
 
 // IDatabase describes the interface of a database client.
+//go:generate mockgen -source=database.go -package=database -destination=database_mock.go
 type IDatabase interface {
 	// Close closes the database client.
 	Close() error

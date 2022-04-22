@@ -1,4 +1,4 @@
-botSecret: '' # replace or overwrite from env vars!
+botSecret: 'sample'  # replace or overwrite by setting BOT_SECRET in env vars!
 cogs:
   greeter:
     motd: "Don't forget to drink water!"

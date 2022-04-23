@@ -1,5 +1,7 @@
 package colours
 
+// repository.go contains implementation of IDomainRepository.
+
 import (
 	"errors"
 	"fmt"
@@ -15,6 +17,7 @@ type ColoursRecord struct {
 	TStamp time.Time
 }
 
+// ColoursLogRecord models table 'colours_log'.
 type ColoursLogRecord struct {
 	UserID    string
 	UserName  string
@@ -23,17 +26,7 @@ type ColoursLogRecord struct {
 	TStamp    time.Time
 }
 
-type Reason string
-
-func (r Reason) String() string { return string(r) }
-
-const (
-	Mutate Reason = "mutate"
-	Reroll Reason = "reroll"
-	Freeze Reason = "freeze"
-)
-
-// repo implements IDomainRepository
+// repo implements IDomainRepository.
 type repo struct {
 	db    database.IDatabase
 	cache map[string]map[Reason]time.Time
@@ -54,7 +47,7 @@ func (r *repo) cachePeek(userID string, reason Reason) (tstamp time.Time, ok boo
 	if !ok {
 		return
 	}
-	tstamp, ok = state[Reason(reason)]
+	tstamp, ok = state[reason]
 	return
 }
 
@@ -77,6 +70,8 @@ func (r *repo) cachePatch(userID string, reason Reason, tstamp time.Time) {
 	}
 }
 
+/* Exported methods for IDomainRepository, and their supporting internals. */
+
 // FetchUserState returns the user's state for the given Reason.
 func (r *repo) FetchUserState(user IDomainMember, reason Reason) (time.Time, error) {
 	userID := user.UserID()
@@ -96,10 +91,16 @@ func (r *repo) FetchUserState(user IDomainMember, reason Reason) (time.Time, err
 }
 
 func (r *repo) queryUserState(userID string) (*ColourState, error) {
-	rows, err := r.db.Query("SELECT userid, tstamp, reason FROM colours WHERE userid = $1", userID)
+	// Pull records with the given userID.
+	rows, err := r.db.Query(
+		"SELECT userid, tstamp, reason FROM colours WHERE userid = $1",
+		userID,
+	)
 	if err != nil {
 		return nil, err
 	}
+
+	// Parsing records.
 	records := make([]ColoursRecord, 0)
 	for rows.Next() {
 		rec := ColoursRecord{}
@@ -108,8 +109,11 @@ func (r *repo) queryUserState(userID string) (*ColourState, error) {
 		}
 		records = append(records, rec)
 	}
+
+	// Collate records into a singular state object
+	// No records means no state
 	if len(records) == 0 {
-		return nil, nil
+		return NoState, nil
 	}
 	state := ColourState{
 		UserID:     userID,
@@ -145,9 +149,12 @@ func (r *repo) UpdateUnfreeze(user IDomainMember) error {
 
 func (r *repo) update(user IDomainMember, reason Reason, colour *Colour, tstamp time.Time) error {
 	userID := user.UserID()
+	// Insert the change inside a transaction
 	if err := r.insert(userID, reason.String(), tstamp); err != nil {
 		return err
 	}
+
+	// Log the change to the audit db
 	hexcode := ""
 	if colour != nil {
 		hexcode = colour.ToHexcode()
@@ -160,11 +167,17 @@ func (r *repo) update(user IDomainMember, reason Reason, colour *Colour, tstamp 
 }
 
 func (r *repo) insert(userID string, reason string, tstamp time.Time) error {
-	rec := ColoursRecord{UserID: userID, Reason: reason, TStamp: tstamp}
+	rec := ColoursRecord{
+		UserID: userID,
+		Reason: reason,
+		TStamp: tstamp,
+	}
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
+
+	// Drop any records for the given reason
 	if _, err := tx.Exec(
 		"DELETE FROM colours WHERE userid = $1 AND reason = $2",
 		rec.UserID, rec.Reason,
@@ -174,6 +187,8 @@ func (r *repo) insert(userID string, reason string, tstamp time.Time) error {
 		}
 		return err
 	}
+
+	// Put a new record for the given reason
 	if _, err := tx.Exec(
 		"INSERT INTO colours(userid, tstamp, reason) VALUES ($1, $2, $3)",
 		rec.UserID, rec.TStamp, rec.Reason,
@@ -183,6 +198,7 @@ func (r *repo) insert(userID string, reason string, tstamp time.Time) error {
 		}
 		return err
 	}
+
 	if err := tx.Commit(); err != nil {
 		return err
 	}

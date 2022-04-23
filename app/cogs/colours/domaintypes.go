@@ -10,9 +10,26 @@ import (
 	"github.com/fiffu/arisa3/lib"
 )
 
-// Never aliases the zero value of time.Time.
+// Reason encodes reasons for colour changes (or lack thereof).
+type Reason string
+
+func (r Reason) String() string { return string(r) }
+
+const (
+	Mutate Reason = "mutate"
+	Reroll Reason = "reroll"
+	Freeze Reason = "freeze"
+)
+
+/* Sentinel values */
+
+// NoState indicates user has never interacted with the Colour Roles domain.
+var NoState = &ColourState{}
+
+// Never indicates that user has state within the domain, but no records for the given Reason.
 var Never = time.Time{} // the zero value
 
+// Colour encodes a Colour Role's RGB value.
 type Colour struct {
 	R, G, B float64
 }
@@ -61,7 +78,7 @@ func (c *Colour) Nudge() *Colour {
 	}
 }
 
-// ColourState models a participant's state in the colour roles domain.
+// ColourState models a participant's state in the Colour Roles domain.
 type ColourState struct {
 	UserID     string
 	LastFrozen time.Time

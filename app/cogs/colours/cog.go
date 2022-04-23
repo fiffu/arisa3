@@ -20,6 +20,14 @@ type Cog struct {
 	commands *engine.CommandsRegistry
 }
 
+type Config struct {
+	MaxRoleHeightName string `mapstructure:"max_role_height_name"`
+
+	MutateCooldownMins int `mapstructure:"mutate_cooldown_mins"`
+	RerollCooldownMins int `mapstructure:"reroll_cooldown_mins"`
+	RerollPenaltyMins  int `mapstructure:"reroll_penalty_mins"`
+}
+
 func NewCog(a types.IApp) types.ICog {
 	return &Cog{
 		commands: engine.NewCommandRegistry(),

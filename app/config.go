@@ -5,7 +5,7 @@ import (
 )
 
 type Config struct {
-	BotSecret   string                 `mapstructure:"botSecret" envvar:"BOT_SECRET"`
+	BotSecret   string                 `mapstructure:"bot_secret" envvar:"BOT_SECRET"`
 	DatabaseDSN string                 `mapstructure:"database_dsn" envvar:"DATABASE_URL"`
 	Cogs        map[string]interface{} `mapstructure:"cogs"`
 }

@@ -1,4 +1,9 @@
-botSecret: 'sample'  # replace or overwrite by setting BOT_SECRET in env vars!
+bot_secret: 'sample'  # replace or overwrite by setting BOT_SECRET in env vars!
 cogs:
   greeter:
     motd: "Don't forget to drink water!"
+  colours:
+    max_role_height_name: "[Arisa] Max colour role height"
+    mutate_cooldown_mins: 240
+    reroll_cooldown_mins: 720
+    reroll_penalty_mins: 30

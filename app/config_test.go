@@ -12,7 +12,7 @@ import (
 )
 
 const testConfigFileName string = "config_test.yml"
-const testConfigFileContents string = "botSecret: sample"
+const testConfigFileContents string = "bot_secret: sample"
 
 var testDir = lib.MustGetCallerDir()
 

@@ -28,6 +28,7 @@ func (d *domain) GetLastFrozen(mem IDomainMember) (time.Time, error) {
 }
 
 func (d *domain) Mutate(m IDomainMember) (*Colour, error) {
+	// TODO
 	// if role := m.ColourRole(); role != nil {
 	// 	current := role.Colour()
 	// 	newCol := current.Nudge()
@@ -36,6 +37,7 @@ func (d *domain) Mutate(m IDomainMember) (*Colour, error) {
 }
 
 func (d *domain) Reroll(m IDomainMember) (*Colour, error) {
+	// TODO
 	return nil, nil
 }
 

@@ -13,8 +13,6 @@ import (
 // pgmigrations.go implements migrations for pgclient
 
 const (
-	migrationInsert        = "INSERT INTO _schema_migrations (version) VALUES ($1);"
-	listMigrations         = "SELECT version FROM _schema_migrations;"
 	createSchemaMigrations = `
 		CREATE TABLE IF NOT EXISTS "_schema_migrations" (
 			version TEXT PRIMARY KEY
@@ -50,16 +48,16 @@ func (c *pgclient) seedMigration() error {
 	if _, err := c.Exec(createSchemaMigrations); err != nil {
 		return err
 	}
-	rows, err := c.Query(listMigrations)
+	rows, err := c.Query("SELECT version FROM _schema_migrations;")
 	if err != nil {
 		return err
 	}
 	for rows.Next() {
-		record := MigrationRecord{}
-		if err := record.Scan(rows); err != nil {
-			return err
+		rec := MigrationRecord{}
+		if err := rec.Scan(rows); err != nil {
+			return rows.Scan(&rec.version)
 		}
-		c.existingMigrations[record.version] = true
+		c.existingMigrations[rec.version] = true
 	}
 	return nil
 }
@@ -81,7 +79,7 @@ func (c *pgclient) Migrate(schema ISchema) error {
 			return err
 		}
 	}
-	query := migrationInsert
+	query := "INSERT INTO _schema_migrations (version) VALUES ($1);"
 	if _, err := txn.Exec(query, schema.Version()); err != nil {
 		if err := txn.Rollback(); err != nil {
 			return err

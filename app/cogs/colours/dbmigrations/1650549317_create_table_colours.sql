@@ -1,8 +1,5 @@
 CREATE TABLE "colours" (
-    userid          BIGINT      NOT NULL,
-    mutateorreroll  TEXT        NOT NULL,
-    tstamp          TIMESTAMP   NOT NULL,
-    colour          TEXT,
-    is_frozen       BOOLEAN,
-    PRIMARY KEY (userid, mutateorreroll)
+    userid TEXT,
+    tstamp TIMESTAMP NOT NULL,
+    reason TEXT,  -- 'mutate' or 'reroll' or 'frozen'
 );

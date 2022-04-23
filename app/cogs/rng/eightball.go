@@ -2,10 +2,10 @@ package rng
 
 import (
 	"fmt"
-	"math/rand"
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/lib"
 )
 
 const (
@@ -54,7 +54,7 @@ func (c *Cog) eightBallCommand() *types.Command {
 func (c *Cog) eightBall(req types.ICommandEvent) error {
 	asker := req.User()
 	question, _ := req.Args().String(EightBallQuestion)
-	reply := randChoice(eightBallResponses)
+	reply := lib.ChooseString(eightBallResponses)
 
 	embed := types.NewEmbed().Description(reply)
 
@@ -64,10 +64,4 @@ func (c *Cog) eightBall(req types.ICommandEvent) error {
 
 	resp := types.NewResponse().Embeds(embed)
 	return req.Respond(resp)
-}
-
-func randChoice(slc []string) string {
-	size := len(slc)
-	n := rand.Intn(size)
-	return slc[n]
 }

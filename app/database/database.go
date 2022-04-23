@@ -1,6 +1,13 @@
 // package database exposes an interface for database I/O.
 package database
 
+import "errors"
+
+var (
+	// ErrNoRecords indicates 0 results were returned for a query.
+	ErrNoRecords = errors.New("no records found")
+)
+
 // IDatabase describes the interface of a database client.
 //go:generate mockgen -source=database.go -destination=./mock_database/mock_database.go
 type IDatabase interface {

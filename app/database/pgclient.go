@@ -4,6 +4,8 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 
 	_ "github.com/lib/pq"
 )
@@ -35,7 +37,10 @@ func (c *pgclient) Close() error {
 }
 
 func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {
-	rows, err := c.pool.Query(query, args)
+	rows, err := c.pool.Query(query, args...)
+	if errors.Is(err, sql.ErrNoRows) {
+		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
+	}
 	return rows, err
 }
 
@@ -58,7 +63,11 @@ type pgtxn struct {
 }
 
 func (t pgtxn) Query(query string, args ...interface{}) (IRows, error) {
-	return t.Tx.Query(query, args...)
+	rows, err := t.Tx.Query(query, args...)
+	if errors.Is(err, sql.ErrNoRows) {
+		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
+	}
+	return rows, err
 }
 
 func (t pgtxn) Exec(query string, args ...interface{}) (IResult, error) {

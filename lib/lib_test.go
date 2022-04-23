@@ -59,3 +59,26 @@ func Test_MustGetCallerDir(t *testing.T) {
 	actual := here[len(here)-len(expect):]
 	assert.Equal(t, expect, actual)
 }
+
+func Test_ChooseString(t *testing.T) {
+	choices := []string{"a", "b"}
+	outcome := make(map[string]bool)
+
+	i := 0
+	for len(outcome) < 2 && i < 1000 {
+		choice := ChooseString(choices)
+		outcome[choice] = true
+	}
+	assert.Len(t, outcome, len(choices))
+}
+
+func Test_ChooseBool(t *testing.T) {
+	outcome := make(map[bool]bool)
+
+	i := 0
+	for len(outcome) < 2 && i < 1000 {
+		choice := ChooseBool()
+		outcome[choice] = true
+	}
+	assert.Len(t, outcome, 2)
+}

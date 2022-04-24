@@ -110,7 +110,7 @@ type session struct {
 	cacheRoles   lib.ICache
 }
 
-func NewDomainSession(sess *discordgo.Session, cacheTimeout time.Duration) IDomainSession {
+func NewDomainSession(sess *discordgo.Session) IDomainSession {
 	return &session{
 		sess, lib.NewMemoryCache(), lib.NewMemoryCache(),
 	}

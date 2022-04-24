@@ -22,7 +22,7 @@ type domain struct {
 }
 
 // NewColoursDomain implements IColoursDomain
-func NewColoursDomain(repo IDomainRepository, cfg Config) IColoursDomain {
+func NewColoursDomain(repo IDomainRepository, cfg *Config) IColoursDomain {
 	return &domain{
 		repo:              repo,
 		maxHeightRoleName: cfg.MaxRoleHeightName,

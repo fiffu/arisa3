@@ -53,7 +53,7 @@ func (a *app) Shutdown() {
 }
 
 func Main(deps IDependencyInjector, configPath string) error {
-	app, sess, err := newApp(deps, configPath)
+	app, err := newApp(deps, configPath)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func Main(deps IDependencyInjector, configPath string) error {
 	}
 
 	engine.AppLog(log.Info()).Msg("Opening gateway session")
-	if err := sess.Open(); err != nil {
+	if err := app.BotSession().Open(); err != nil {
 		engine.AppLog(log.Error()).Err(err).Msg("Failed to open session")
 		return err
 	}
@@ -80,29 +80,30 @@ func Main(deps IDependencyInjector, configPath string) error {
 	return nil
 }
 
-func newApp(deps IDependencyInjector, configPath string) (types.IApp, *discordgo.Session, error) {
+func newApp(deps IDependencyInjector, configPath string) (types.IApp, error) {
 	setupLogger()
 
 	cfg, err := Configure(configPath)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	cogsCfg := getCogsConfigs(cfg)
 
 	db, err := deps.NewDatabase(cfg.DatabaseDSN)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	sess, err := deps.Bot(cfg.BotSecret)
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid bot parameters: %w", err)
+		return nil, fmt.Errorf("invalid bot parameters: %w", err)
 	}
 
 	return &app{
 		cogsConfigs: cogsCfg,
 		db:          db,
-	}, sess, nil
+		sess:        sess,
+	}, nil
 }
 
 func setupLogger() {

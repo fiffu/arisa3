@@ -22,6 +22,7 @@ func getCogsList(app types.IApp) []types.ICog {
 	return []types.ICog{
 		general.NewCog(app),
 		rng.NewCog(app),
+		// colours.NewCog(app),
 	}
 }
 

@@ -33,6 +33,7 @@ type IBootable interface {
 }
 
 type IRepository interface {
+	Name() string
 	MigrationsDir() string
 }
 
@@ -82,8 +83,15 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 	if rcog, ok := c.(IRepository); ok {
 		db := app.Database()
 		if err := runMigrations(rcog, db); err != nil {
+			registryLog(log.Info()).Str(CtxCog, cog.Name()).Msgf(
+				"Running migrations",
+			)
 			return bootError(err)
 		}
+	} else {
+		registryLog(log.Info()).Str(CtxCog, cog.Name()).Msgf(
+			"Skipping migrations (interface assert failed)",
+		)
 	}
 
 	// Bind ready callback after boot sequence is ready
@@ -102,6 +110,9 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 func runMigrations(cog IRepository, db database.IDatabase) error {
 	dir := cog.MigrationsDir()
 	files, err := ioutil.ReadDir(dir)
+	registryLog(log.Info()).Str(CtxCog, cog.Name()).Msgf(
+		"Looking migrations in: %s (found %d files)", dir, len(files),
+	)
 	if err != nil {
 		return err
 	}

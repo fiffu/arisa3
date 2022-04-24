@@ -8,15 +8,13 @@ import (
 	"regexp"
 
 	"github.com/fiffu/arisa3/lib"
+	"github.com/rs/zerolog/log"
 )
 
 // pgmigrations.go implements migrations for pgclient
 
 const (
-	createSchemaMigrations = `
-		CREATE TABLE IF NOT EXISTS "_schema_migrations" (
-			version TEXT PRIMARY KEY
-		);`
+	createSchemaMigrations = `CREATE TABLE IF NOT EXISTS "_schema_migrations" (version TEXT PRIMARY KEY);`
 )
 
 var (
@@ -45,7 +43,9 @@ func (r MigrationRecord) Scan(rows IRows) error {
 
 // seedMigration pulls the migrations table state, or creates if it doesn't exist.
 func (c *pgclient) seedMigration() error {
+	log.Info().Msgf("Creating schema migrations table")
 	if _, err := c.Exec(createSchemaMigrations); err != nil {
+		log.Error().Err(err).Msgf("Failed to creating seed migrations table")
 		return err
 	}
 	rows, err := c.Query("SELECT version FROM _schema_migrations;")
@@ -55,7 +55,8 @@ func (c *pgclient) seedMigration() error {
 	for rows.Next() {
 		rec := MigrationRecord{}
 		if err := rec.Scan(rows); err != nil {
-			return rows.Scan(&rec.version)
+			log.Error().Msgf("Failed parsing migration record: %v", rows)
+			return err
 		}
 		c.existingMigrations[rec.version] = true
 	}

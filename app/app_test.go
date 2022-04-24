@@ -29,8 +29,8 @@ func Test_newApp(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	testDI := testDependencyInjector{ctrl}
-	app, sess, err := newApp(testDI, configPath)
+	app, err := newApp(testDI, configPath)
 	assert.NotNil(t, app)
-	assert.Nil(t, sess)
+	assert.Nil(t, app.BotSession())
 	assert.NoError(t, err)
 }

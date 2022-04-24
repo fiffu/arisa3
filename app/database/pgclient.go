@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 )
 
 // pgclient implements IData for database/sql + lib/pq.
@@ -18,6 +19,7 @@ type pgclient struct {
 
 func NewDBClient(dsn string) (IDatabase, error) {
 	pool, err := sql.Open("postgres", dsn)
+	log.Info().Msgf("Database connection opened")
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +28,7 @@ func NewDBClient(dsn string) (IDatabase, error) {
 		existingMigrations: make(map[string]bool),
 	}
 	if err := c.seedMigration(); err != nil {
+		log.Error().Msgf("Seed migrations failed")
 		defer c.Close()
 		return nil, err
 	}
@@ -45,7 +48,7 @@ func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {
 }
 
 func (c *pgclient) Exec(query string, args ...interface{}) (IResult, error) {
-	affected, err := c.pool.Exec(query, args)
+	affected, err := c.pool.Exec(query, args...)
 	return affected, err
 }
 

@@ -12,10 +12,9 @@ import (
 )
 
 var (
-	errNotCommand              = errors.New("not a command")
-	errNoHandler               = errors.New("no handler")
-	errUnrecognisedInteraction = errors.New("unrecognised interaction name")
-	errPanic                   = errors.New("panic while executing command handler")
+	errNotCommand = errors.New("not a command")
+	errNoHandler  = errors.New("no handler")
+	errPanic      = errors.New("panic while executing command handler")
 )
 
 type CommandsRegistry struct {
@@ -35,7 +34,7 @@ func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) erro
 		if _, err := s.ApplicationCommandCreate(appID, "", data); err != nil {
 			return err
 		}
-		registryLog(log.Info()).Msgf("Binding command '%s'", cmd.Name())
+		registryLog(log.Info()).Msgf("Binding command /%s", cmd.Name())
 		r.cmds[cmd.Name()] = cmd
 	}
 	return nil
@@ -50,20 +49,6 @@ func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 
 // onInteractionCreate logs errors from registryHandler.
 func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
-	who := i.User
-	if who == nil && i.Member != nil {
-		who = i.Member.User
-	}
-	opts := make([]dgo.ApplicationCommandInteractionDataOption, len(i.ApplicationCommandData().Options))
-	for i, o := range i.ApplicationCommandData().Options {
-		opts[i] = *o
-	}
-	registryLog(log.Info()).
-		Str(CtxCommand, i.ApplicationCommandData().Name).
-		Msgf(
-			"Incoming interaction (id:%s) from '%s' --- options=%+v",
-			who, i.ID, opts,
-		)
 	if err := r.registryHandler(s, i); err != nil {
 		registryLog(log.Error()).Err(err).Msgf("Error handling interaction")
 		err = s.InteractionRespond(
@@ -71,7 +56,7 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 			types.NewResponse().Content("Hmm, seems like something went wrong. Try again later?").Data(),
 		)
 		if err != nil {
-			registryLog(log.Error()).Err(err).Msgf("Error sending response")
+			registryLog(log.Error()).Err(err).Msgf("Error sending response, maybe interaction already acknowledged?")
 		}
 	}
 }
@@ -85,9 +70,31 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	commandName := i.ApplicationCommandData().Name
 	cmd, ok := r.cmds[commandName]
 	if !ok {
-		err = fmt.Errorf("%w: %s", errUnrecognisedInteraction, commandName)
+		// log.Info().Msgf("%+v", r.cmds)
+		// err = fmt.Errorf("%w: %s", errUnrecognisedInteraction, commandName)
 		return
 	}
+
+	// Code before this line executes for all commands; be careful to avoid excess logging.
+
+	// Logging
+	who := i.User
+	if who == nil && i.Member != nil {
+		who = i.Member.User
+	}
+	opts := make(map[string]interface{})
+	for _, o := range i.ApplicationCommandData().Options {
+		opts[o.Name] = o.Value
+	}
+	registryLog(log.Info()).
+		Str(types.CtxCommand, i.ApplicationCommandData().Name).
+		Str(types.CtxInteraction, i.ID).
+		Msgf(
+			"Interaction incoming <<< user=%s options=%+v",
+			who, opts,
+		)
+
+	// Invoke handler
 	handler := cmd.HandlerFunc()
 	if handler == nil {
 		return r.fallbackHandler(s, i, cmd)
@@ -107,7 +114,7 @@ func (r *CommandsRegistry) runHandler(
 			fmt.Printf("%+v:\n%s\n", r, string(debug.Stack()))
 		}
 	}()
-	registryLog(log.Debug()).Str(CtxCommand, cmd.Name()).Msgf("Handler executing")
+	registryLog(log.Debug()).Str(types.CtxCommand, cmd.Name()).Msgf("Handler executing")
 	err = handler(types.NewCommandEvent(s, i, cmd, args))
 	if err == nil {
 		registryLog(log.Debug()).Msgf("Handler completed")
@@ -119,7 +126,7 @@ func (r *CommandsRegistry) runHandler(
 
 // fallbackHandler is invoked in lieu of runHandler if a command has no associated handler.
 func (r *CommandsRegistry) fallbackHandler(s *dgo.Session, i *dgo.InteractionCreate, cmd types.ICommand) error {
-	registryLog(log.Error()).Str(CtxCommand, cmd.Name()).Msgf("Missing interaction handler")
+	registryLog(log.Error()).Str(types.CtxCommand, cmd.Name()).Msgf("Missing interaction handler")
 	return fmt.Errorf("%w: %s", errNoHandler, cmd.Name())
 }
 
@@ -131,6 +138,6 @@ func parseArgs(cmd types.ICommand, args []*dgo.ApplicationCommandInteractionData
 			mapping[opt] = arg
 		}
 	}
-	registryLog(log.Debug()).Str(CtxCommand, cmd.Name()).Msgf("Parsed options: %v", args)
+	registryLog(log.Debug()).Str(types.CtxCommand, cmd.Name()).Msgf("Parsed options: %v", args)
 	return types.NewArgs(cmd, mapping)
 }

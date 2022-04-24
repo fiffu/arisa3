@@ -36,7 +36,12 @@ func NewDBClient(dsn string) (IDatabase, error) {
 }
 
 func (c *pgclient) Close() error {
-	return c.pool.Close()
+	if err := c.pool.Close(); err != nil {
+		log.Error().Err(err).Msgf("Failed to close database connection")
+		return err
+	}
+	log.Info().Msgf("Database connection closed")
+	return nil
 }
 
 func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {

@@ -15,8 +15,9 @@ func (c *Cog) colCommand() *types.Command {
 func (c *Cog) col(req types.ICommandEvent) error {
 	from := req.Interaction().Member
 	if from == nil {
-		// must be in a guild
-		return nil
+		return req.Respond(
+			types.NewResponse().Content("You need to be in a guild to use this command."),
+		)
 	}
 
 	s := NewDomainSession(req.Session())

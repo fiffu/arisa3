@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 
 	dgo "github.com/bwmarrin/discordgo"
@@ -13,6 +14,7 @@ type ICommandResponse interface {
 	Embeds(...IEmbed) ICommandResponse
 	// Components() ICommandResponse
 	// Files() ICommandResponse
+	String() string // stringify
 }
 
 type Response struct {
@@ -39,4 +41,17 @@ func (r *Response) Embeds(embeds ...IEmbed) ICommandResponse {
 		r.data.Data.Embeds = append(r.data.Data.Embeds, e.Data())
 	}
 	return r
+}
+func (r *Response) String() string {
+	embeds := make([]dgo.MessageEmbed, 0)
+	if r.data.Data.Embeds != nil {
+		for _, e := range r.data.Data.Embeds {
+			embeds = append(embeds, *e)
+		}
+	}
+	emb, _ := json.Marshal(embeds)
+	return fmt.Sprintf(
+		"content='%s' embeds=%s",
+		r.data.Data.Content, string(emb),
+	)
 }

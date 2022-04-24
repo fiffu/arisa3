@@ -34,11 +34,11 @@ func (s sqlSchema) Version() string   { return s.version }
 func (s sqlSchema) Queries() []string { return s.queries }
 
 type MigrationRecord struct {
-	version string
+	Version string
 }
 
-func (r MigrationRecord) Scan(rows IRows) error {
-	return rows.Scan(&r.version)
+func (r *MigrationRecord) Scan(rows IRows) error {
+	return rows.Scan(&r.Version)
 }
 
 // seedMigration pulls the migrations table state, or creates if it doesn't exist.
@@ -52,14 +52,16 @@ func (c *pgclient) seedMigration() error {
 	if err != nil {
 		return err
 	}
+
 	for rows.Next() {
-		rec := MigrationRecord{}
+		rec := &MigrationRecord{}
 		if err := rec.Scan(rows); err != nil {
 			log.Error().Msgf("Failed parsing migration record: %v", rows)
 			return err
 		}
-		c.existingMigrations[rec.version] = true
+		c.existingMigrations[rec.Version] = true
 	}
+	log.Info().Msgf("Loaded schema migrations (noted %d migration records)", len(c.existingMigrations))
 	return nil
 }
 
@@ -68,6 +70,7 @@ func (c *pgclient) Migrate(schema ISchema) error {
 	if _, ok := c.existingMigrations[schema.Version()]; ok {
 		return nil
 	}
+	log.Info().Msgf("Executing migration %s (%s)", schema.Version(), schema.Source())
 	txn, err := c.pool.Begin()
 	if err != nil {
 		return err

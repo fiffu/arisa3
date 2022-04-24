@@ -42,7 +42,7 @@ func StartupContext() context.Context {
 	// we can inject timeouts etc here
 	type contextKey string
 	ctx := context.Background()
-	return context.WithValue(ctx, contextKey(CtxEngine), "startup")
+	return context.WithValue(ctx, contextKey(types.CtxEngine), "startup")
 }
 
 // Bootstrap parses config and pushes it to cog, and sets up a handler for discordgo.Ready event.
@@ -82,14 +82,24 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 	// Setup repo migrations
 	if rcog, ok := c.(IRepository); ok {
 		db := app.Database()
+		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
+			"Running migrations",
+		)
 		if err := runMigrations(rcog, db); err != nil {
-			registryLog(log.Info()).Str(CtxCog, cog.Name()).Msgf(
-				"Running migrations",
+			registryLog(log.Error()).Err(err).Str(types.CtxCog, cog.Name()).Msgf(
+				"Migrations failed",
 			)
+			if closeErr := db.Close(); closeErr != nil {
+				return bootError(fmt.Errorf(
+					"failed to close DB connection (%v) during teardown due to "+
+						"migration error (%v)",
+					closeErr, err,
+				))
+			}
 			return bootError(err)
 		}
 	} else {
-		registryLog(log.Info()).Str(CtxCog, cog.Name()).Msgf(
+		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
 			"Skipping migrations (interface assert failed)",
 		)
 	}
@@ -99,8 +109,8 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 	sess.AddHandler(func(s *dgo.Session, r *dgo.Ready) {
 		if err := cog.ReadyCallback(s, r); err != nil {
 			log.Error().
-				Str(CtxEngine, "ReadyCallback").
-				Str(CtxCog, cog.Name()).
+				Str(types.CtxEngine, "ReadyCallback").
+				Str(types.CtxCog, cog.Name()).
 				Err(err).Msg("error in ReadyCallback")
 		}
 	})
@@ -110,7 +120,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 func runMigrations(cog IRepository, db database.IDatabase) error {
 	dir := cog.MigrationsDir()
 	files, err := ioutil.ReadDir(dir)
-	registryLog(log.Info()).Str(CtxCog, cog.Name()).Msgf(
+	registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
 		"Looking migrations in: %s (found %d files)", dir, len(files),
 	)
 	if err != nil {

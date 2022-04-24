@@ -2,6 +2,7 @@ package types
 
 import (
 	dgo "github.com/bwmarrin/discordgo"
+	"github.com/rs/zerolog/log"
 )
 
 type ICommandEvent interface {
@@ -39,5 +40,9 @@ func (evt *commandEvent) User() *dgo.User {
 func (evt *commandEvent) Respond(resp ICommandResponse) error {
 	itr := evt.i.Interaction
 	data := resp.Data()
+	log.Info().
+		Str(CtxCommand, evt.Command().Name()).
+		Str(CtxInteraction, itr.ID).
+		Msgf("Interaction response >>> resp %s", resp.String())
 	return evt.s.InteractionRespond(itr, data)
 }

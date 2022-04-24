@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/fiffu/arisa3/app/cogs/colours"
 	"github.com/fiffu/arisa3/app/cogs/general"
 	"github.com/fiffu/arisa3/app/cogs/rng"
 	"github.com/fiffu/arisa3/app/engine"
@@ -22,7 +23,7 @@ func getCogsList(app types.IApp) []types.ICog {
 	return []types.ICog{
 		general.NewCog(app),
 		rng.NewCog(app),
-		// colours.NewCog(app),
+		colours.NewCog(app),
 	}
 }
 
@@ -38,13 +39,13 @@ func SetupCogs(ctx context.Context, app types.IApp) error {
 		}
 		if err := c.OnStartup(ctx, app, cfg); err != nil {
 			engine.StartupLog(log.Error()).
-				Str(engine.CtxCog, c.Name()).
+				Str(types.CtxCog, c.Name()).
 				Err(err).
 				Msg("Failure to setup cog")
 			return err
 		}
 		engine.StartupLog(log.Info()).
-			Str(engine.CtxCog, c.Name()).
+			Str(types.CtxCog, c.Name()).
 			Msg("Cog started")
 	}
 	return nil

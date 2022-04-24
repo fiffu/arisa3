@@ -1,7 +1,11 @@
 bot_secret: 'sample'  # replace or overwrite by setting BOT_SECRET in env vars!
 cogs:
-  greeter:
+  general:
     motd: "Don't forget to drink water!"
+    repo_name: "GitHub · fiffu/arisa2"
+    repo_web_url: "https://github.com/fiffu/arisa3"
+    repo_issues_url: "https://github.com/fiffu/arisa3/issues"
+    repo_gitclone_url: "https://github.com/fiffu/arisa3.git"
   colours:
     max_role_height_name: "[Arisa] Max colour role height"
     mutate_cooldown_mins: 240

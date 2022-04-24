@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/fiffu/arisa3/app/cogs/greeter"
+	"github.com/fiffu/arisa3/app/cogs/general"
 	"github.com/fiffu/arisa3/app/cogs/rng"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
@@ -20,7 +20,7 @@ var (
 // getCogsList maintains a list of cogs to load when the app starts.
 func getCogsList(app types.IApp) []types.ICog {
 	return []types.ICog{
-		greeter.NewCog(app),
+		general.NewCog(app),
 		rng.NewCog(app),
 	}
 }

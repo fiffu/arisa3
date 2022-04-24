@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 
+	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/envconfig"
 
@@ -15,6 +18,8 @@ import (
 
 // Errors
 var (
+	ErrBootstrap             = errors.New("bootstrap error")
+	ErrCogNotBootable        = errors.New("cog does not implement IBootable")
 	ErrCogParseConfig        = errors.New("unable to parse cog config")
 	ErrUnexpectedConfigValue = errors.New("config type assert failed")
 )
@@ -27,22 +32,39 @@ type IBootable interface {
 	ReadyCallback(s *dgo.Session, r *dgo.Ready) error
 }
 
+type IRepository interface {
+	Name() string
+	MigrationsDir() string
+}
+
 // StartupContext creates a runtime context for the app startup sequence.
 func StartupContext() context.Context {
 	// we can inject timeouts etc here
 	type contextKey string
 	ctx := context.Background()
-	return context.WithValue(ctx, contextKey(CtxEngine), "startup")
+	return context.WithValue(ctx, contextKey(types.CtxEngine), "startup")
 }
 
 // Bootstrap parses config and pushes it to cog, and sets up a handler for discordgo.Ready event.
-func Bootstrap(ctx context.Context, sess *dgo.Session, rawConfig types.CogConfig, cog IBootable) error {
+func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c interface{}) error {
+	bootError := func(e error) error {
+		return fmt.Errorf("%w: %v", ErrBootstrap, e)
+	}
+
+	// Assert interface satisfies IBootable
+	cog, ok := c.(IBootable)
+	if !ok {
+		return bootError(ErrCogNotBootable)
+	}
+
+	// Parse config
 	cfg := cog.ConfigPointer()
 	if err := ParseConfig(rawConfig, cfg); err != nil {
-		return err
+		return bootError(err)
 	}
+	// Merge config from env vars
 	if replaced, err := envconfig.MergeEnvVars(cfg, EnvKeyPrefix(cog)); err != nil {
-		return err
+		return bootError(err)
 	} else if len(replaced) > 0 {
 		for envKey, fld := range replaced {
 			registryLog(log.Info()).Msgf(
@@ -52,18 +74,68 @@ func Bootstrap(ctx context.Context, sess *dgo.Session, rawConfig types.CogConfig
 			)
 		}
 	}
+	// Assign config
 	if err := cog.Configure(ctx, cfg); err != nil {
-		return err
+		return bootError(err)
 	}
 
+	// Setup repo migrations
+	if rcog, ok := c.(IRepository); ok {
+		db := app.Database()
+		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
+			"Running migrations",
+		)
+		if err := runMigrations(rcog, db); err != nil {
+			registryLog(log.Error()).Err(err).Str(types.CtxCog, cog.Name()).Msgf(
+				"Migrations failed",
+			)
+			if closeErr := db.Close(); closeErr != nil {
+				return bootError(fmt.Errorf(
+					"failed to close DB connection (%v) during teardown due to "+
+						"migration error (%v)",
+					closeErr, err,
+				))
+			}
+			return bootError(err)
+		}
+	} else {
+		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
+			"Skipping migrations (interface assert failed)",
+		)
+	}
+
+	// Bind ready callback after boot sequence is ready
+	sess := app.BotSession()
 	sess.AddHandler(func(s *dgo.Session, r *dgo.Ready) {
 		if err := cog.ReadyCallback(s, r); err != nil {
 			log.Error().
-				Str(CtxEngine, "ReadyCallback").
-				Str(CtxCog, cog.Name()).
+				Str(types.CtxEngine, "ReadyCallback").
+				Str(types.CtxCog, cog.Name()).
 				Err(err).Msg("error in ReadyCallback")
 		}
 	})
+	return nil
+}
+
+func runMigrations(cog IRepository, db database.IDatabase) error {
+	dir := cog.MigrationsDir()
+	files, err := ioutil.ReadDir(dir)
+	registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
+		"Looking migrations in: %s (found %d files)", dir, len(files),
+	)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		path := filepath.Join(dir, file.Name())
+		schema, err := db.ParseMigration(path)
+		if err != nil {
+			return err
+		}
+		if err := db.Migrate(schema); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

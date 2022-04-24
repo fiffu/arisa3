@@ -37,7 +37,7 @@ func main() {
 		flag.Parse()
 		assertFlags()
 
-		return app.Main(*ConfigFilePath)
+		return app.Main(app.DefaultInjector{}, *ConfigFilePath)
 	}
 	err, errPanic := panicWatch(run)
 	if err != nil {

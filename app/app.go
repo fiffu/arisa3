@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fiffu/arisa3/app/cogs"
+	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 
@@ -15,17 +16,44 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// IDependencyInjector is an interface for initializing injected dependencies.
+type IDependencyInjector interface {
+	NewDatabase(dsn string) (database.IDatabase, error)
+	Bot(token string) (*discordgo.Session, error)
+}
+
+// DefaultInjector provides default methods satisfying IDependencyInjector.
+type DefaultInjector struct{}
+
+func (d DefaultInjector) NewDatabase(dsn string) (database.IDatabase, error) {
+	return database.NewDBClient(dsn)
+}
+
+func (d DefaultInjector) Bot(token string) (*discordgo.Session, error) {
+	return discordgo.New("Bot " + token)
+}
+
 // app implements IApp
 type app struct {
 	cogsConfigs map[string]interface{}
+	db          database.IDatabase
+	sess        *discordgo.Session
 }
 
-func (a *app) Configs() map[string]interface{} {
-	return a.cogsConfigs
+func (a *app) Configs() map[string]interface{} { return a.cogsConfigs }
+func (a *app) Database() database.IDatabase    { return a.db }
+func (a *app) BotSession() *discordgo.Session  { return a.sess }
+func (a *app) Shutdown() {
+	if err := a.sess.Close(); err != nil {
+		engine.AppLog(log.Error()).Err(err).Msg("Error while closing session")
+	}
+	if err := a.db.Close(); err != nil {
+		engine.AppLog(log.Error()).Err(err).Msg("Error while closing DB connection")
+	}
 }
 
-func Main(configPath string) error {
-	app, sess, err := newApp(configPath)
+func Main(deps IDependencyInjector, configPath string) error {
+	app, err := newApp(deps, configPath)
 	if err != nil {
 		return err
 	}
@@ -33,18 +61,18 @@ func Main(configPath string) error {
 	ctx := engine.StartupContext()
 
 	engine.AppLog(log.Info()).Msg("Initializing cogs")
-	if err = cogs.SetupCogs(ctx, app, sess); err != nil {
+	if err = cogs.SetupCogs(ctx, app); err != nil {
 		return err
 	}
 
 	engine.AppLog(log.Info()).Msg("Opening gateway session")
-	if err := sess.Open(); err != nil {
+	if err := app.BotSession().Open(); err != nil {
 		engine.AppLog(log.Error()).Err(err).Msg("Failed to open session")
 		return err
 	}
 
 	engine.AppLog(log.Info()).Msg("Gateway session established")
-	defer sess.Close()
+	defer app.Shutdown()
 
 	engine.AppLog(log.Info()).Msg("Press Ctrl+C to exit")
 	waitUntilInterrupt()
@@ -52,23 +80,30 @@ func Main(configPath string) error {
 	return nil
 }
 
-func newApp(configPath string) (types.IApp, *discordgo.Session, error) {
+func newApp(deps IDependencyInjector, configPath string) (types.IApp, error) {
 	setupLogger()
 
 	cfg, err := Configure(configPath)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	cogsCfg := getCogsConfigs(cfg)
 
-	sess, err := discordgo.New("Bot " + cfg.BotSecret)
+	db, err := deps.NewDatabase(cfg.DatabaseDSN)
 	if err != nil {
-		return nil, nil, fmt.Errorf("invalid bot parameters: %w", err)
+		return nil, err
+	}
+
+	sess, err := deps.Bot(cfg.BotSecret)
+	if err != nil {
+		return nil, fmt.Errorf("invalid bot parameters: %w", err)
 	}
 
 	return &app{
 		cogsConfigs: cogsCfg,
-	}, sess, nil
+		db:          db,
+		sess:        sess,
+	}, nil
 }
 
 func setupLogger() {

@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/fiffu/arisa3/app/cogs/greeter"
+	"github.com/fiffu/arisa3/app/cogs/colours"
+	"github.com/fiffu/arisa3/app/cogs/general"
 	"github.com/fiffu/arisa3/app/cogs/rng"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 
-	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,13 +21,14 @@ var (
 // getCogsList maintains a list of cogs to load when the app starts.
 func getCogsList(app types.IApp) []types.ICog {
 	return []types.ICog{
-		greeter.NewCog(app),
+		general.NewCog(app),
 		rng.NewCog(app),
+		colours.NewCog(app),
 	}
 }
 
 // SetupCogs loads cogs.
-func SetupCogs(ctx context.Context, app types.IApp, sess *dgo.Session) error {
+func SetupCogs(ctx context.Context, app types.IApp) error {
 	configs := app.Configs()
 
 	for _, c := range getCogsList(app) {
@@ -36,15 +37,15 @@ func SetupCogs(ctx context.Context, app types.IApp, sess *dgo.Session) error {
 		if err != nil {
 			return err
 		}
-		if err := c.OnStartup(ctx, sess, cfg); err != nil {
+		if err := c.OnStartup(ctx, app, cfg); err != nil {
 			engine.StartupLog(log.Error()).
-				Str(engine.CtxCog, c.Name()).
+				Str(types.CtxCog, c.Name()).
 				Err(err).
 				Msg("Failure to setup cog")
 			return err
 		}
 		engine.StartupLog(log.Info()).
-			Str(engine.CtxCog, c.Name()).
+			Str(types.CtxCog, c.Name()).
 			Msg("Cog started")
 	}
 	return nil

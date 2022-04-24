@@ -82,3 +82,12 @@ func Test_ChooseBool(t *testing.T) {
 	}
 	assert.Len(t, outcome, 2)
 }
+
+func Test_DecimalToRGB(t *testing.T) {
+	// ffff00
+	num := 255<<16 + 255<<8 + 0
+	r, g, b := DecimalToRGB(num)
+	assert.Equal(t, 1.0, r)
+	assert.Equal(t, 1.0, g)
+	assert.Equal(t, 0.0, b)
+}

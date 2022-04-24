@@ -219,3 +219,16 @@ func (r *repo) log(userID string, name string, reason string, hexcode string, ts
 	)
 	return err
 }
+
+func (r *repo) UpdateRerollPenalty(user IDomainMember, tstamp time.Time) error {
+	rec := ColoursRecord{
+		UserID: user.UserID(),
+		Reason: Reroll.String(),
+		TStamp: tstamp,
+	}
+	_, err := r.db.Exec(
+		"UPDATE colours SET tstamp=$1 WHERE userid=$2 AND reason=$3",
+		rec.TStamp, rec.UserID, rec.Reason,
+	)
+	return err
+}

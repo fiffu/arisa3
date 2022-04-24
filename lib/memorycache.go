@@ -5,14 +5,15 @@ package lib
 import "time"
 
 type ICache interface {
-	Peek(key string) ICacheable
+	Peek(key string) (ICacheable, bool)
 	Put(data ICacheable)
+	Delete(key string)
 }
 
 type ICacheable interface {
 	CacheKey() string
-	CacheDuration() time.Duration
 	CacheData() interface{}
+	CacheDuration() time.Duration
 }
 
 // memoryCache implements ICache
@@ -26,17 +27,17 @@ func NewMemoryCache() ICache {
 	return new(memoryCache)
 }
 
-func (c *memoryCache) Peek(key string) ICacheable {
+func (c *memoryCache) Peek(key string) (ICacheable, bool) {
 	record, ok := (*c)[key]
 	if !ok {
-		return nil
+		return nil, false
 	}
 	if time.Now().After(record.expiry) {
 		// cache expired
 		delete(*c, key)
-		return nil
+		return nil, false
 	}
-	return record.data
+	return record.data, true
 }
 
 func (c *memoryCache) Put(data ICacheable) {
@@ -44,4 +45,8 @@ func (c *memoryCache) Put(data ICacheable) {
 	duration := data.CacheDuration()
 	expiry := time.Now().Add(duration)
 	(*c)[key] = &cacheRecord{data, expiry}
+}
+
+func (c *memoryCache) Delete(key string) {
+	delete(*c, key)
 }

@@ -3,6 +3,7 @@ package colours
 // types.go implements the interfaces defined by interfaces.go.
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -57,9 +58,9 @@ func (c *Colour) ToHexcode() string {
 	)
 }
 
-func (c *Colour) FromDecimal(i int) *Colour {
-	// TODO
-	return &Colour{}
+func (c *Colour) FromDecimal(colour int) *Colour {
+	r, g, b := lib.DecimalToRGB(colour)
+	return &Colour{r, g, b}
 }
 
 // FromHSV returns a new instance of Colour, converting from HSV input to RGB colour space.
@@ -116,8 +117,16 @@ func NewDomainSession(sess *discordgo.Session, cacheTimeout time.Duration) IDoma
 }
 
 func (s *session) GuildMember(guildID, userID string) (IDomainMember, error) {
+	// Cache lookup
+	if cached, ok := s.cacheMembers.Peek(userID); ok {
+		if mem, ok := (cached.CacheData()).(*member); ok {
+			return mem, nil
+		} else {
+			return nil, errors.New("error coercing cached member")
+		}
+	}
+
 	// Query API for guild member
-	// TODO - caching for guild member lookup
 	mem, err := s.sess.GuildMember(guildID, userID)
 	if err != nil {
 		return nil, err
@@ -139,10 +148,19 @@ func (s *session) GuildMember(guildID, userID string) (IDomainMember, error) {
 		}
 	}
 
-	return NewDomainMember(mem, roles), nil
+	d := NewDomainMember(mem, roles)
+	s.cacheMembers.Put(d)
+	return d, nil
 }
 
 func (s *session) GuildRole(guildID, roleID string) (IDomainRole, error) {
+	if cached, ok := s.cacheRoles.Peek(roleID); ok {
+		if role, ok := (cached.CacheData()).(*colourRole); ok {
+			return role, nil
+		} else {
+			return nil, errors.New("error coercing cached colourRole")
+		}
+	}
 	roles, err := s.GuildRoles(guildID)
 	if err != nil {
 		return nil, err
@@ -156,22 +174,48 @@ func (s *session) GuildRole(guildID, roleID string) (IDomainRole, error) {
 }
 
 func (s *session) GuildRoles(guildID string) ([]IDomainRole, error) {
-	// TODO - cache roles lookup
-	roles, err := s.sess.GuildRoles(guildID)
+	roles, err := s.guildRolesNative(guildID)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]IDomainRole, 0)
 	for _, role := range roles {
 		d := NewDomainRole(role.ID, role.Name, role.Color)
+		s.cacheRoles.Put(d)
 		out = append(out, d)
 	}
 	return out, nil
 }
 
-func (s *session) GuildRoleReorder(guildID, roleID string, height int) error {
-	// TODO
-	return nil
+// guildRolesNative returns array of discordgo.Role instead of IDomainRole
+func (s *session) guildRolesNative(guildID string) ([]*discordgo.Role, error) {
+	return s.sess.GuildRoles(guildID)
+}
+
+func (s *session) guildRoleNative(guildID, roleID string) (*discordgo.Role, error) {
+	roles, err := s.guildRolesNative(guildID)
+	if err != nil {
+		return nil, err
+	}
+	for _, role := range roles {
+		if role.ID == roleID {
+			return role, nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *session) GuildRoleReorder(guildID string, roles []IDomainRole) error {
+	nativeRoles := make([]*discordgo.Role, 0)
+	for _, role := range roles {
+		nativeRole, err := s.guildRoleNative(guildID, role.ID())
+		if err != nil {
+			return err
+		}
+		nativeRoles = append(nativeRoles, nativeRole)
+	}
+	_, err := s.sess.GuildRoleReorder(guildID, nativeRoles)
+	return err
 }
 
 func (s *session) GuildRoleCreate(guildID string) (roleID string, err error) {
@@ -181,15 +225,26 @@ func (s *session) GuildRoleCreate(guildID string) (roleID string, err error) {
 	}
 	return role.ID, nil
 }
+
 func (s *session) GuildRoleEdit(guildID, roleID, name string, color int) error {
 	_, err := s.sess.GuildRoleEdit(
 		guildID, roleID, name, color,
 		false, 0, false,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	s.cacheRoles.Delete(roleID)
+	return nil
 }
+
 func (s *session) GuildMemberRoleAdd(guildID, userID, roleID string) error {
-	return s.sess.GuildMemberRoleAdd(guildID, userID, roleID)
+	err := s.sess.GuildMemberRoleAdd(guildID, userID, roleID)
+	if err != nil {
+		return err
+	}
+	s.cacheMembers.Delete(userID)
+	return nil
 }
 
 // guild implements IDomainGuild
@@ -218,7 +273,8 @@ func (m *member) UserID() string               { return m.mem.User.ID }
 func (m *member) Nick() string                 { return m.mem.Nick }
 func (m *member) Username() string             { return m.mem.User.Username + m.mem.User.Discriminator }
 func (m *member) Roles() []IDomainRole         { return m.roles }
-func (m *member) CacheKey() string             { return m.Guild().ID() + "_" + m.UserID() }
+func (m *member) CacheKey() string             { return m.UserID() }
+func (m *member) CacheData() interface{}       { return m }
 func (m *member) CacheDuration() time.Duration { return time.Hour + 1 }
 
 // colourRole implements IDomainRole.
@@ -237,4 +293,5 @@ func (r *colourRole) ID() string                   { return r.roleID }
 func (r *colourRole) Name() string                 { return r.name }
 func (r *colourRole) Colour() *Colour              { return r.colour }
 func (r *colourRole) CacheKey() string             { return r.ID() }
+func (r *colourRole) CacheData() interface{}       { return r }
 func (r *colourRole) CacheDuration() time.Duration { return time.Hour * 1 }

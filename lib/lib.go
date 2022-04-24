@@ -105,3 +105,15 @@ func HSVtoRGB(h, s, v float64) (r, g, b float64) {
 		return 0, 0, 0
 	}
 }
+
+// DecimalToRGB converts 24-bit decimal to RGB tuple.
+func DecimalToRGB(c int) (float64, float64, float64) {
+	r := c >> 16
+	c -= r * 65536
+
+	g := c / 256
+	c -= g * 256
+
+	b := c
+	return float64(r) / 255, float64(g) / 255, float64(b) / 255
+}

@@ -9,36 +9,35 @@ import (
 
 // IColoursDomain describes the colour roles domain
 type IColoursDomain interface {
-	// Get a member's last mutate time.
-	GetLastMutate(IDomainMember) (time.Time, error)
-	// Get a member's last reroll time.
-	GetLastReroll(IDomainMember) (time.Time, error)
 	// Get a member's last freeze time. If Never is returned, member's colour is not frozen.
 	GetLastFrozen(IDomainMember) (time.Time, error)
+	// Get a member's last mutate time.
+	GetLastMutate(IDomainMember) (time.Time, bool, error)
+	// Get a member's last reroll time.
+	GetLastReroll(IDomainMember) (time.Time, bool, error)
 
-	// Check whether Mutate cooldown expired for the member.
-	CanMutate(IDomainMember) (bool, error)
 	// Apply a mutation on member's colour role. If frozen, mutation is not allowed.
-	Mutate(IDomainMember) (*Colour, error)
-
-	// Check whether Reroll cooldown expired for the member.
-	CanReroll(IDomainMember) (bool, error)
+	Mutate(IDomainSession, IDomainMember) (*Colour, error)
 	// Reroll the colour for a member's colour role.
-	Reroll(IDomainMember) (*Colour, error)
+	Reroll(IDomainSession, IDomainMember) (*Colour, error)
 
 	// Freeze a member's colour role, i.e. disable mutations.
 	Freeze(IDomainMember) error
 	// Unfreeze a member's colour role, i.e. enable mutations.
 	Unfreeze(IDomainMember) error
 
-	// Search member's roles for one that looks like a Colour Role, based on name.
+	// Returns whether member has colour role.
+	HasColourRole(IDomainMember) bool
+	// Search member's roles for one that looks like a colour role, based on name.
 	GetColourRole(IDomainMember) IDomainRole
 	// Generate a colour role name based on the member's nickname or username.
 	CreateColourRole(IDomainSession, IDomainMember, *Colour) (IDomainRole, error)
+	// Get height that colour roles should be at, based on position of role with maxHeightRoleName
+	GetColourRoleHeight(IDomainSession, IDomainGuild) (int, error)
+	// Set the height of a role
+	SetRoleHeight(IDomainSession, IDomainGuild, string, int) error
 	// Create and assign a colour role to a member.
 	AssignColourRole(IDomainSession, IDomainMember, IDomainRole) error
-	// What height should
-	GetColourRoleHeight(s IDomainSession, guildID string) (int, error)
 }
 
 // IDomainSession wraps methods of discordgo.Session that IColoursDomain will use.
@@ -49,7 +48,7 @@ type IDomainSession interface {
 	GuildRoles(guildID string) ([]IDomainRole, error)
 	GuildRoleCreate(guildID string) (roleID string, err error)
 	GuildRoleEdit(guildID, roleID, name string, color int) error
-	GuildRoleReorder(guildID, roleID string, height int) error
+	GuildRoleReorder(guildID string, roles []IDomainRole) error
 }
 
 // IDomainGuild describes information that IColoursDomain derives from discordgo.Guild.
@@ -67,6 +66,7 @@ type IDomainMember interface {
 	Roles() []IDomainRole
 
 	CacheKey() string
+	CacheData() interface{}
 	CacheDuration() time.Duration
 }
 
@@ -78,6 +78,7 @@ type IDomainRole interface {
 	Colour() *Colour
 
 	CacheKey() string
+	CacheData() interface{}
 	CacheDuration() time.Duration
 }
 
@@ -86,6 +87,7 @@ type IDomainRepository interface {
 	FetchUserState(IDomainMember, Reason) (time.Time, error)
 	UpdateMutate(IDomainMember, *Colour) error
 	UpdateReroll(IDomainMember, *Colour) error
+	UpdateRerollPenalty(IDomainMember, time.Time) error
 	UpdateFreeze(IDomainMember) error
 	UpdateUnfreeze(IDomainMember) error
 }

@@ -20,7 +20,7 @@ type ColoursRecord struct {
 // ColoursLogRecord models table 'colours_log'.
 type ColoursLogRecord struct {
 	UserID    string
-	UserName  string
+	Username  string
 	ColourHex string
 	Reason    string
 	TStamp    time.Time
@@ -159,7 +159,7 @@ func (r *repo) update(user IDomainMember, reason Reason, colour *Colour, tstamp 
 	if colour != nil {
 		hexcode = colour.ToHexcode()
 	}
-	if err := r.log(userID, user.UserName(), reason.String(), hexcode, tstamp); err != nil {
+	if err := r.log(userID, user.Username(), reason.String(), hexcode, tstamp); err != nil {
 		return err
 	}
 	r.cachePatch(userID, reason, tstamp)
@@ -208,14 +208,14 @@ func (r *repo) insert(userID string, reason string, tstamp time.Time) error {
 func (r *repo) log(userID string, name string, reason string, hexcode string, tstamp time.Time) error {
 	rec := ColoursLogRecord{
 		UserID:    userID,
-		UserName:  name,
+		Username:  name,
 		Reason:    reason,
 		ColourHex: hexcode,
 		TStamp:    tstamp,
 	}
 	_, err := r.db.Exec(
 		"INSERT INTO colours_log(userid, username, colour, reason, tstamp) VALUES ($1, $2, $3, $4, $5)",
-		rec.UserID, rec.UserName, rec.ColourHex, rec.Reason, rec.TStamp,
+		rec.UserID, rec.Username, rec.ColourHex, rec.Reason, rec.TStamp,
 	)
 	return err
 }

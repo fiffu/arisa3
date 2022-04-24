@@ -63,13 +63,13 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		return bootError(err)
 	}
 	// Merge config from env vars
-	if replaced, err := envconfig.MergeEnvVars(cfg, EnvKeyPrefix(cog)); err != nil {
+	if replaced, err := envconfig.MergeEnvVars(cfg, ""); err != nil {
 		return bootError(err)
 	} else if len(replaced) > 0 {
 		for envKey, fld := range replaced {
-			registryLog(log.Info()).Msgf(
-				"replaced %v with environment var %s",
-				fld,
+			registryLog(log.Warn()).Msgf(
+				"Replaced %v with environment var %s",
+				fld.Name,
 				envKey,
 			)
 		}

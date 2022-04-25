@@ -1,7 +1,9 @@
 package app
 
 import (
+	"github.com/fiffu/arisa3/lib/envconfig"
 	validator "github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -21,6 +23,19 @@ func Configure(path string) (*Config, error) {
 	cfg := &Config{}
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, err
+	}
+
+	// Merge config from env vars
+	if replaced, err := envconfig.MergeEnvVars(cfg, ""); err != nil {
+		return nil, err
+	} else if len(replaced) > 0 {
+		for envKey, fld := range replaced {
+			log.Warn().Msgf(
+				"Replaced %v with environment var %s",
+				fld.Name,
+				envKey,
+			)
+		}
 	}
 
 	validate := validator.New()

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const ExpectStructTag = "env"
+const ExpectStructTag = "envvar"
 
 var (
 	ErrConvertEnvvarFailed = errors.New("type conversion of environment variable failed")

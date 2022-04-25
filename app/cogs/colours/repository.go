@@ -214,7 +214,7 @@ func (r *repo) log(userID string, name string, reason string, hexcode string, ts
 		TStamp:    tstamp,
 	}
 	_, err := r.db.Exec(
-		"INSERT INTO colours_log(userid, username, colour, reason, tstamp) VALUES ($1, $2, $3, $4, $5)",
+		"INSERT INTO colours_logview(userid, username, colour, reason, tstamp) VALUES ($1, $2, $3, $4, $5)",
 		rec.UserID, rec.Username, rec.ColourHex, rec.Reason, rec.TStamp,
 	)
 	return err

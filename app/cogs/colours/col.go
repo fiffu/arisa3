@@ -39,7 +39,7 @@ func (c *Cog) col(req types.ICommandEvent) error {
 	r, g, b := newColour.scale255()
 	hex := newColour.ToHexcode()
 	title := fmt.Sprintf("%s · rgb(%d, %d, %d)", hex, r, g, b)
-	embed := types.NewEmbed().Title(title)
+	embed := types.NewEmbed().Title(title).Color(newColour.ToDecimal())
 
 	return req.Respond(
 		types.NewResponse().Embeds(embed),

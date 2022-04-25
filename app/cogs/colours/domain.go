@@ -169,7 +169,6 @@ func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
 	who := mem.Username()
 	for _, role := range mem.Roles() {
 		if role.Name() == expectName {
-			engine.CogLog(d.cog, log.Info()).Msgf("%s has colour role (%s)", who, expectName)
 			return role
 		}
 	}

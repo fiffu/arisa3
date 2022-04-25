@@ -38,8 +38,8 @@ type Colour struct {
 func (c *Colour) scale255() (r, g, b int) {
 	delta := 1 / 512.0 // to make truncation round to nearest number instead of flooring
 	r = int((c.R + delta) * 255)
-	g = int((c.R + delta) * 255)
-	b = int((c.R + delta) * 255)
+	g = int((c.G + delta) * 255)
+	b = int((c.B + delta) * 255)
 	return
 }
 

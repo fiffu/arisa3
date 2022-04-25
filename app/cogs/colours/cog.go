@@ -51,6 +51,7 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 	}
 	c.cfg = config
 	c.domain = NewColoursDomain(
+		c,
 		NewRepository(c.db),
 		c.cfg,
 	)

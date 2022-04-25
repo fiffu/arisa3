@@ -3,15 +3,21 @@ package colours
 import (
 	"errors"
 	"time"
+
+	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/types"
+	"github.com/rs/zerolog/log"
 )
 
 // domain.go implements IColoursDomain defined by interfaces.go.
 
 var (
-	ErrCooldownPending = errors.New("cooldown is still in progress")
+	ErrCooldownPending   = errors.New("cooldown is still in progress")
+	ErrInvalidRoleHeight = errors.New("invalid target role height, it should be >=0")
 )
 
 type domain struct {
+	cog               types.ICog
 	repo              IDomainRepository
 	maxHeightRoleName string
 	maxRoleHeight     int
@@ -22,8 +28,9 @@ type domain struct {
 }
 
 // NewColoursDomain implements IColoursDomain
-func NewColoursDomain(repo IDomainRepository, cfg *Config) IColoursDomain {
+func NewColoursDomain(c types.ICog, repo IDomainRepository, cfg *Config) IColoursDomain {
 	return &domain{
+		cog:               c,
 		repo:              repo,
 		maxHeightRoleName: cfg.MaxRoleHeightName,
 		maxRoleHeight:     -1,
@@ -153,7 +160,13 @@ func (d *domain) Unfreeze(mem IDomainMember) error {
 }
 
 func (d *domain) HasColourRole(mem IDomainMember) bool {
-	return d.GetColourRole(mem) != nil
+	hasRole := d.GetColourRole(mem) != nil
+	have := "has"
+	if !hasRole {
+		have = "does not have"
+	}
+	engine.CogLog(d.cog, log.Info()).Msgf("%s %s colour role", mem.Username(), have)
+	return hasRole
 }
 
 func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
@@ -167,10 +180,7 @@ func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
 }
 
 func (d *domain) getColourRoleName(mem IDomainMember) string {
-	roleName := mem.Nick()
-	if roleName == "" {
-		roleName = mem.Username()
-	}
+	roleName := mem.Username()
 	return roleName
 }
 
@@ -196,9 +206,11 @@ func (d *domain) CreateColourRole(s IDomainSession, mem IDomainMember, colour *C
 	if err != nil {
 		return nil, err
 	}
-	err = d.SetRoleHeight(s, mem.Guild(), id, height)
-	if err != nil {
-		return nil, err
+	if height > -1 {
+		err = d.SetRoleHeight(s, mem.Guild(), id, height)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return NewDomainRole(id, roleName, col), nil
 }
@@ -215,9 +227,14 @@ func (d *domain) GetColourRoleHeight(s IDomainSession, guild IDomainGuild) (int,
 	if err != nil {
 		return -1, err
 	}
+
+	engine.CogLog(d.cog, log.Debug()).Msgf("Checking height of role: %s", d.maxHeightRoleName)
 	for i, role := range roles {
 		if role.Name() == d.maxHeightRoleName {
 			d.maxRoleHeight = i
+			engine.CogLog(d.cog, log.Info()).Msgf(
+				"Found height of role: %s (= %d)", d.maxHeightRoleName, i,
+			)
 			return i, nil
 		}
 	}
@@ -225,6 +242,9 @@ func (d *domain) GetColourRoleHeight(s IDomainSession, guild IDomainGuild) (int,
 }
 
 func (d *domain) SetRoleHeight(s IDomainSession, g IDomainGuild, roleID string, height int) error {
+	if height <= -1 {
+		return ErrInvalidRoleHeight
+	}
 	guildID := g.ID()
 	allRoles, err := s.GuildRoles(guildID)
 	if err != nil {

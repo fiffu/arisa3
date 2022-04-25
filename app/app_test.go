@@ -5,7 +5,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fiffu/arisa3/app/database"
-	"github.com/fiffu/arisa3/app/database/mock_database"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +14,7 @@ type testDependencyInjector struct {
 }
 
 func (d testDependencyInjector) NewDatabase(dsn string) (database.IDatabase, error) {
-	return mock_database.NewMockIDatabase(d.ctrl), nil
+	return database.NewMockIDatabase(d.ctrl), nil
 }
 
 func (d testDependencyInjector) Bot(token string) (*discordgo.Session, error) {

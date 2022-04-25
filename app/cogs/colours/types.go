@@ -271,7 +271,7 @@ func NewDomainMember(mem *discordgo.Member, roles []IDomainRole) IDomainMember {
 func (m *member) Guild() IDomainGuild          { return NewDomainGuild(m.mem.GuildID) }
 func (m *member) UserID() string               { return m.mem.User.ID }
 func (m *member) Nick() string                 { return m.mem.Nick }
-func (m *member) Username() string             { return m.mem.User.Username + m.mem.User.Discriminator }
+func (m *member) Username() string             { return m.mem.User.Username + "#" + m.mem.User.Discriminator }
 func (m *member) Roles() []IDomainRole         { return m.roles }
 func (m *member) CacheKey() string             { return m.UserID() }
 func (m *member) CacheData() interface{}       { return m }

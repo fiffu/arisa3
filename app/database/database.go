@@ -9,7 +9,7 @@ var (
 )
 
 // IDatabase describes the interface of a database client.
-//go:generate mockgen -source=database.go -destination=./mock_database/mock_database.go
+//go:generate mockgen -source=database.go -destination=./database_mock.go -package=database
 type IDatabase interface {
 	// Close closes the database client.
 	Close() error

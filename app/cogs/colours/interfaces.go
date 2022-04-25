@@ -3,6 +3,8 @@ package colours
 // interfaces.go describes the interfaces of the Colour Roles domain.
 // The domain logic should operate on these primitives.
 
+//go:generate mockgen -source=interfaces.go -destination=./interfaces_mock.go -package=colours
+
 import (
 	"time"
 )
@@ -30,6 +32,8 @@ type IColoursDomain interface {
 	HasColourRole(IDomainMember) bool
 	// Search member's roles for one that looks like a colour role, based on name.
 	GetColourRole(IDomainMember) IDomainRole
+	// Derive a role name based on the member's properties, like username.
+	GetColourRoleName(mem IDomainMember) string
 	// Generate a colour role name based on the member's nickname or username.
 	CreateColourRole(IDomainSession, IDomainMember, *Colour) (IDomainRole, error)
 	// Get height that colour roles should be at, based on position of role with maxHeightRoleName

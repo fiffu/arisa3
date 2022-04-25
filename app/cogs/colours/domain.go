@@ -22,9 +22,9 @@ type domain struct {
 	maxHeightRoleName string
 	maxRoleHeight     int
 
-	mutateCooldownMins time.Duration
-	rerollCooldownMins time.Duration
-	rerollPenaltyMins  time.Duration
+	mutateCooldownMins int
+	rerollCooldownMins int
+	rerollPenaltyMins  int
 }
 
 // NewColoursDomain implements IColoursDomain
@@ -34,6 +34,10 @@ func NewColoursDomain(c types.ICog, repo IDomainRepository, cfg *Config) IColour
 		repo:              repo,
 		maxHeightRoleName: cfg.MaxRoleHeightName,
 		maxRoleHeight:     -1,
+
+		mutateCooldownMins: cfg.MutateCooldownMins,
+		rerollCooldownMins: cfg.RerollCooldownMins,
+		rerollPenaltyMins:  cfg.RerollPenaltyMins,
 	}
 }
 
@@ -46,7 +50,7 @@ func (d *domain) GetLastMutate(mem IDomainMember) (time.Time, bool, error) {
 	if err != nil {
 		return last, false, err
 	}
-	cooldownPeriod := d.mutateCooldownMins * time.Minute
+	cooldownPeriod := time.Duration(d.mutateCooldownMins) * time.Minute
 	return last, d.hasCooldownFinished(last, cooldownPeriod), nil
 }
 
@@ -55,12 +59,15 @@ func (d *domain) GetLastReroll(mem IDomainMember) (time.Time, bool, error) {
 	if err != nil {
 		return last, false, err
 	}
-	cooldownPeriod := d.rerollCooldownMins * time.Minute
+	cooldownPeriod := time.Duration(d.rerollCooldownMins) * time.Minute
 	return last, d.hasCooldownFinished(last, cooldownPeriod), nil
 }
 
 func (d *domain) hasCooldownFinished(cooldownStartTime time.Time, cooldownPeriod time.Duration) bool {
 	if cooldownStartTime == Never {
+		return true
+	}
+	if cooldownPeriod == 0 {
 		return true
 	}
 	cooldownEndTime := cooldownStartTime.Add(cooldownPeriod)
@@ -105,15 +112,23 @@ func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {
 func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
 	// Check cooldown
 	last, ok, err := d.GetLastReroll(mem)
+	engine.CogLog(d.cog, log.Info()).Msgf(
+		"%s last roll was %s, %d mins cooldown finished? %v",
+		mem.Username(), last, d.rerollCooldownMins, ok,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	// Apply penalty if reroll not
+	// Apply penalty if reroll cooldown not finished
 	if !ok {
 		// Skip DB call if no penalty configured
-		if d.rerollPenaltyMins > 0*time.Minute {
-			addedPenalty := last.Add(d.rerollPenaltyMins)
+		engine.CogLog(d.cog, log.Info()).Msgf(
+			"Applying %v mins penalty on %s",
+			d.rerollPenaltyMins, mem.Username(),
+		)
+		if d.rerollPenaltyMins > 0 {
+			addedPenalty := last.Add(time.Duration(d.rerollPenaltyMins) * time.Minute)
 			if err := d.repo.UpdateRerollPenalty(mem, addedPenalty); err != nil {
 				return nil, err
 			}
@@ -165,7 +180,7 @@ func (d *domain) HasColourRole(mem IDomainMember) bool {
 }
 
 func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
-	expectName := d.getColourRoleName(mem)
+	expectName := d.GetColourRoleName(mem)
 	who := mem.Username()
 	for _, role := range mem.Roles() {
 		if role.Name() == expectName {
@@ -176,13 +191,13 @@ func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
 	return nil
 }
 
-func (d *domain) getColourRoleName(mem IDomainMember) string {
+func (d *domain) GetColourRoleName(mem IDomainMember) string {
 	roleName := mem.Username()
 	return roleName
 }
 
 func (d *domain) CreateColourRole(s IDomainSession, mem IDomainMember, colour *Colour) (IDomainRole, error) {
-	roleName := d.getColourRoleName(mem)
+	roleName := d.GetColourRoleName(mem)
 	guildID := mem.Guild().ID()
 
 	// Create role

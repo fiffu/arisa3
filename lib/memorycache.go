@@ -24,7 +24,8 @@ type cacheRecord struct {
 }
 
 func NewMemoryCache() ICache {
-	return new(memoryCache)
+	cache := memoryCache(make(map[string]*cacheRecord))
+	return &cache
 }
 
 func (c *memoryCache) Peek(key string) (ICacheable, bool) {

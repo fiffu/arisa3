@@ -161,21 +161,19 @@ func (d *domain) Unfreeze(mem IDomainMember) error {
 
 func (d *domain) HasColourRole(mem IDomainMember) bool {
 	hasRole := d.GetColourRole(mem) != nil
-	have := "has"
-	if !hasRole {
-		have = "does not have"
-	}
-	engine.CogLog(d.cog, log.Info()).Msgf("%s %s colour role", mem.Username(), have)
 	return hasRole
 }
 
 func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
 	expectName := d.getColourRoleName(mem)
+	who := mem.Username()
 	for _, role := range mem.Roles() {
 		if role.Name() == expectName {
+			engine.CogLog(d.cog, log.Info()).Msgf("%s has colour role (%s)", who, expectName)
 			return role
 		}
 	}
+	engine.CogLog(d.cog, log.Info()).Msgf("%s doesn't have colour role (expected: %s)", who, expectName)
 	return nil
 }
 

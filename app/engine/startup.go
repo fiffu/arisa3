@@ -125,7 +125,7 @@ func runMigrations(cog IRepository, db database.IDatabase) error {
 	dir := cog.MigrationsDir()
 	files, err := ioutil.ReadDir(dir)
 	registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-		"Migrations found (count: %d) at: %s ()", len(files), dir,
+		"Migrations found (count: %d) at: %s", len(files), dir,
 	)
 	if err != nil {
 		return err

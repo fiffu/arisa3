@@ -24,7 +24,7 @@ type IDatabase interface {
 	Begin() (ITransaction, error)
 
 	// Migrate executes a schema for database migration.
-	Migrate(ISchema) error
+	Migrate(ISchema) (executed bool, err error)
 
 	// ParseMigration is a helper function for reading migrations.
 	ParseMigration(filepath string) (ISchema, error)

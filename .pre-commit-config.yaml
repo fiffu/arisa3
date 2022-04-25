@@ -1,13 +1,19 @@
- fail_fast: true
- repos:
- - repo: 'git://github.com/dnephin/pre-commit-golang'
-   rev: v0.4.0
-   hooks:
-  #  - id: go-fmt
-   - id: go-unit-tests
-   - id: golangci-lint
- - repo: 'https://github.com/pre-commit/pre-commit-hooks'
-   rev: v2.3.0
-   hooks:
-   - id: trailing-whitespace
-   - id: check-yaml
+fail_fast: true
+repos:
+- repo: local
+  hooks:
+  - id: go-generate
+    name: go generate
+    entry: go generate ./...
+    language: system
+    pass_filenames: false
+- repo: 'git://github.com/dnephin/pre-commit-golang'
+  rev: v0.4.0
+  hooks:
+  - id: go-unit-tests
+  - id: golangci-lint
+- repo: 'https://github.com/pre-commit/pre-commit-hooks'
+  rev: v2.3.0
+  hooks:
+  - id: trailing-whitespace
+  - id: check-yaml

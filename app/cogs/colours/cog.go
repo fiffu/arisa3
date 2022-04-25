@@ -55,7 +55,7 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 		NewRepository(c.db),
 		c.cfg,
 	)
-	engine.CogLog(c, log.Info()).Msgf("Config and domain loaded")
+	engine.CogLog(c, log.Info()).Msgf("IColoursDomain loaded")
 	return nil
 }
 

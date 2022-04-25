@@ -46,7 +46,7 @@ func SetupCogs(ctx context.Context, app types.IApp) error {
 		}
 		engine.StartupLog(log.Info()).
 			Str(types.CtxCog, c.Name()).
-			Msg("Cog started")
+			Msgf("⚙️  %s cog init complete", c.Name())
 	}
 	return nil
 }

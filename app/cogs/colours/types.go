@@ -45,7 +45,7 @@ func (c *Colour) scale255() (r, g, b int) {
 
 func (c *Colour) ToDecimal() int {
 	r, g, b := c.scale255()
-	return r<<16 + g<<8 + b
+	return (r << 16) + (g << 8) + b
 }
 
 // ToHexcode returns the Colour in HTML-encoded hexcode.

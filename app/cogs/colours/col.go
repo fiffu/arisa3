@@ -3,7 +3,9 @@ package colours
 import (
 	"fmt"
 
+	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/rs/zerolog/log"
 )
 
 func (c *Cog) colCommand() *types.Command {
@@ -32,13 +34,14 @@ func (c *Cog) col(req types.ICommandEvent) error {
 
 	// reroll here
 	newColour, err := c.domain.Reroll(s, mem)
+	engine.CommandLog(c, req, log.Info()).Msgf("Generated colour: %+v", newColour)
 	if err != nil {
 		return err
 	}
 
 	r, g, b := newColour.scale255()
 	hex := newColour.ToHexcode()
-	title := fmt.Sprintf("%s · rgb(%d, %d, %d)", hex, r, g, b)
+	title := fmt.Sprintf("#%s · rgb(%d, %d, %d)", hex, r, g, b)
 	embed := types.NewEmbed().Title(title).Color(newColour.ToDecimal())
 
 	return req.Respond(

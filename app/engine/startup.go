@@ -57,6 +57,10 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		return bootError(ErrCogNotBootable)
 	}
 
+	registryLog(log.Info()).Msgf(
+		"🥾 %s cog is booting", cog.Name(),
+	)
+
 	// Parse config
 	cfg := cog.ConfigPointer()
 	if err := ParseConfig(rawConfig, cfg); err != nil {
@@ -83,7 +87,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 	if rcog, ok := c.(IRepository); ok {
 		db := app.Database()
 		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-			"Running migrations",
+			"Migrations starting",
 		)
 		if err := runMigrations(rcog, db); err != nil {
 			registryLog(log.Error()).Err(err).Str(types.CtxCog, cog.Name()).Msgf(
@@ -100,7 +104,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		}
 	} else {
 		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-			"Skipping migrations (interface assert failed)",
+			"Migrations skipped (no migration interface found)",
 		)
 	}
 
@@ -121,21 +125,29 @@ func runMigrations(cog IRepository, db database.IDatabase) error {
 	dir := cog.MigrationsDir()
 	files, err := ioutil.ReadDir(dir)
 	registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-		"Looking migrations in: %s (found %d files)", dir, len(files),
+		"Migrations found (count: %d) at: %s", len(files), dir,
 	)
 	if err != nil {
 		return err
 	}
+
+	migratedCount := 0
 	for _, file := range files {
 		path := filepath.Join(dir, file.Name())
 		schema, err := db.ParseMigration(path)
 		if err != nil {
 			return err
 		}
-		if err := db.Migrate(schema); err != nil {
+		executed, err := db.Migrate(schema)
+		if err != nil {
 			return err
+		} else if executed {
+			migratedCount += 1
 		}
 	}
+	registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
+		"Migrations complete (total executed: %d)", migratedCount,
+	)
 	return nil
 }
 

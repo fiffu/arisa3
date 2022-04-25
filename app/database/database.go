@@ -9,7 +9,7 @@ var (
 )
 
 // IDatabase describes the interface of a database client.
-//go:generate mockgen -source=database.go -destination=./mock_database/mock_database.go
+//go:generate mockgen -source=database.go -destination=./database_mock.go -package=database
 type IDatabase interface {
 	// Close closes the database client.
 	Close() error
@@ -24,7 +24,7 @@ type IDatabase interface {
 	Begin() (ITransaction, error)
 
 	// Migrate executes a schema for database migration.
-	Migrate(ISchema) error
+	Migrate(ISchema) (executed bool, err error)
 
 	// ParseMigration is a helper function for reading migrations.
 	ParseMigration(filepath string) (ISchema, error)

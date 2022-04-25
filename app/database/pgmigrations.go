@@ -66,31 +66,34 @@ func (c *pgclient) seedMigration() error {
 }
 
 // Migrate executes a migration and records it in the migrations table.
-func (c *pgclient) Migrate(schema ISchema) error {
+func (c *pgclient) Migrate(schema ISchema) (bool, error) {
 	if _, ok := c.existingMigrations[schema.Version()]; ok {
-		return nil
+		return false, nil
 	}
 	log.Info().Msgf("Executing migration %s (%s)", schema.Version(), schema.Source())
 	txn, err := c.pool.Begin()
 	if err != nil {
-		return err
+		return false, err
 	}
 	for _, q := range schema.Queries() {
 		if _, err := txn.Exec(q); err != nil {
 			if err := txn.Rollback(); err != nil {
-				return err
+				return false, err
 			}
-			return err
+			return false, err
 		}
 	}
 	query := "INSERT INTO _schema_migrations (version) VALUES ($1);"
 	if _, err := txn.Exec(query, schema.Version()); err != nil {
 		if err := txn.Rollback(); err != nil {
-			return err
+			return false, err
 		}
-		return err
+		return false, err
 	}
-	return txn.Commit()
+	if err := txn.Commit(); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // ParseMigration implements parsing of files into sqlSchema.

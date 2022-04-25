@@ -8,6 +8,7 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
+	"github.com/rs/zerolog/log"
 
 	dgo "github.com/bwmarrin/discordgo"
 )
@@ -44,15 +45,18 @@ func NewCog(a types.IApp) types.ICog {
 func (c *Cog) Name() string                       { return "colours" }
 func (c *Cog) ConfigPointer() types.StructPointer { return &Config{} }
 func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
-	if config, ok := cfg.(*Config); ok {
-		c.cfg = config
-		return nil
+	config, ok := cfg.(*Config)
+	if !ok {
+		return engine.UnexpectedConfigType(c.ConfigPointer(), cfg)
 	}
+	c.cfg = config
 	c.domain = NewColoursDomain(
+		c,
 		NewRepository(c.db),
 		c.cfg,
 	)
-	return engine.UnexpectedConfigType(c.ConfigPointer(), cfg)
+	engine.CogLog(c, log.Info()).Msgf("IColoursDomain loaded")
+	return nil
 }
 
 func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.CogConfig) error {

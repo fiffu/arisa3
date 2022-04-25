@@ -38,14 +38,14 @@ type Colour struct {
 func (c *Colour) scale255() (r, g, b int) {
 	delta := 1 / 512.0 // to make truncation round to nearest number instead of flooring
 	r = int((c.R + delta) * 255)
-	g = int((c.R + delta) * 255)
-	b = int((c.R + delta) * 255)
+	g = int((c.G + delta) * 255)
+	b = int((c.B + delta) * 255)
 	return
 }
 
 func (c *Colour) ToDecimal() int {
 	r, g, b := c.scale255()
-	return r<<16 + g<<8 + b
+	return (r << 16) + (g << 8) + b
 }
 
 // ToHexcode returns the Colour in HTML-encoded hexcode.
@@ -271,7 +271,7 @@ func NewDomainMember(mem *discordgo.Member, roles []IDomainRole) IDomainMember {
 func (m *member) Guild() IDomainGuild          { return NewDomainGuild(m.mem.GuildID) }
 func (m *member) UserID() string               { return m.mem.User.ID }
 func (m *member) Nick() string                 { return m.mem.Nick }
-func (m *member) Username() string             { return m.mem.User.Username + m.mem.User.Discriminator }
+func (m *member) Username() string             { return m.mem.User.Username + "#" + m.mem.User.Discriminator }
 func (m *member) Roles() []IDomainRole         { return m.roles }
 func (m *member) CacheKey() string             { return m.UserID() }
 func (m *member) CacheData() interface{}       { return m }

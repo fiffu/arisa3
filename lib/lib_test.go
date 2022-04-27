@@ -60,6 +60,45 @@ func Test_MustGetCallerDir(t *testing.T) {
 	assert.Equal(t, expect, actual)
 }
 
+func Test_Clamper(t *testing.T) {
+	type testCase struct {
+		lo, hi, num, expect float64
+	}
+	for _, tc := range []testCase{
+		{0, 1, 3, 1},        // +ve, overflow
+		{0, 1, 0.5, 0.5},    // +ve, neutral
+		{0, 1, -3, 0},       // +ve, underflow
+		{-1, 0, -3, -1},     // -ve, underflow
+		{-1, 0, -0.5, -0.5}, // -ve, neutral
+		{-1, 0, 3, 0},       // -ve, overflow
+		{-1, 1, 3, 1},       // crossing signs, overflow
+		{-1, 1, 0.5, 0.5},   // crossing signs, neutral
+		{-1, 1, -3, -1},     // crossing signs, underflow
+	} {
+		clamp := Clamper(tc.lo, tc.hi)
+		actual := clamp(tc.num)
+		assert.Equal(t, tc.expect, actual)
+	}
+}
+
+func Test_UniformRange(t *testing.T) {
+	type testCase struct {
+		lo, hi float64
+	}
+	for _, tc := range []testCase{
+		{0, 1},
+		{2, 3},
+		{-2, -1},
+		{-1, 1},
+	} {
+		for i := 0; i < 10000; i++ {
+			out := UniformRange(tc.lo, tc.hi)
+			assert.LessOrEqual(t, tc.lo, out)
+			assert.GreaterOrEqual(t, tc.hi, out)
+		}
+	}
+}
+
 func Test_ChooseString(t *testing.T) {
 	choices := []string{"a", "b"}
 	outcome := make(map[string]bool)
@@ -81,13 +120,4 @@ func Test_ChooseBool(t *testing.T) {
 		outcome[choice] = true
 	}
 	assert.Len(t, outcome, 2)
-}
-
-func Test_DecimalToRGB(t *testing.T) {
-	// ffff00
-	num := 255<<16 + 255<<8 + 0
-	r, g, b := DecimalToRGB(num)
-	assert.Equal(t, 1.0, r)
-	assert.Equal(t, 1.0, g)
-	assert.Equal(t, 0.0, b)
 }

@@ -4,7 +4,6 @@ package colours
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -29,71 +28,6 @@ var NoState = &ColourState{}
 
 // Never indicates that user has state within the domain, but no records for the given Reason.
 var Never = time.Time{} // the zero value
-
-// Colour encodes a Colour Role's RGB value.
-type Colour struct {
-	R, G, B float64
-}
-
-func (c *Colour) scale255() (r, g, b int) {
-	delta := 1 / 512.0 // to make truncation round to nearest number instead of flooring
-	r = int((c.R + delta) * 255)
-	g = int((c.G + delta) * 255)
-	b = int((c.B + delta) * 255)
-	return
-}
-
-func (c *Colour) ToDecimal() int {
-	r, g, b := c.scale255()
-	return (r << 16) + (g << 8) + b
-}
-
-// ToHexcode returns the Colour in HTML-encoded hexcode.
-func (c *Colour) ToHexcode() string {
-	// Stolen from https://github.com/gerow/go-color/blob/master/color.go
-	r, g, b := c.scale255()
-	return fmt.Sprintf(
-		"%02x%02x%02x",
-		byte(r), byte(g), byte(b),
-	)
-}
-
-func (c *Colour) FromDecimal(colour int) *Colour {
-	r, g, b := lib.DecimalToRGB(colour)
-	return &Colour{r, g, b}
-}
-
-// FromHSV returns a new instance of Colour, converting from HSV input to RGB colour space.
-func (c *Colour) FromHSV(h, s, v float64) *Colour {
-	r, g, b := lib.HSVtoRGB(h, s, v)
-	return &Colour{r, g, b}
-}
-
-// Random returns a new instance of Colour with freshly-seeded values.
-func (c *Colour) Random() *Colour {
-	return c.FromHSV(
-		lib.UniformRange(0, 1),       // any hue
-		lib.UniformRange(0.55, 0.85), // less variation on saturation
-		lib.UniformRange(0.50, 0.90), // more variation on lightness
-	)
-}
-
-// Nudge returns a copy of the current Colour with very slightly adjusted values.
-func (c *Colour) Nudge() *Colour {
-	step := func() float64 {
-		distance := lib.UniformRange(0.08, 0.15)
-		if lib.ChooseBool() {
-			distance *= -1
-		}
-		return distance
-	}
-	clamp := lib.Clamper(0, 1)
-	return &Colour{
-		clamp(c.R + step()),
-		clamp(c.G + step()),
-		clamp(c.B + step()),
-	}
-}
 
 // ColourState models a participant's state in the Colour Roles domain.
 type ColourState struct {

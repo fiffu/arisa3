@@ -121,3 +121,13 @@ func Test_ChooseBool(t *testing.T) {
 	}
 	assert.Len(t, outcome, 2)
 }
+
+func Test_ContainsStr(t *testing.T) {
+	abcList := []string{"a", "b", "c"}
+	list := []string{}
+	for _, abc := range abcList {
+		assert.True(t, ContainsStr(abcList, abc))
+		assert.False(t, ContainsStr(abcList, "xyz"))
+		assert.False(t, ContainsStr(list, abc))
+	}
+}

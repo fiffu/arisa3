@@ -12,7 +12,7 @@ type IEmbed interface {
 	Title(string) IEmbed
 	Description(string) IEmbed
 	Timestamp(time.Time) IEmbed
-	Color(int) IEmbed
+	Colour(int) IEmbed
 	Image(url string) IEmbed
 	Video(url string) IEmbed
 	Thumbnail(url string) IEmbed
@@ -42,7 +42,7 @@ func (e *embed) URL(s string) IEmbed          { e.d.URL = s; return e }
 func (e *embed) Title(s string) IEmbed        { e.d.Title = s; return e }
 func (e *embed) Description(s string) IEmbed  { e.d.Description = s; return e }
 func (e *embed) Timestamp(t time.Time) IEmbed { e.d.Timestamp = t.Format(time.RFC3339); return e }
-func (e *embed) Color(i int) IEmbed           { e.d.Color = i; return e }
+func (e *embed) Colour(i int) IEmbed          { e.d.Color = i; return e }
 
 // Complex setters
 

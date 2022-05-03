@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +10,7 @@ import (
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/envconfig"
+	"github.com/mitchellh/mapstructure"
 
 	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
@@ -161,11 +161,7 @@ func ParseConfig(in types.CogConfig, out types.StructPointer) error {
 	if out == nil {
 		return nil
 	}
-	bytes, err := json.Marshal(in)
-	if err != nil {
-		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
-	}
-	err = json.Unmarshal(bytes, out)
+	err := mapstructure.Decode(in, out)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrCogParseConfig, err)
 	}

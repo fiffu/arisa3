@@ -23,7 +23,7 @@ func (d testDependencyInjector) Bot(token string) (*discordgo.Session, error) {
 
 func Test_newApp(t *testing.T) {
 	mustWriteFile(testConfigFileName, testConfigFileContents)
-	defer mustDeleteFile(testConfigFileName)
+	defer deleteFile(testConfigFileName)
 	configPath := mustFindFile(testConfigFileName)
 
 	ctrl := gomock.NewController(t)

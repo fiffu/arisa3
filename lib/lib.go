@@ -71,3 +71,12 @@ func ChooseBool() bool {
 	n := rand.Intn(2)
 	return n == 0
 }
+
+func ContainsStr(list []string, str string) bool {
+	for _, s := range list {
+		if s == str {
+			return true
+		}
+	}
+	return false
+}

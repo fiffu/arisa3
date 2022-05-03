@@ -160,9 +160,9 @@ func (s *session) GuildRoleCreate(guildID string) (roleID string, err error) {
 	return role.ID, nil
 }
 
-func (s *session) GuildRoleEdit(guildID, roleID, name string, color int) error {
+func (s *session) GuildRoleEdit(guildID, roleID, name string, colour int) error {
 	_, err := s.sess.GuildRoleEdit(
-		guildID, roleID, name, color,
+		guildID, roleID, name, colour,
 		false, 0, false,
 	)
 	if err != nil {

@@ -51,7 +51,7 @@ type IDomainSession interface {
 	GuildRole(guildID, roleID string) (IDomainRole, error)
 	GuildRoles(guildID string) ([]IDomainRole, error)
 	GuildRoleCreate(guildID string) (roleID string, err error)
-	GuildRoleEdit(guildID, roleID, name string, color int) error
+	GuildRoleEdit(guildID, roleID, name string, colour int) error
 	GuildRoleReorder(guildID string, roles []IDomainRole) error
 }
 

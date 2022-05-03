@@ -11,3 +11,6 @@ cogs:
     mutate_cooldown_mins: 240
     reroll_cooldown_mins: 720
     reroll_penalty_mins: 30
+  cardboard:
+    user: username
+    api_key: apikey

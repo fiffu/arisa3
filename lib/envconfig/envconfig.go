@@ -56,7 +56,7 @@ func MergeEnvVars(structPtr interface{}, prefix string) (map[string]reflect.Stru
 
 		tagged := fldType.Tag.Get(ExpectStructTag)
 		if tagged == "" {
-			// field has no "fromenv" tag
+			// field has no "envvar" tag
 			continue
 		}
 

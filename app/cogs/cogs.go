@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/fiffu/arisa3/app/cogs/cardboard"
 	"github.com/fiffu/arisa3/app/cogs/colours"
 	"github.com/fiffu/arisa3/app/cogs/general"
 	"github.com/fiffu/arisa3/app/cogs/rng"
@@ -24,6 +25,7 @@ func getCogsList(app types.IApp) []types.ICog {
 		general.NewCog(app),
 		rng.NewCog(app),
 		colours.NewCog(app),
+		cardboard.NewCog(app),
 	}
 }
 

@@ -33,16 +33,16 @@ func mustWriteFile(name, contents string) {
 	}
 }
 
-func mustDeleteFile(name string) {
+func deleteFile(name string) {
 	targetFile := filepath.Join(testDir, string(name))
 	if err := os.Remove(targetFile); err != nil {
-		panic("failed to delete " + targetFile + "err: " + err.Error())
+		fmt.Println("ignoring error trying to delete " + targetFile + "err: " + err.Error())
 	}
 }
 
 func Test_Configure(t *testing.T) {
 	mustWriteFile(testConfigFileName, testConfigFileContents)
-	defer mustDeleteFile(testConfigFileName)
+	defer deleteFile(testConfigFileName)
 	path := mustFindFile(testConfigFileName)
 
 	cfg, err := Configure(path)

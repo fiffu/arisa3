@@ -31,10 +31,10 @@ func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) erro
 	for _, cmd := range cmds {
 		appID := s.State.User.ID
 		data := cmd.Data()
+		registryLog(log.Info()).Msgf("Binding command /%s", cmd.Name())
 		if _, err := s.ApplicationCommandCreate(appID, "", data); err != nil {
 			return err
 		}
-		registryLog(log.Info()).Msgf("Binding command /%s", cmd.Name())
 		r.cmds[cmd.Name()] = cmd
 	}
 	return nil

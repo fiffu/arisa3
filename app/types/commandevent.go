@@ -1,5 +1,7 @@
 package types
 
+//go:generate mockgen -source=commandevent.go -destination=./commandevent_mock.go -package=types
+
 import (
 	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"

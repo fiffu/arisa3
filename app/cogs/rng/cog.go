@@ -33,6 +33,7 @@ func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
 		s,
 		c.rollCommand(),
 		c.eightBallCommand(),
+		c.pokiesCommand(),
 	)
 	if err != nil {
 		return err

@@ -1,5 +1,7 @@
 package types
 
+//go:generate mockgen -source=commandargs.go -destination=./commandargs_mock.go -package=types
+
 import (
 	dgo "github.com/bwmarrin/discordgo"
 )
@@ -37,7 +39,11 @@ func (a *args) fetch(key string) interface{} {
 	}
 	return nil
 }
-func (a *args) Int(key string) (int, bool)       { v, ok := a.fetch(key).(int); return v, ok }
+func (a *args) Int(key string) (int, bool) {
+	v := a.fetch(key)
+	vf, ok := v.(float64) // discordgo returns as float64
+	return int(vf), ok
+}
 func (a *args) Float(key string) (float64, bool) { v, ok := a.fetch(key).(float64); return v, ok }
 func (a *args) String(key string) (string, bool) { v, ok := a.fetch(key).(string); return v, ok }
 func (a *args) Bool(key string) (bool, bool)     { v, ok := a.fetch(key).(bool); return v, ok }

@@ -12,7 +12,9 @@ import (
 )
 
 const (
-	PokiesSize = "grid_size"
+	PokiesSize        = "grid_size"
+	pokiesDefaultRows = 1
+	pokiesDefaultCols = 3
 )
 
 func (c *Cog) pokiesCommand() *types.Command {
@@ -48,14 +50,16 @@ func (c *Cog) pokies(req types.ICommandEvent) error {
 }
 
 func parseGrid(req types.ICommandEvent) (rows int, cols int, tooBig bool) {
-	rows, cols = 1, 3
+	rows, cols = pokiesDefaultRows, pokiesDefaultCols
 	if size, ok := req.Args().Int(PokiesSize); ok {
 		if size > 9 {
 			tooBig = true
 			return
 		}
-		rows = size
-		cols = size
+		if size > 0 {
+			rows = size
+			cols = size
+		}
 	}
 	return
 }

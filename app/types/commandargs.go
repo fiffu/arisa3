@@ -1,5 +1,7 @@
 package types
 
+//go:generate mockgen -source=commandargs.go -destination=./commandargs_mock.go -package=types
+
 import (
 	dgo "github.com/bwmarrin/discordgo"
 )

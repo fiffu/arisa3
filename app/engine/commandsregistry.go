@@ -70,8 +70,6 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	commandName := i.ApplicationCommandData().Name
 	cmd, ok := r.cmds[commandName]
 	if !ok {
-		// log.Info().Msgf("%+v", r.cmds)
-		// err = fmt.Errorf("%w: %s", errUnrecognisedInteraction, commandName)
 		return
 	}
 
@@ -138,6 +136,6 @@ func parseArgs(cmd types.ICommand, args []*dgo.ApplicationCommandInteractionData
 			mapping[opt] = arg
 		}
 	}
-	registryLog(log.Debug()).Str(types.CtxCommand, cmd.Name()).Msgf("Parsed options: %v", args)
+	registryLog(log.Info()).Str(types.CtxCommand, cmd.Name()).Msgf("Parsed options: %v", args)
 	return types.NewArgs(cmd, mapping)
 }

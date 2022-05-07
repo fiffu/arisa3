@@ -5,18 +5,21 @@ import (
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/lib"
 
 	dgo "github.com/bwmarrin/discordgo"
 )
 
 // Cog implements ICog and IDefaultStartup
 type Cog struct {
-	commands *engine.CommandsRegistry
+	commands    *engine.CommandsRegistry
+	pokiesCache lib.ICache
 }
 
 func NewCog(a types.IApp) types.ICog {
 	return &Cog{
-		commands: engine.NewCommandRegistry(),
+		commands:    engine.NewCommandRegistry(),
+		pokiesCache: lib.NewMemoryCache(),
 	}
 }
 

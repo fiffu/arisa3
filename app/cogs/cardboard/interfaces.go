@@ -14,6 +14,11 @@ type Filter func(posts []*api.Post) []*api.Post
 type IDomain interface {
 	PostsSearch(IQueryPosts) ([]*api.Post, error)
 	PostsResult(IQueryPosts, []*api.Post) (types.IEmbed, error)
+
+	PromoteTag(tagName string) error
+	DemoteTag(tagName string) error
+	OmitTag(tagName string) error
+	AliasTag(actual, alias string) error
 }
 
 // IQueryPosts is the interface of a query for posts, interpreted within the domain (not the API)

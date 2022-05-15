@@ -35,6 +35,48 @@ func (m *MockIDomain) EXPECT() *MockIDomainMockRecorder {
 	return m.recorder
 }
 
+// AliasTag mocks base method.
+func (m *MockIDomain) AliasTag(actual, alias string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AliasTag", actual, alias)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AliasTag indicates an expected call of AliasTag.
+func (mr *MockIDomainMockRecorder) AliasTag(actual, alias interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AliasTag", reflect.TypeOf((*MockIDomain)(nil).AliasTag), actual, alias)
+}
+
+// DemoteTag mocks base method.
+func (m *MockIDomain) DemoteTag(tagName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DemoteTag", tagName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DemoteTag indicates an expected call of DemoteTag.
+func (mr *MockIDomainMockRecorder) DemoteTag(tagName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DemoteTag", reflect.TypeOf((*MockIDomain)(nil).DemoteTag), tagName)
+}
+
+// OmitTag mocks base method.
+func (m *MockIDomain) OmitTag(tagName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OmitTag", tagName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OmitTag indicates an expected call of OmitTag.
+func (mr *MockIDomainMockRecorder) OmitTag(tagName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OmitTag", reflect.TypeOf((*MockIDomain)(nil).OmitTag), tagName)
+}
+
 // PostsResult mocks base method.
 func (m *MockIDomain) PostsResult(arg0 IQueryPosts, arg1 []*api.Post) (types.IEmbed, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +105,20 @@ func (m *MockIDomain) PostsSearch(arg0 IQueryPosts) ([]*api.Post, error) {
 func (mr *MockIDomainMockRecorder) PostsSearch(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostsSearch", reflect.TypeOf((*MockIDomain)(nil).PostsSearch), arg0)
+}
+
+// PromoteTag mocks base method.
+func (m *MockIDomain) PromoteTag(tagName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PromoteTag", tagName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PromoteTag indicates an expected call of PromoteTag.
+func (mr *MockIDomainMockRecorder) PromoteTag(tagName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PromoteTag", reflect.TypeOf((*MockIDomain)(nil).PromoteTag), tagName)
 }
 
 // MockIQueryPosts is a mock of IQueryPosts interface.

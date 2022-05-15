@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 
+	"github.com/fiffu/arisa3/app/commandfilters"
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
@@ -63,11 +64,21 @@ func (c *Cog) MigrationsDir() string {
 }
 
 func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
+	requireGuildAdmin := commandfilters.NewMiddleware(commandfilters.IsGuildAdmin).
+		Asserts("Only server admins can use this command!")
+
 	err := c.commands.Register(
 		s,
+		// commands to fetch posts
 		c.danCommand(),
 		c.cuteCommand(),
 		c.lewdCommand(),
+
+		// commands to set tag ops
+		requireGuildAdmin(c.promoteCommand()),
+		requireGuildAdmin(c.demoteCommand()),
+		requireGuildAdmin(c.omitCommand()),
+		requireGuildAdmin(c.aliasCommand()),
 	)
 	if err != nil {
 		return err

@@ -33,7 +33,8 @@ func (q *queryPosts) SetTerm(s string) { q.term = s }
 
 // Method-chaining builder.
 
-func (q *queryPosts) SetNoMagic() *queryPosts           { q.magic = false; return q }
-func (q *queryPosts) SetSafe() *queryPosts              { q.rating = tagRatingSafe; return q }
-func (q *queryPosts) SetUnsafe() *queryPosts            { q.rating = tagRatingUnsafe; return q }
-func (q *queryPosts) SetGuildID(gid string) *queryPosts { q.guildID = gid; return q }
+func (q *queryPosts) WithMagic() *queryPosts             { q.magic = true; return q }
+func (q *queryPosts) WithNoMagic() *queryPosts           { q.magic = false; return q }
+func (q *queryPosts) WithSafe() *queryPosts              { q.rating = tagRatingSafe; return q }
+func (q *queryPosts) WithUnsafe() *queryPosts            { q.rating = tagRatingUnsafe; return q }
+func (q *queryPosts) WithGuildID(gid string) *queryPosts { q.guildID = gid; return q }

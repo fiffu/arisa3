@@ -45,7 +45,9 @@ func (c *Cog) lewdCommand() *types.Command {
 
 func (c *Cog) dumbSearch(req types.ICommandEvent) error {
 	queryStr, _ := req.Args().String(OptionQuery)
-	query := NewQuery(queryStr).SetNoMagic()
+	query := NewQuery(queryStr).
+		WithNoMagic().
+		WithGuildID(getGuildID(req))
 
 	posts, err := c.domain.PostsSearch(query)
 	if err != nil {
@@ -63,14 +65,14 @@ func (c *Cog) dumbSearch(req types.ICommandEvent) error {
 func (c *Cog) smartSearch(safe bool) types.Handler {
 	return func(req types.ICommandEvent) error {
 		queryStr, _ := req.Args().String(OptionQuery)
-		guildID := getGuildID(req)
 
-		query := NewQuery(queryStr)
-		query.SetGuildID(guildID)
+		query := NewQuery(queryStr).
+			WithMagic().
+			WithGuildID(getGuildID(req))
 		if safe {
-			query.SetSafe()
+			query.WithSafe()
 		} else {
-			query.SetUnsafe()
+			query.WithUnsafe()
 		}
 
 		posts, err := c.domain.PostsSearch(query)

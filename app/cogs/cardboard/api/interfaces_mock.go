@@ -33,6 +33,20 @@ func (m *MockIClient) EXPECT() *MockIClientMockRecorder {
 	return m.recorder
 }
 
+// FaviconURL mocks base method.
+func (m *MockIClient) FaviconURL() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FaviconURL")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// FaviconURL indicates an expected call of FaviconURL.
+func (mr *MockIClientMockRecorder) FaviconURL() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FaviconURL", reflect.TypeOf((*MockIClient)(nil).FaviconURL))
+}
+
 // GetPosts mocks base method.
 func (m *MockIClient) GetPosts(tags []string) ([]*Post, error) {
 	m.ctrl.T.Helper()

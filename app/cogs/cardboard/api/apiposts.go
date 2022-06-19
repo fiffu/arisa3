@@ -56,7 +56,7 @@ func (p *Post) repairURL(url string) string {
 		return ""
 	}
 	if url[:4] != "http" {
-		url = apiHostHTTP + url
+		url = apiHostHTTPS + url
 	}
 
 	// Sometimes url returns with repeated forward slash

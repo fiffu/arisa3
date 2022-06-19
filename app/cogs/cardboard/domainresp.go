@@ -43,7 +43,7 @@ func (d *domain) formatResult(query IQueryPosts, posts []*api.Post) (types.IEmbe
 	term := query.Term()
 	footer := fmt.Sprintf("Matched against tag: " + term)
 	if termTag, ok := tagData[term]; ok {
-		footer = fmt.Sprint(termTag.PostCount)
+		footer += fmt.Sprintf(" (%d)", termTag.PostCount)
 	}
 
 	inline := true

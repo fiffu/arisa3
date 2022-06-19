@@ -12,7 +12,8 @@ import (
 const (
 	WildcardCharacter = "*"
 	apiHost           = "danbooru.donmai.us"
-	apiHostHTTP       = "https://" + apiHost
+	apiHostHTTPS      = "https://" + apiHost
+	faviconPath       = "/favicon.ico"
 )
 
 var (
@@ -48,6 +49,10 @@ func NewClient(username, apiKey string, timeoutSecs int) IClient {
 		apiHost,
 		timeoutSecs,
 	}
+}
+
+func (c *client) FaviconURL() string {
+	return apiHostHTTPS + faviconPath
 }
 
 func commaJoin(strs []string) string {

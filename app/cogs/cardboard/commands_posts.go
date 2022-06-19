@@ -64,7 +64,7 @@ func (c *Cog) dumbSearch(req types.ICommandEvent) error {
 
 func (c *Cog) smartSearch(safe bool) types.Handler {
 	return func(req types.ICommandEvent) error {
-		queryStr, _ := req.Args().String(OptionQuery)
+		queryStr, _ := req.Args().String(OptionTag)
 
 		query := NewQuery(queryStr).
 			WithMagic().

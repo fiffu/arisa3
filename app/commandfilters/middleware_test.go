@@ -19,7 +19,7 @@ func Panic(types.ICommandEvent) bool {
 	panic("oh no")
 }
 
-func Test(t *testing.T) {
+func Test_Middleware(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		mw     *Middleware

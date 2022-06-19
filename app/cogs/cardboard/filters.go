@@ -22,8 +22,8 @@ func (h *opsHelper) hasOperation(post *api.Post, hasOper TagOperation) bool {
 	return false
 }
 
-func (h *opsHelper) gatherByOperation(posts []*api.Post, oper TagOperation) ([]*api.Post, []*api.Post) {
-	gathered := make([]*api.Post, 0)
+func (h *opsHelper) gatherByOperation(posts []*api.Post, oper TagOperation) (gathered, remaining []*api.Post) {
+	gathered = make([]*api.Post, 0)
 	for i, post := range posts {
 		if h.hasOperation(post, oper) {
 			gathered = append(gathered, post)
@@ -34,7 +34,8 @@ func (h *opsHelper) gatherByOperation(posts []*api.Post, oper TagOperation) ([]*
 			}
 		}
 	}
-	return gathered, posts
+	remaining = posts
+	return /* gathered, remaining */
 }
 
 func postsFilter(predicate func(*api.Post) bool) Filter {
@@ -51,22 +52,22 @@ func postsFilter(predicate func(*api.Post) bool) Filter {
 
 func PromoteFilter(h *opsHelper) Filter {
 	return func(posts []*api.Post) []*api.Post {
-		gathered, posts := h.gatherByOperation(posts, Promote)
-		return append(gathered, posts...)
+		gathered, remaining := h.gatherByOperation(posts, Promote)
+		return append(gathered, remaining...)
 	}
 }
 
 func DemoteFilter(h *opsHelper) Filter {
 	return func(posts []*api.Post) []*api.Post {
-		gathered, posts := h.gatherByOperation(posts, Demote)
-		return append(posts, gathered...)
+		gathered, remaining := h.gatherByOperation(posts, Demote)
+		return append(gathered, remaining...)
 	}
 }
 
 func OmitFilter(h *opsHelper) Filter {
 	return func(posts []*api.Post) []*api.Post {
-		_, posts = h.gatherByOperation(posts, Omit)
-		return posts
+		_, remaining := h.gatherByOperation(posts, Omit)
+		return remaining
 	}
 }
 

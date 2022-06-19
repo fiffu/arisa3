@@ -6,14 +6,17 @@ import (
 )
 
 const (
-	Query = "query"
+	OptionQuery = "query"
+	OptionTag   = "tag"
 )
 
 func (c *Cog) danCommand() *types.Command {
 	return types.NewCommand("dan").ForChat().
 		Desc("Search the booru with the exact query, no aliases, no result filter.").
 		Options(
-			types.NewOption(Query).String().Required(),
+			types.NewOption(OptionQuery).
+				Desc("exact search query").
+				String().Required(),
 		).
 		Handler(c.dumbSearch)
 }
@@ -22,7 +25,9 @@ func (c *Cog) cuteCommand() *types.Command {
 	return types.NewCommand("cute").ForChat().
 		Desc("Finds a cute picture with the given tag (spaces convert to _).").
 		Options(
-			types.NewOption(Query).String().Required(),
+			types.NewOption(OptionTag).
+				Desc("tag to search").
+				String().Required(),
 		).
 		Handler(c.smartSearch(true))
 }
@@ -31,14 +36,16 @@ func (c *Cog) lewdCommand() *types.Command {
 	return types.NewCommand("lewd").ForChat().
 		Desc("Finds a LEWD picture with the given tag (spaces convert to _).").
 		Options(
-			types.NewOption(Query).String().Required(),
+			types.NewOption(OptionTag).
+				Desc("tag to search").
+				String().Required(),
 		).
 		Handler(c.smartSearch(false))
 }
 
 func (c *Cog) dumbSearch(req types.ICommandEvent) error {
-	queryStr, _ := req.Args().String(Query)
-	query := NewQuery(queryStr).NoMagic()
+	queryStr, _ := req.Args().String(OptionQuery)
+	query := NewQuery(queryStr).SetNoMagic()
 
 	posts, err := c.domain.PostsSearch(query)
 	if err != nil {
@@ -55,8 +62,11 @@ func (c *Cog) dumbSearch(req types.ICommandEvent) error {
 
 func (c *Cog) smartSearch(safe bool) types.Handler {
 	return func(req types.ICommandEvent) error {
-		queryStr, _ := req.Args().String(Query)
+		queryStr, _ := req.Args().String(OptionQuery)
+		guildID := getGuildID(req)
+
 		query := NewQuery(queryStr)
+		query.SetGuildID(guildID)
 		if safe {
 			query.SetSafe()
 		} else {

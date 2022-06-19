@@ -8,11 +8,13 @@ import (
 
 type Filter func(types.ICommandEvent) bool
 type CommandDecorator func(*types.Command) *types.Command
+type FailureResponse types.ICommandResponse
 
 type opcode int
 
 type Middleware struct {
-	filter Filter
+	filter                   Filter
+	assertionFailureResponse FailureResponse
 }
 
 const (
@@ -20,8 +22,12 @@ const (
 	OR  opcode = 1
 )
 
-func NewMiddleware(f Filter) *Middleware {
-	return &Middleware{f}
+func NewMiddleware(filter Filter) *Middleware {
+	defaultResponse := types.NewResponse().Content("Command failed! Try again later?")
+	return &Middleware{
+		filter,
+		defaultResponse,
+	}
 }
 
 func (mw *Middleware) And(f Filter) *Middleware {
@@ -44,20 +50,24 @@ func (mw *Middleware) Exec(ev types.ICommandEvent) bool {
 	return mw.filter(ev)
 }
 
-func (mw *Middleware) wrapHandler(next types.Handler, message string) types.Handler {
-	return func(ev types.ICommandEvent) error {
-		if ok := mw.Exec(ev); !ok {
-			resp := types.NewResponse().Content(message)
-			return ev.Respond(resp)
-		}
-		return next(ev)
-	}
+func (mw *Middleware) FailureResponse(resp FailureResponse) *Middleware {
+	mw.assertionFailureResponse = resp
+	return mw
 }
 
-func (mw *Middleware) Asserts(message string) CommandDecorator {
+func (mw *Middleware) CommandDecorator() CommandDecorator {
 	return func(cmd *types.Command) *types.Command {
+		// next is the subsequent handler to be called after this handler
 		next := cmd.HandlerFunc()
-		cmd.Handler(mw.wrapHandler(next, message))
+		// assertionHandler calls next() only if Exec() returns true
+		assertionHandler := func(ev types.ICommandEvent) error {
+			if !mw.Exec(ev) {
+				return ev.Respond(mw.assertionFailureResponse)
+			}
+			return next(ev)
+		}
+		// Overwrite command's handler with the assertionHandler
+		cmd.Handler(assertionHandler)
 		return cmd
 	}
 }

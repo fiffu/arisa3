@@ -34,18 +34,18 @@ func (d *domain) PostsResult(query IQueryPosts, posts []*api.Post) (types.IEmbed
 	}
 }
 
-func (d *domain) PromoteTag(tagName string) error {
-	return d.repo.SetPromote(tagName)
+func (d *domain) PromoteTag(guildID, tagName string) error {
+	return d.repo.SetPromote(tagName, guildID)
 }
 
-func (d *domain) DemoteTag(tagName string) error {
-	return d.repo.SetDemote(tagName)
+func (d *domain) DemoteTag(guildID, tagName string) error {
+	return d.repo.SetDemote(tagName, guildID)
 }
 
-func (d *domain) OmitTag(tagName string) error {
-	return d.repo.SetOmit(tagName)
+func (d *domain) OmitTag(guildID, tagName string) error {
+	return d.repo.SetOmit(tagName, guildID)
 }
 
-func (d *domain) AliasTag(actual, alias string) error {
-	return d.repo.SetAlias(Alias(alias), Actual(actual))
+func (d *domain) AliasTag(guildID, actual, alias string) error {
+	return d.repo.SetAlias(guildID, Alias(alias), Actual(actual))
 }

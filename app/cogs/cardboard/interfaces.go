@@ -10,10 +10,23 @@ import (
 type Actual string
 type Alias string
 type Filter func(posts []*api.Post) []*api.Post
+type TagOperation string
+
+const (
+	Promote TagOperation = "promote"
+	Demote  TagOperation = "demote"
+	Omit    TagOperation = "omit"
+	Noop    TagOperation = ""
+)
 
 type IDomain interface {
 	PostsSearch(IQueryPosts) ([]*api.Post, error)
 	PostsResult(IQueryPosts, []*api.Post) (types.IEmbed, error)
+
+	PromoteTag(guildID, tagName string) error
+	DemoteTag(guildID, tagName string) error
+	OmitTag(guildID, tagName string) error
+	AliasTag(guildID, actual, alias string) error
 }
 
 // IQueryPosts is the interface of a query for posts, interpreted within the domain (not the API)
@@ -27,20 +40,20 @@ type IQueryPosts interface {
 	SetTerm(string)
 	// Enumerate tags in the query.
 	Tags() []string
-	// Render tags into a search string.
-	String() string
+	// Optional GuildID that the query originated from.
+	GuildID() string
 }
 
 type IRepository interface {
-	GetAliases() (map[Alias]Actual, error)
-	SetAlias(Alias, Actual) error
+	GetAliases(guildID string) (map[Alias]Actual, error)
+	SetAlias(guildID string, ali Alias, act Actual) error
 
-	GetTagOperations() (map[string]TagOperation, error)
-	GetPromotes() ([]string, error)
-	GetDemotes() ([]string, error)
-	GetOmits() ([]string, error)
+	GetTagOperations(guildID string) (map[string]TagOperation, error)
+	GetPromotes(guildID string) ([]string, error)
+	GetDemotes(guildID string) ([]string, error)
+	GetOmits(guildID string) ([]string, error)
 
-	SetPromote(string) error
-	SetDemote(string) error
-	SetOmit(string) error
+	SetPromote(guildID string, tag string) error
+	SetDemote(guildID string, tag string) error
+	SetOmit(guildID string, tag string) error
 }

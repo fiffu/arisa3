@@ -33,3 +33,19 @@ func (d *domain) PostsResult(query IQueryPosts, posts []*api.Post) (types.IEmbed
 		return d.formatZeroResults(query), nil
 	}
 }
+
+func (d *domain) PromoteTag(guildID, tagName string) error {
+	return d.repo.SetPromote(tagName, guildID)
+}
+
+func (d *domain) DemoteTag(guildID, tagName string) error {
+	return d.repo.SetDemote(tagName, guildID)
+}
+
+func (d *domain) OmitTag(guildID, tagName string) error {
+	return d.repo.SetOmit(tagName, guildID)
+}
+
+func (d *domain) AliasTag(guildID, actual, alias string) error {
+	return d.repo.SetAlias(guildID, Alias(alias), Actual(actual))
+}

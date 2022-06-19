@@ -1,22 +1,36 @@
 package cardboard
 
 import (
+	"strings"
+
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
 	"github.com/rs/zerolog/log"
 )
 
 func (d *domain) boringSearch(q IQueryPosts) ([]*api.Post, error) {
-	return d.client.GetPosts(q.Tags())
+	tags := q.Tags()
+	log.Info().Msgf("Querying for posts tagged='%v'", strings.Join(tags, " "))
+	return d.client.GetPosts(tags)
 }
 
 func (d *domain) magicSearch(q IQueryPosts, tryGuessTerm bool) ([]*api.Post, error) {
-	// Resolve any alias matches
-	term, err := d.findAlias(q)
+	log.Info().Msgf("magicSearch for %+v", q)
+
+	// Resolve any alias matches on the term
+	newTerm, err := d.findAlias(q)
 	if err != nil {
 		// Log the error but don't break the flow
 		log.Error().Err(err).Msgf("Errored while fetching aliases")
 	} else {
-		q.SetTerm(term)
+		log.Info().Msgf("Resolved alias %s -> %s", q.Term(), newTerm)
+		q.SetTerm(newTerm)
+	}
+
+	// Convert spaces in the term into underscores
+	newTerm = taggify(q.Term())
+	if newTerm != q.Term() {
+		log.Info().Msgf("Taggify %s -> %s", q.Term(), newTerm)
+		q.SetTerm(newTerm)
 	}
 
 	// Perform search
@@ -44,7 +58,7 @@ func (d *domain) magicSearch(q IQueryPosts, tryGuessTerm bool) ([]*api.Post, err
 		guess, err := d.guessTag(q)
 		if err != nil {
 			// Log the error then give up
-			log.Error().Err(err).Msgf("Errored while filtering results")
+			log.Error().Err(err).Msgf("Errored while best-guessing query")
 			return posts, nil
 		}
 		if guess == q.Term() {
@@ -52,6 +66,7 @@ func (d *domain) magicSearch(q IQueryPosts, tryGuessTerm bool) ([]*api.Post, err
 			return posts, nil
 		} else {
 			// Retry with guess
+			log.Info().Msgf("magicSearch retrying with guess=%s", guess)
 			q.SetTerm(guess)
 			return d.magicSearch(q, false)
 		}
@@ -63,13 +78,19 @@ func (d *domain) magicSearch(q IQueryPosts, tryGuessTerm bool) ([]*api.Post, err
 }
 
 func (d *domain) filter(q IQueryPosts, posts []*api.Post) ([]*api.Post, error) {
-	opsMapping, err := d.repo.GetTagOperations()
-	if err != nil {
-		return nil, err
+	opsMapping := make(map[string]TagOperation)
+
+	guildID := q.GuildID()
+	if guildID != "" {
+		guildOpsMapping, err := d.repo.GetTagOperations(guildID)
+		if err != nil {
+			return nil, err
+		}
+		opsMapping = guildOpsMapping
 	}
 
 	helper := &opsHelper{opsMapping}
-	filters := []Filter{
+	for _, f := range []Filter{
 		HasMediaFile(),
 		HasURL(),
 		Shuffle(),
@@ -77,32 +98,31 @@ func (d *domain) filter(q IQueryPosts, posts []*api.Post) ([]*api.Post, error) {
 		OmitFilter(helper),
 		PromoteFilter(helper),
 		DemoteFilter(helper),
-	}
-	return applyFilters(posts, filters), nil
-}
-
-func applyFilters(posts []*api.Post, filters []Filter) []*api.Post {
-	for _, filter := range filters {
-		posts = filter(posts)
+	} {
+		posts = f(posts)
 		if len(posts) == 0 {
 			break
 		}
 	}
-	return posts
+	return posts, nil
 }
 
 func (d *domain) findAlias(q IQueryPosts) (string, error) {
 	term := q.Term()
+	aliases := make(map[Alias]Actual)
 
-	aliases, err := d.repo.GetAliases()
-	if err != nil {
-		return term, err
+	guildID := q.GuildID()
+	if guildID != "" {
+		guildAliases, err := d.repo.GetAliases(guildID)
+		if err != nil {
+			return term, err
+		}
+		aliases = guildAliases
 	}
 
 	if actual, ok := aliases[Alias(term)]; ok {
-		term = string(actual)
+		return string(actual), nil
 	}
-
 	return term, nil
 }
 

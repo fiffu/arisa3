@@ -26,7 +26,7 @@ func (d *domain) formatResult(query IQueryPosts, posts []*api.Post) (types.IEmbe
 	}
 	post := posts[0]
 
-	log.Info().Msgf("Generating embed for query=%s post md5=%s", query.String(), post.MD5)
+	log.Info().Msgf("Generating embed for post md5=%s", post.MD5)
 
 	tagData, err := d.client.GetTags(post.TagsList())
 	if err != nil {
@@ -143,11 +143,12 @@ func embedFieldTags(tagNames []string, tagData map[string]*api.Tag) string {
 }
 
 func (d *domain) embedLinks(query IQueryPosts, post *api.Post) string {
+	queryStr := strings.Join(query.Tags(), " ")
 	return fmt.Sprintf(
 		"[pic](%s) · [post](%s) · [search](%s)",
 		post.GetFileURL(),
 		api.GetPostURL(post),
-		api.GetSearchURL(query.String()),
+		api.GetSearchURL(queryStr),
 	)
 }
 
@@ -162,10 +163,7 @@ func splitTags(str string) []string {
 func parseTags(str string) []string {
 	tags := splitTags(str)
 	for i, tag := range tags {
-		tags[i] = strings.ReplaceAll(
-			utils.EscapeMarkdown(tag),
-			"\\_", " ",
-		)
+		tags[i] = utils.EscapeMarkdown(untaggify(tag))
 	}
 	return tags
 }
@@ -182,12 +180,6 @@ func fitString(
 	if totalLength < 0 {
 		totalLength = 9999999
 	}
-
-	// if fmtEach != "%s" {
-	// 	for i, s := range strs {
-	// 		strs[i] = fmt.Sprintf(fmtEach, s)
-	// 	}
-	// }
 
 	joined := join(strs, sep, sepLast)
 	tailCount := 0

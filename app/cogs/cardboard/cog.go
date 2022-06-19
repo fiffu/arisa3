@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 
+	"github.com/fiffu/arisa3/app/commandfilters"
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
@@ -14,6 +15,8 @@ import (
 
 var (
 	migrationsDir = filepath.Join(lib.MustGetCallerDir(), "dbmigrations")
+
+	respRequiresAdmin = types.NewResponse().Content("This command can only be used from a server, by a server admin.")
 )
 
 // Cog implements ICog and IDefaultStartup
@@ -63,11 +66,23 @@ func (c *Cog) MigrationsDir() string {
 }
 
 func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
+
+	adminOnly := commandfilters.NewMiddleware(commandfilters.IsGuildAdmin).
+		FailureResponse(respRequiresAdmin).
+		CommandDecorator()
+
 	err := c.commands.Register(
 		s,
+		// commands to fetch posts
 		c.danCommand(),
 		c.cuteCommand(),
 		c.lewdCommand(),
+
+		// commands to set tag ops
+		adminOnly(c.promoteCommand()),
+		adminOnly(c.demoteCommand()),
+		adminOnly(c.omitCommand()),
+		adminOnly(c.aliasCommand()),
 	)
 	if err != nil {
 		return err

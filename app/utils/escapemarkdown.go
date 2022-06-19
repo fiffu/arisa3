@@ -4,10 +4,11 @@ import (
 	"strings"
 )
 
-func EscapeMarkdown(s string) string {
-	for _, c := range "\\*>_:~`|" {
-		ch := string(c)
-		s = strings.ReplaceAll(s, ch, "\\"+ch)
+func EscapeMarkdown(text string) string {
+	markdownSymbols := "\\*>_:~`|"
+	for _, char := range markdownSymbols {
+		s := string(char)
+		text = strings.ReplaceAll(text, s, "\\"+s)
 	}
-	return s
+	return text
 }

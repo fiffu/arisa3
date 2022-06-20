@@ -18,6 +18,7 @@ var (
 
 	respRequiresGuild = types.NewResponse().Content("This command can only be used from a server.")
 	respRequiresAdmin = types.NewResponse().Content("This command can only be used from a server by a server admin.")
+	respNoAliases     = types.NewResponse().Content("There's no aliases set yet.")
 )
 
 // Cog implements ICog and IDefaultStartup

@@ -23,10 +23,11 @@ type IDomain interface {
 	PostsSearch(IQueryPosts) ([]*api.Post, error)
 	PostsResult(IQueryPosts, []*api.Post) (types.IEmbed, error)
 
-	PromoteTag(guildID, tagName string) error
-	DemoteTag(guildID, tagName string) error
-	OmitTag(guildID, tagName string) error
-	AliasTag(guildID, actual, alias string) error
+	SetPromote(guildID, tagName string) error
+	SetDemote(guildID, tagName string) error
+	SetOmit(guildID, tagName string) error
+	SetAlias(guildID string, alias Alias, actual Actual) error
+	GetAliases(guildID string) (map[Alias]Actual, error)
 }
 
 // IQueryPosts is the interface of a query for posts, interpreted within the domain (not the API)

@@ -35,46 +35,19 @@ func (m *MockIDomain) EXPECT() *MockIDomainMockRecorder {
 	return m.recorder
 }
 
-// AliasTag mocks base method.
-func (m *MockIDomain) AliasTag(guildID, actual, alias string) error {
+// GetAliases mocks base method.
+func (m *MockIDomain) GetAliases(guildID string) (map[Alias]Actual, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AliasTag", guildID, actual, alias)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "GetAliases", guildID)
+	ret0, _ := ret[0].(map[Alias]Actual)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// AliasTag indicates an expected call of AliasTag.
-func (mr *MockIDomainMockRecorder) AliasTag(guildID, actual, alias interface{}) *gomock.Call {
+// GetAliases indicates an expected call of GetAliases.
+func (mr *MockIDomainMockRecorder) GetAliases(guildID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AliasTag", reflect.TypeOf((*MockIDomain)(nil).AliasTag), guildID, actual, alias)
-}
-
-// DemoteTag mocks base method.
-func (m *MockIDomain) DemoteTag(guildID, tagName string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DemoteTag", guildID, tagName)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DemoteTag indicates an expected call of DemoteTag.
-func (mr *MockIDomainMockRecorder) DemoteTag(guildID, tagName interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DemoteTag", reflect.TypeOf((*MockIDomain)(nil).DemoteTag), guildID, tagName)
-}
-
-// OmitTag mocks base method.
-func (m *MockIDomain) OmitTag(guildID, tagName string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OmitTag", guildID, tagName)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// OmitTag indicates an expected call of OmitTag.
-func (mr *MockIDomainMockRecorder) OmitTag(guildID, tagName interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OmitTag", reflect.TypeOf((*MockIDomain)(nil).OmitTag), guildID, tagName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAliases", reflect.TypeOf((*MockIDomain)(nil).GetAliases), guildID)
 }
 
 // PostsResult mocks base method.
@@ -107,18 +80,60 @@ func (mr *MockIDomainMockRecorder) PostsSearch(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostsSearch", reflect.TypeOf((*MockIDomain)(nil).PostsSearch), arg0)
 }
 
-// PromoteTag mocks base method.
-func (m *MockIDomain) PromoteTag(guildID, tagName string) error {
+// SetAlias mocks base method.
+func (m *MockIDomain) SetAlias(guildID string, alias Alias, actual Actual) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PromoteTag", guildID, tagName)
+	ret := m.ctrl.Call(m, "SetAlias", guildID, alias, actual)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// PromoteTag indicates an expected call of PromoteTag.
-func (mr *MockIDomainMockRecorder) PromoteTag(guildID, tagName interface{}) *gomock.Call {
+// SetAlias indicates an expected call of SetAlias.
+func (mr *MockIDomainMockRecorder) SetAlias(guildID, alias, actual interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PromoteTag", reflect.TypeOf((*MockIDomain)(nil).PromoteTag), guildID, tagName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAlias", reflect.TypeOf((*MockIDomain)(nil).SetAlias), guildID, alias, actual)
+}
+
+// SetDemote mocks base method.
+func (m *MockIDomain) SetDemote(guildID, tagName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDemote", guildID, tagName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetDemote indicates an expected call of SetDemote.
+func (mr *MockIDomainMockRecorder) SetDemote(guildID, tagName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDemote", reflect.TypeOf((*MockIDomain)(nil).SetDemote), guildID, tagName)
+}
+
+// SetOmit mocks base method.
+func (m *MockIDomain) SetOmit(guildID, tagName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetOmit", guildID, tagName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetOmit indicates an expected call of SetOmit.
+func (mr *MockIDomainMockRecorder) SetOmit(guildID, tagName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOmit", reflect.TypeOf((*MockIDomain)(nil).SetOmit), guildID, tagName)
+}
+
+// SetPromote mocks base method.
+func (m *MockIDomain) SetPromote(guildID, tagName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPromote", guildID, tagName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPromote indicates an expected call of SetPromote.
+func (mr *MockIDomainMockRecorder) SetPromote(guildID, tagName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPromote", reflect.TypeOf((*MockIDomain)(nil).SetPromote), guildID, tagName)
 }
 
 // MockIQueryPosts is a mock of IQueryPosts interface.

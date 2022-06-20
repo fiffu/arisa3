@@ -52,10 +52,10 @@ func (r *repo) GetAliases(guildID string) (map[Alias]Actual, error) {
 
 func (r *repo) SetAlias(guildID string, ali Alias, act Actual) error {
 	if _, err := r.db.Exec(
-		"INSERT INTO aliases(alias, actual) VALUES ($1, $2, $3)",
+		"INSERT INTO aliases(alias, actual, guildid) VALUES ($1, $2, $3)",
 		string(ali), string(act), guildID,
 	); err != nil {
-		return nil
+		return err
 	}
 	r.clearAliasesMap(guildID)
 	return nil
@@ -68,7 +68,8 @@ func (r *repo) getTagsByOperation(guildID string, oper TagOperation) ([]string, 
 
 	tags := make([]string, 0)
 	rows, err := r.db.Query(
-		fmt.Sprintf("SELECT tag FROM tag_%s", oper),
+		fmt.Sprintf("SELECT tag FROM tag_%s WHERE guildid=$1", oper),
+		guildID,
 	)
 	if err != nil {
 		return nil, err
@@ -92,14 +93,10 @@ func (r *repo) getTagsByOperation(guildID string, oper TagOperation) ([]string, 
 
 func (r *repo) setTagOperation(guildID string, tag string, oper TagOperation) error {
 	if _, err := r.db.Exec(
-		fmt.Sprintf(`
-			INSERT INTO tag_%s(tag) VALUES ($1, $2)
-			ON CONFLICT DO NOTHING`,
-			string(oper),
-		),
+		fmt.Sprintf(`INSERT INTO tag_%s(tag, guildid) VALUES ($1, $2) ON CONFLICT DO NOTHING`, string(oper)),
 		tag, guildID,
 	); err != nil {
-		return nil
+		return err
 	}
 	r.clearTagOperation(guildID, oper)
 	r.clearOperationsMap(guildID)

@@ -2,6 +2,7 @@ package cardboard
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fiffu/arisa3/app/types"
 )
@@ -125,11 +126,18 @@ func (c *Cog) listAliases(req types.ICommandEvent) error {
 		return err
 	}
 
-	list := make([]string, 0)
-	for ali, act := range aliasMap {
-		list = append(list, fmt.Sprintf("%s -> %s", ali, act))
+	list := []string{
+		"Alias → Actual Tag",
+		"==================",
 	}
-	columns := twoColumns(list, "", "   ", 100, 1000)
-	resp := types.NewResponse().Content(fmt.Sprintf("```" + columns + "```"))
+	for ali, act := range aliasMap {
+		list = append(list, fmt.Sprintf("%s → %s", string(ali), string(act)))
+	}
+
+	resp := respNoAliases
+	if len(list) > 0 {
+		message := fmt.Sprintf("```\n" + strings.Join(list, "\n") + "```")
+		resp.Content(message)
+	}
 	return req.Respond(resp)
 }

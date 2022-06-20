@@ -41,7 +41,7 @@ func (d *domain) formatResult(query IQueryPosts, posts []*api.Post) (types.IEmbe
 	linksField := d.embedLinks(query, post)
 
 	term := query.Term()
-	footer := fmt.Sprintf("Matched against tag: " + term)
+	footer := fmt.Sprintf("Matched against: " + term)
 	if termTag, ok := tagData[term]; ok {
 		footer += fmt.Sprintf(" (%d)", termTag.PostCount)
 	}

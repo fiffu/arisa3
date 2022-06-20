@@ -45,6 +45,7 @@ func (c *pgclient) Close() error {
 }
 
 func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {
+	log.Info().Msgf("Query: %s", query)
 	rows, err := c.pool.Query(query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
@@ -53,6 +54,7 @@ func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {
 }
 
 func (c *pgclient) Exec(query string, args ...interface{}) (IResult, error) {
+	log.Info().Msgf("Exec: %s", query)
 	affected, err := c.pool.Exec(query, args...)
 	return affected, err
 }
@@ -71,6 +73,7 @@ type pgtxn struct {
 }
 
 func (t pgtxn) Query(query string, args ...interface{}) (IRows, error) {
+	log.Info().Msgf("Query: %s", query)
 	rows, err := t.Tx.Query(query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
@@ -79,5 +82,6 @@ func (t pgtxn) Query(query string, args ...interface{}) (IRows, error) {
 }
 
 func (t pgtxn) Exec(query string, args ...interface{}) (IResult, error) {
+	log.Info().Msgf("Exec: %s", query)
 	return t.Tx.Exec(query, args...)
 }

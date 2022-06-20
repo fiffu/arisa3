@@ -47,6 +47,12 @@ func (c *Cog) aliasCommand() *types.Command {
 		Handler(c.alias)
 }
 
+func (c *Cog) aliasesCommand() *types.Command {
+	return types.NewCommand("aliases").ForChat().
+		Desc("List available aliases.").
+		Handler(c.listAliases)
+}
+
 func (c *Cog) promote(req types.ICommandEvent) error {
 	tagName, _ := req.Args().String(OptionTag)
 
@@ -55,7 +61,7 @@ func (c *Cog) promote(req types.ICommandEvent) error {
 		return req.Respond(respRequiresAdmin)
 	}
 
-	if err := c.domain.PromoteTag(tagName, guildID); err != nil {
+	if err := c.domain.SetPromote(tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be promoted.", tagName))
@@ -70,7 +76,7 @@ func (c *Cog) demote(req types.ICommandEvent) error {
 		return req.Respond(respRequiresAdmin)
 	}
 
-	if err := c.domain.DemoteTag(tagName, guildID); err != nil {
+	if err := c.domain.SetDemote(tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be demoted.", tagName))
@@ -85,7 +91,7 @@ func (c *Cog) omit(req types.ICommandEvent) error {
 		return req.Respond(respRequiresAdmin)
 	}
 
-	if err := c.domain.OmitTag(tagName, guildID); err != nil {
+	if err := c.domain.SetOmit(tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be omitted.", tagName))
@@ -101,9 +107,29 @@ func (c *Cog) alias(req types.ICommandEvent) error {
 		return req.Respond(respRequiresAdmin)
 	}
 
-	if err := c.domain.AliasTag(guildID, actual, alias); err != nil {
+	if err := c.domain.SetAlias(guildID, Alias(alias), Actual(actual)); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("`%s` will be aliased as `%s`.", actual, alias))
+	return req.Respond(resp)
+}
+
+func (c *Cog) listAliases(req types.ICommandEvent) error {
+	guildID := getGuildID(req)
+	if guildID == "" {
+		return req.Respond(respRequiresAdmin)
+	}
+
+	aliasMap, err := c.domain.GetAliases(guildID)
+	if err != nil {
+		return err
+	}
+
+	list := make([]string, 0)
+	for ali, act := range aliasMap {
+		list = append(list, fmt.Sprintf("%s -> %s", ali, act))
+	}
+	columns := twoColumns(list, "", "   ", 100, 1000)
+	resp := types.NewResponse().Content(fmt.Sprintf("```" + columns + "```"))
 	return req.Respond(resp)
 }

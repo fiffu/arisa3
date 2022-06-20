@@ -16,7 +16,8 @@ import (
 var (
 	migrationsDir = filepath.Join(lib.MustGetCallerDir(), "dbmigrations")
 
-	respRequiresAdmin = types.NewResponse().Content("This command can only be used from a server, by a server admin.")
+	respRequiresGuild = types.NewResponse().Content("This command can only be used from a server.")
+	respRequiresAdmin = types.NewResponse().Content("This command can only be used from a server by a server admin.")
 )
 
 // Cog implements ICog and IDefaultStartup
@@ -66,7 +67,9 @@ func (c *Cog) MigrationsDir() string {
 }
 
 func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
-
+	guildOnly := commandfilters.NewMiddleware(commandfilters.IsFromGuild).
+		FailureResponse(respRequiresGuild).
+		CommandDecorator()
 	adminOnly := commandfilters.NewMiddleware(commandfilters.IsGuildAdmin).
 		FailureResponse(respRequiresAdmin).
 		CommandDecorator()
@@ -83,6 +86,7 @@ func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
 		adminOnly(c.demoteCommand()),
 		adminOnly(c.omitCommand()),
 		adminOnly(c.aliasCommand()),
+		guildOnly(c.aliasesCommand()),
 	)
 	if err != nil {
 		return err

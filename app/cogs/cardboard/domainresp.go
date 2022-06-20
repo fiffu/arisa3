@@ -43,7 +43,7 @@ func (d *domain) formatResult(query IQueryPosts, posts []*api.Post) (types.IEmbe
 	term := query.Term()
 	footer := fmt.Sprintf("Matched against tag: " + term)
 	if termTag, ok := tagData[term]; ok {
-		footer = fmt.Sprint(termTag.PostCount)
+		footer += fmt.Sprintf(" (%d)", termTag.PostCount)
 	}
 
 	inline := true
@@ -209,4 +209,43 @@ func join(strs []string, joiner, penult string) string {
 func joinWithTail(strs []string, joiner, tailFmt string, tailCount int) string {
 	joined := strings.Join(strs, joiner)
 	return joined + fmt.Sprintf(tailFmt, tailCount)
+}
+
+func twoColumns(strs []string, margin, padding string, maxWidth, maxChars int) string {
+	marWidth := len(margin)
+	padWidth := len(padding)
+	colWidth := maxWidth / 2
+
+	maxNumStrs := maxChars / (marWidth + colWidth + padWidth + colWidth + marWidth)
+	height := int(float64(maxNumStrs / 2))
+	remainStrs := len(strs) - maxNumStrs
+
+	leftStrs := strs[:height]
+	leftN := len(leftStrs)
+	rightStrs := strs[height:]
+	rightN := len(rightStrs)
+	if remainStrs > 0 {
+		if leftN > rightN {
+			rightStrs = append(rightStrs, fmt.Sprintf("(%d more...)", remainStrs))
+		} else {
+			remainStrs += 1
+			rightStrs[rightN-1] = fmt.Sprintf("(%d more...)", remainStrs)
+		}
+	}
+
+	lines := make([]string, height)
+	for i := 0; i < height; i++ {
+		left, right := tryIndex(leftStrs, i), tryIndex(rightStrs, i)
+		lines = append(
+			lines,
+			margin+left+padding+right+margin,
+		)
+	}
+	return strings.Join(lines, "\\n")
+}
+func tryIndex(slc []string, idx int) string {
+	if idx >= len(slc) {
+		return ""
+	}
+	return slc[idx]
 }

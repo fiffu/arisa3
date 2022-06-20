@@ -34,18 +34,10 @@ func (d *domain) PostsResult(query IQueryPosts, posts []*api.Post) (types.IEmbed
 	}
 }
 
-func (d *domain) PromoteTag(guildID, tagName string) error {
-	return d.repo.SetPromote(tagName, guildID)
-}
+// Remaining methods proxy to the repo
 
-func (d *domain) DemoteTag(guildID, tagName string) error {
-	return d.repo.SetDemote(tagName, guildID)
-}
-
-func (d *domain) OmitTag(guildID, tagName string) error {
-	return d.repo.SetOmit(tagName, guildID)
-}
-
-func (d *domain) AliasTag(guildID, actual, alias string) error {
-	return d.repo.SetAlias(guildID, Alias(alias), Actual(actual))
-}
+func (d *domain) SetPromote(gid, tagName string) error            { return d.repo.SetPromote(gid, tagName) }
+func (d *domain) SetDemote(gid, tagName string) error             { return d.repo.SetDemote(gid, tagName) }
+func (d *domain) SetOmit(gid, tagName string) error               { return d.repo.SetOmit(gid, tagName) }
+func (d *domain) SetAlias(gid string, al Alias, ac Actual) error  { return d.repo.SetAlias(gid, al, ac) }
+func (d *domain) GetAliases(gid string) (map[Alias]Actual, error) { return d.repo.GetAliases(gid) }

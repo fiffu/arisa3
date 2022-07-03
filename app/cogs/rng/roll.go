@@ -176,7 +176,7 @@ func throwDie(sides int) int {
 }
 
 func formatResponse(req types.ICommandEvent, d dice, result int, comment string) types.ICommandResponse {
-	asker := req.User()
+	asker := formatAsker(req)
 	whatDice := DefaultRollContent
 	resultStr := fmt.Sprintf("%2d", result)
 	if d.parsed {
@@ -190,6 +190,21 @@ func formatResponse(req types.ICommandEvent, d dice, result int, comment string)
 		embed.Footer(foot, "")
 	}
 	return types.NewResponse().Embeds(embed)
+}
+
+func formatAsker(req types.ICommandEvent) string {
+	username := req.User().String()
+
+	nickname := ""
+	member := req.Interaction().Member
+	if member != nil && member.Nick != "" {
+		nickname = member.Nick
+	}
+
+	if nickname != "" {
+		return nickname
+	}
+	return username
 }
 
 func formatDice(d dice) string {

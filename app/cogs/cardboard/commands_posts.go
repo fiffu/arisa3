@@ -23,10 +23,10 @@ func (c *Cog) danCommand() *types.Command {
 
 func (c *Cog) cuteCommand() *types.Command {
 	return types.NewCommand("cute").ForChat().
-		Desc("Finds a cute picture with the given tag (spaces convert to _).").
+		Desc("Finds a cute picture with a particular tag.").
 		Options(
 			types.NewOption(OptionTag).
-				Desc("tag to search").
+				Desc("the tag to search (spaces convert to _)").
 				String().Required(),
 		).
 		Handler(c.smartSearch(true))
@@ -34,10 +34,10 @@ func (c *Cog) cuteCommand() *types.Command {
 
 func (c *Cog) lewdCommand() *types.Command {
 	return types.NewCommand("lewd").ForChat().
-		Desc("Finds a LEWD picture with the given tag (spaces convert to _).").
+		Desc("Finds a LEWD picture with a particular tag.").
 		Options(
 			types.NewOption(OptionTag).
-				Desc("tag to search").
+				Desc("tag to search (spaces convert to _)").
 				String().Required(),
 		).
 		Handler(c.smartSearch(false))

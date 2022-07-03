@@ -15,7 +15,9 @@ func (c *Cog) promoteCommand() *types.Command {
 	return types.NewCommand("promote").ForChat().
 		Desc("(Admins only) Indicate that posts with this tag should be prioritized over other posts.").
 		Options(
-			types.NewOption(OptionTag).String().Required(),
+			types.NewOption(OptionTag).
+				Desc("tag to be promoted").
+				String().Required(),
 		).
 		Handler(c.promote)
 }
@@ -24,7 +26,9 @@ func (c *Cog) demoteCommand() *types.Command {
 	return types.NewCommand("demote").ForChat().
 		Desc("(Admins only) Indicate that posts with this tag should be de-prioritized in favour of other posts.").
 		Options(
-			types.NewOption(OptionTag).String().Required(),
+			types.NewOption(OptionTag).
+				Desc("tag to be demoted").
+				String().Required(),
 		).
 		Handler(c.demote)
 }
@@ -33,7 +37,9 @@ func (c *Cog) omitCommand() *types.Command {
 	return types.NewCommand("omit").ForChat().
 		Desc("(Admins only) Indicate that posts with this tag should not be shown.").
 		Options(
-			types.NewOption(OptionTag).String().Required(),
+			types.NewOption(OptionTag).
+				Desc("tag to be omitted").
+				String().Required(),
 		).
 		Handler(c.omit)
 }
@@ -42,8 +48,12 @@ func (c *Cog) aliasCommand() *types.Command {
 	return types.NewCommand("alias").ForChat().
 		Desc("(Admins only) Set an alias mapping to an actual tag.").
 		Options(
-			types.NewOption(OptionAlias).String().Required(),
-			types.NewOption(OptionTag).String().Required(),
+			types.NewOption(OptionAlias).
+				Desc("alias name to be created").
+				String().Required(),
+			types.NewOption(OptionTag).
+				Desc("actual tag").
+				String().Required(),
 		).
 		Handler(c.alias)
 }

@@ -89,6 +89,11 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 
 func (c *Cog) registerEvents(sess *dgo.Session) {
 	sess.AddHandler(func(s *dgo.Session, m *dgo.MessageCreate) {
+		if m.Author.ID == sess.State.User.ID {
+			// Ignore bot's own messages
+			return
+		}
+
 		evt := types.NewMessageEvent(s, m)
 		c.mutate(evt)
 	})

@@ -58,8 +58,8 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 		return
 	}
 
-	s := NewDomainSession(msg.Event().Session())
 	userID := msg.User().ID
+	s := NewDomainSession(msg.Event().Session())
 	member, err := s.GuildMember(guildID, userID)
 	if err != nil {
 		engine.EventLog(c, msg.Event(), log.Error()).Err(err).

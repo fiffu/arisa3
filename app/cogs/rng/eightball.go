@@ -46,7 +46,9 @@ func (c *Cog) eightBallCommand() *types.Command {
 	return types.NewCommand(EightBallCommand).ForChat().
 		Desc("Concentrate and ask again").
 		Options(
-			types.NewOption(EightBallQuestion).String().Required(),
+			types.NewOption(EightBallQuestion).
+				Desc("(yes/no questions work well)").
+				String().Required(),
 		).
 		Handler(c.eightBall)
 }

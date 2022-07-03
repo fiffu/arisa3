@@ -33,8 +33,8 @@ func (c *Cog) pokiesCommand() *types.Command {
 		Desc("An avian slots machine. Use with care.").
 		Options(
 			types.NewOption(PokiesSize).
-				Int().
-				Desc("generate result in N x N grid; if not given, result will be a single row of 3 x 1"),
+				Desc("generate result in N x N grid; if not given, result will be a single row of 3 x 1").
+				Int(),
 		).
 		Handler(c.pokies)
 }

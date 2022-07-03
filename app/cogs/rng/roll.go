@@ -44,7 +44,8 @@ func (c *Cog) rollCommand() *types.Command {
 	return types.NewCommand(RollCommand).ForChat().
 		Desc("Rolls dice (supports algebraic notation)").
 		Options(
-			types.NewOption(RollExpression).Desc("dice expression (e.g. 3d5+10) and/or a comment").
+			types.NewOption(RollExpression).
+				Desc("dice expression like 3d5+10 and/or a comment (default is d100-1)").
 				String(),
 		).
 		Handler(c.roll)

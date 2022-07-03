@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/fiffu/arisa3/app/cogs/cardboard"
 	"github.com/fiffu/arisa3/app/cogs/colours"
 	"github.com/fiffu/arisa3/app/cogs/general"
-	"github.com/fiffu/arisa3/app/cogs/rng"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 
@@ -23,9 +21,9 @@ var (
 func getCogsList(app types.IApp) []types.ICog {
 	return []types.ICog{
 		general.NewCog(app),
-		rng.NewCog(app),
+		// rng.NewCog(app),
 		colours.NewCog(app),
-		cardboard.NewCog(app),
+		// cardboard.NewCog(app),
 	}
 }
 

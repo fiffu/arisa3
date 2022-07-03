@@ -30,7 +30,6 @@ func CommandLog(cog types.ICog, evt types.ICommandEvent, e *zerolog.Event) *zero
 	return e.Str(types.CtxCog, cog.Name()).Str(types.CtxCommand, evt.Command().Name())
 }
 
-// func EventLog(cog types.ICog, evt interface{}, e *zerolog.Event) *zerolog.Event {
-// 	evtName := ParseEvent(evt)
-// 	return CogLog(cog).Str(CtxEvent, evtName)
-// }
+func EventLog(cog types.ICog, evt types.IEvent, e *zerolog.Event) *zerolog.Event {
+	return e.Str(types.CtxCog, cog.Name()).Str(types.CtxEvent, evt.Name())
+}

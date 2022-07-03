@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/fiffu/arisa3/app/engine"
@@ -23,18 +24,19 @@ func (c *Cog) col(req types.ICommandEvent) error {
 	}
 
 	s := NewDomainSession(req.Session())
-	mem, err := s.GuildMember(
-		req.Interaction().GuildID,
-		req.User().ID,
-	)
+	guildID := req.Interaction().GuildID
+	userID := req.User().ID
+	mem, err := s.GuildMember(guildID, userID)
 	if err != nil {
 		// failed to get member
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
 	// reroll here
 	newColour, err := c.domain.Reroll(s, mem)
-	engine.CommandLog(c, req, log.Info()).Msgf("Generated colour: %+v", newColour)
+	engine.CommandLog(c, req, log.Info()).Msgf("Generated colour: #%s", newColour.ToHexcode())
 	if err != nil {
 		return err
 	}
@@ -47,4 +49,36 @@ func (c *Cog) col(req types.ICommandEvent) error {
 	return req.Respond(
 		types.NewResponse().Embeds(embed),
 	)
+}
+
+func (c *Cog) mutate(msg types.IMessageEvent) {
+	guildID := msg.GuildID()
+	if guildID == "" {
+		// Not a message from a guild, ignore
+		return
+	}
+
+	s := NewDomainSession(msg.Event().Session())
+	userID := msg.User().ID
+	member, err := s.GuildMember(guildID, userID)
+	if err != nil {
+		engine.EventLog(c, msg.Event(), log.Error()).Err(err).
+			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
+	}
+
+	newColour, err := c.domain.Mutate(s, member)
+
+	switch {
+	case err == nil:
+		engine.EventLog(c, msg.Event(), log.Info()).
+			Msgf("Mutated colour: #%s, guild=%s user=%s", newColour.ToHexcode(), guildID, userID)
+
+	case errors.As(err, &ErrCooldownPending):
+		engine.EventLog(c, msg.Event(), log.Info()).
+			Msgf("Skipped mutate due to cooldown pending, guild=%s user=%s", guildID, userID)
+
+	default:
+		engine.EventLog(c, msg.Event(), log.Error()).Err(err).
+			Msgf("Errored while mutating member, guild=%s user=%s", guildID, userID)
+	}
 }

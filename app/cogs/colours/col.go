@@ -69,6 +69,10 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 	newColour, err := c.domain.Mutate(s, member)
 
 	switch {
+	case newColour == nil:
+		// user has no colour role, do nothing
+		return
+
 	case err == nil:
 		engine.EventLog(c, msg.Event(), log.Info()).
 			Msgf("Mutated colour: #%s, guild=%s user=%s", newColour.ToHexcode(), guildID, userID)

@@ -11,6 +11,7 @@ type IMessageEvent interface {
 	Message() *dgo.Message
 	GuildID() string
 	User() *dgo.User
+	IsFromSelf() bool
 }
 
 func NewMessageEvent(sess *dgo.Session, source *dgo.MessageCreate) IMessageEvent {
@@ -39,4 +40,10 @@ func (m *msgEvent) User() *dgo.User {
 
 func (m *msgEvent) GuildID() string {
 	return m.source.GuildID
+}
+
+func (m *msgEvent) IsFromSelf() bool {
+	botUserID := m.event.Session().State.User.ID
+	authorUserID := m.source.Author.ID
+	return authorUserID == botUserID
 }

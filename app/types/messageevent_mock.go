@@ -62,6 +62,20 @@ func (mr *MockIMessageEventMockRecorder) GuildID() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildID", reflect.TypeOf((*MockIMessageEvent)(nil).GuildID))
 }
 
+// IsFromSelf mocks base method.
+func (m *MockIMessageEvent) IsFromSelf() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsFromSelf")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsFromSelf indicates an expected call of IsFromSelf.
+func (mr *MockIMessageEventMockRecorder) IsFromSelf() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFromSelf", reflect.TypeOf((*MockIMessageEvent)(nil).IsFromSelf))
+}
+
 // Message mocks base method.
 func (m *MockIMessageEvent) Message() *discordgo.Message {
 	m.ctrl.T.Helper()

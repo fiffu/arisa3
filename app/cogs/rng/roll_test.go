@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bwmarrin/discordgo"
+	"github.com/fiffu/arisa3/app/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -176,6 +179,67 @@ func Test_formatDice(t *testing.T) {
 		}
 		t.Run(n, func(t *testing.T) {
 			actual := formatDice(tc.d)
+			assert.Equal(t, tc.expect, actual)
+		})
+	}
+}
+
+func Test_formatAsker(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	const NoMember = "_"
+	newMockEvent := func(ctrl *gomock.Controller, username, nickname string) types.ICommandEvent {
+		ix := types.NewMockICommandEvent(ctrl)
+
+		var mockMember *discordgo.Member
+		if nickname != NoMember {
+			mockMember = &discordgo.Member{Nick: nickname}
+		}
+
+		ix.EXPECT().User().AnyTimes().Return(&discordgo.User{
+			Username:      username,
+			Discriminator: "1234",
+		})
+		ix.EXPECT().Interaction().AnyTimes().Return(
+			&discordgo.InteractionCreate{
+				Interaction: &discordgo.Interaction{
+					Member: mockMember,
+				},
+			},
+		)
+		return ix
+	}
+
+	type testCase struct {
+		desc               string
+		nickname, username string
+		expect             string
+	}
+
+	tests := []testCase{
+		{
+			desc:     "having nickname and username should return nickname",
+			nickname: "nick",
+			username: "user",
+			expect:   "nick",
+		},
+		{
+			desc:     "having no nickname should return username",
+			nickname: "",
+			username: "user",
+			expect:   "user#1234",
+		},
+		{
+			desc:     "having no member should return username",
+			nickname: NoMember,
+			username: "user",
+			expect:   "user#1234",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			mockEvt := newMockEvent(ctrl, tc.username, tc.nickname)
+			actual := formatAsker(mockEvt)
 			assert.Equal(t, tc.expect, actual)
 		})
 	}

@@ -70,9 +70,23 @@ func (d *domain) hasCooldownFinished(cooldownStartTime time.Time, cooldownPeriod
 	if cooldownPeriod == 0 {
 		return true
 	}
-	cooldownEndTime := cooldownStartTime.Add(cooldownPeriod)
+	cooldownEndTime := d.getCooldownEndTime(cooldownStartTime, cooldownPeriod)
 	finished := time.Now().After(cooldownEndTime)
 	return finished
+}
+
+func (d *domain) getCooldownEndTime(startTime time.Time, cooldownPeriod time.Duration) time.Time {
+	return startTime.Add(cooldownPeriod)
+}
+
+func (d *domain) GetRerollCooldownEndTime(mem IDomainMember) (time.Time, error) {
+	last, _, err := d.GetLastReroll(mem)
+	if err != nil {
+		return time.Time{}, err
+	}
+	cooldownPeriod := time.Duration(d.rerollCooldownMins) * time.Minute
+	endTime := d.getCooldownEndTime(last, cooldownPeriod)
+	return endTime, nil
 }
 
 func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {

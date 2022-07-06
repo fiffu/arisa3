@@ -18,6 +18,9 @@ type IColoursDomain interface {
 	// Get a member's last reroll time.
 	GetLastReroll(IDomainMember) (time.Time, bool, error)
 
+	// Get the reroll cooldown end time for
+	GetRerollCooldownEndTime(IDomainMember) (time.Time, error)
+
 	// Apply a mutation on member's colour role. If frozen, mutation is not allowed.
 	Mutate(IDomainSession, IDomainMember) (*Colour, error)
 	// Reroll the colour for a member's colour role.

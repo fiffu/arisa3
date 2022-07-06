@@ -61,12 +61,16 @@ func (c *Cog) getReply(req types.ICommandEvent) (string, error) {
 	}
 
 	// Parse request, build reply
-	rows, cols, tooBig := parseGrid(req)
-	if tooBig {
-		return "That's just way too much work " + utils.BIRB, nil
-	} else {
-		return buildGrid(rows, cols, emojis), nil
+	replyTooBig := "That's just way too much work " + utils.BIRB
+	rows, cols, ok := parseGrid(req)
+	if !ok {
+		return replyTooBig, nil
 	}
+	result, ok := buildGrid(rows, cols, emojis)
+	if !ok {
+		return replyTooBig, nil
+	}
+	return result, nil
 }
 
 func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.Emoji, error) {
@@ -94,11 +98,11 @@ func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.
 	return emojis, err
 }
 
-func parseGrid(req types.ICommandEvent) (rows int, cols int, tooBig bool) {
+func parseGrid(req types.ICommandEvent) (rows int, cols int, sizeCheck bool) {
 	rows, cols = pokiesDefaultRows, pokiesDefaultCols
 	if size, ok := req.Args().Int(PokiesSize); ok {
-		if size > 9 {
-			tooBig = true
+		if size > 8 {
+			sizeCheck = false
 			return
 		}
 		if size > 0 {
@@ -109,7 +113,7 @@ func parseGrid(req types.ICommandEvent) (rows int, cols int, tooBig bool) {
 	return
 }
 
-func buildGrid(rows, cols int, emojis []*discordgo.Emoji) string {
+func buildGrid(rows, cols int, emojis []*discordgo.Emoji) (result string, sizeCheck bool) {
 	// Reset the rand seed otherwise it will always yield the same result
 	rand.Seed(time.Now().Unix())
 
@@ -125,5 +129,10 @@ func buildGrid(rows, cols int, emojis []*discordgo.Emoji) string {
 		grid[y] = strings.Join(row, " ")
 	}
 
-	return strings.Join(grid, "\n")
+	result = strings.Join(grid, "\n")
+	sizeCheck = true
+	if len(result) > utils.MAX_MESSAGE_LENGTH {
+		return "", false
+	}
+	return
 }

@@ -3,9 +3,11 @@ package colours
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/lib"
 	"github.com/rs/zerolog/log"
 )
 
@@ -36,10 +38,23 @@ func (c *Cog) col(req types.ICommandEvent) error {
 
 	// reroll here
 	newColour, err := c.domain.Reroll(s, mem)
-	engine.CommandLog(c, req, log.Info()).Msgf("Generated colour: #%s", newColour.ToHexcode())
-	if err != nil {
+	if errors.As(err, &ErrCooldownPending) {
+		engine.CommandLog(c, req, log.Info()).Err(err).
+			Msgf("Blocked reroll due to cooldown pending, guild=%s user=%s", guildID, userID)
+
+		endTime, err := c.domain.GetRerollCooldownEndTime(mem)
+		if err != nil {
+			return err
+		}
+		delta := formatDuration(time.Until(endTime))
+		msg := fmt.Sprintf("You cannot reroll a new colour yet! Cooldown remaining: %s", delta)
+		return req.Respond(
+			types.NewResponse().Content(msg),
+		)
+	} else if err != nil {
 		return err
 	}
+	engine.CommandLog(c, req, log.Info()).Msgf("Generated colour: #%s", newColour.ToHexcode())
 
 	r, g, b := newColour.scale255()
 	hex := newColour.ToHexcode()
@@ -85,4 +100,25 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 		engine.EventLog(c, msg.Event(), log.Error()).Err(err).
 			Msgf("Errored while mutating member, guild=%s user=%s", guildID, userID)
 	}
+}
+
+func formatDuration(delta time.Duration) string {
+	deltaSeconds := int(delta.Seconds())
+	if deltaSeconds <= 0 {
+		return "none"
+	}
+	hours, remainder := lib.IntDivmod(deltaSeconds, 60*60)
+	mins, secs := lib.IntDivmod(remainder, 60)
+
+	var h, m, s string
+	if hours > 0 {
+		h = fmt.Sprintf("%dhr ", hours)
+	}
+	if mins > 0 {
+		m = fmt.Sprintf("%dmin ", mins)
+	}
+	if secs > 0 && h != "" && m != "" {
+		s = "less than a minute"
+	}
+	return h + m + s
 }

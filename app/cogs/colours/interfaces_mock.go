@@ -167,6 +167,21 @@ func (mr *MockIColoursDomainMockRecorder) GetLastReroll(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastReroll", reflect.TypeOf((*MockIColoursDomain)(nil).GetLastReroll), arg0)
 }
 
+// GetRerollCooldownEndTime mocks base method.
+func (m *MockIColoursDomain) GetRerollCooldownEndTime(arg0 IDomainMember) (time.Time, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRerollCooldownEndTime", arg0)
+	ret0, _ := ret[0].(time.Time)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRerollCooldownEndTime indicates an expected call of GetRerollCooldownEndTime.
+func (mr *MockIColoursDomainMockRecorder) GetRerollCooldownEndTime(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRerollCooldownEndTime", reflect.TypeOf((*MockIColoursDomain)(nil).GetRerollCooldownEndTime), arg0)
+}
+
 // HasColourRole mocks base method.
 func (m *MockIColoursDomain) HasColourRole(arg0 IDomainMember) bool {
 	m.ctrl.T.Helper()

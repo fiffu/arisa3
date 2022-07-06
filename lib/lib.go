@@ -80,3 +80,9 @@ func ContainsStr(list []string, str string) bool {
 	}
 	return false
 }
+
+func IntDivmod(numerator, denominator int) (quotient, remainder int) {
+	quotient = numerator / denominator // integer division, decimals are truncated
+	remainder = numerator % denominator
+	return
+}

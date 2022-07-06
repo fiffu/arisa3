@@ -10,27 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newMockAPI(ctrl *gomock.Controller) api.IClient {
-	tagNames := []string{
-		"general", "artist", "character", "copyright",
-	}
-
-	tags := make(map[string]*api.Tag)
-	for i, name := range tagNames {
-		tags[name] = &api.Tag{ID: i, Name: name, PostCount: 999}
-	}
-
-	client := api.NewMockIClient(ctrl)
-	client.EXPECT().
-		GetTags(gomock.Any()).
-		AnyTimes().
-		DoAndReturn(func(_ []string) (map[string]*api.Tag, error) {
-			return tags, nil
-		})
-
-	return client
-}
-
 func newTestPost() *api.Post {
 	return &api.Post{
 		FileExt:       "png",
@@ -59,7 +38,18 @@ func Test_formatZeroResults(t *testing.T) {
 func Test_formatResult(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	db := database.NewMockIDatabase(ctrl)
-	client := newMockAPI(ctrl)
+	client := api.NewMockIClient(ctrl)
+	client.EXPECT().
+		GetTags(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(_ []string) (map[string]*api.Tag, error) {
+			return map[string]*api.Tag{
+				"general":   {ID: 0, Name: "general", PostCount: 999},
+				"artist":    {ID: 1, Name: "artist", PostCount: 999},
+				"character": {ID: 2, Name: "character", PostCount: 999},
+				"copyright": {ID: 3, Name: "copyright", PostCount: 999},
+			}, nil
+		})
 
 	d := NewDomain(db, &Config{})
 	d.client = client
@@ -79,6 +69,67 @@ func Test_formatResult(t *testing.T) {
 	assert.Contains(t, embed.Data().Fields[1].Value, testPost.CopyrightTags)
 	assert.Contains(t, embed.Data().Fields[2].Value, testPost.File)
 	assert.Contains(t, embed.Data().Footer.Text, testTerm)
+}
+
+func Test_formatResult_shouldOnlyGetTagsForTermArtistCopyright(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	db := database.NewMockIDatabase(ctrl)
+	client := api.NewMockIClient(ctrl)
+	client.EXPECT().
+		GetTags([]string{"testing", "artist", "copyright"}).
+		AnyTimes().
+		DoAndReturn(func(_ []string) (map[string]*api.Tag, error) {
+			return map[string]*api.Tag{
+				"general":   {ID: 0, Name: "general", PostCount: 999},
+				"artist":    {ID: 1, Name: "artist", PostCount: 999},
+				"character": {ID: 2, Name: "character", PostCount: 999},
+				"copyright": {ID: 3, Name: "copyright", PostCount: 999},
+			}, nil
+		})
+
+	d := NewDomain(db, &Config{})
+	d.client = client
+
+	testTerm := "testing"
+	query := NewQuery(testTerm)
+
+	testPost := newTestPost()
+	posts := []*api.Post{testPost}
+
+	embed, err := d.formatResult(query, posts)
+	assert.NoError(t, err)
+	assert.Contains(t, embed.Data().Fields[0].Value, testPost.ArtistTags)
+	assert.Contains(t, embed.Data().Fields[0].Value, "999")
+	assert.Contains(t, embed.Data().Fields[1].Value, testPost.CopyrightTags)
+	assert.Contains(t, embed.Data().Fields[1].Value, "999")
+}
+
+func Test_formatResult_shouldNotFailIfGetTagsErrors(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	db := database.NewMockIDatabase(ctrl)
+	client := api.NewMockIClient(ctrl)
+	client.EXPECT().
+		GetTags([]string{"testing", "artist", "copyright"}).
+		AnyTimes().
+		DoAndReturn(func(_ []string) (map[string]*api.Tag, error) {
+			return nil, assert.AnError
+		})
+
+	d := NewDomain(db, &Config{})
+	d.client = client
+
+	testTerm := "testing"
+	query := NewQuery(testTerm)
+
+	testPost := newTestPost()
+	posts := []*api.Post{testPost}
+
+	embed, err := d.formatResult(query, posts)
+	assert.NoError(t, err)
+	assert.Contains(t, embed.Data().Fields[0].Value, testPost.ArtistTags)
+	assert.NotContains(t, embed.Data().Fields[0].Value, "999")
+	assert.Contains(t, embed.Data().Fields[1].Value, testPost.CopyrightTags)
+	assert.NotContains(t, embed.Data().Fields[1].Value, "999")
 }
 
 func Test_embedTitle(t *testing.T) {

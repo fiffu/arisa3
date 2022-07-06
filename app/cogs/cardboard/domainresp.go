@@ -28,19 +28,27 @@ func (d *domain) formatResult(query IQueryPosts, posts []*api.Post) (types.IEmbe
 
 	log.Info().Msgf("Generating embed for post md5=%s", post.MD5)
 
-	tagData, err := d.client.GetTags(post.TagsList())
+	term := query.Term()
+	artistTags := splitTags(post.ArtistTags)
+	copyrightTags := splitTags(post.CopyrightTags)
+
+	tagsToFetch := []string{term}
+	tagsToFetch = append(tagsToFetch, artistTags...)
+	tagsToFetch = append(tagsToFetch, copyrightTags...)
+
+	tagData, err := d.client.GetTags(tagsToFetch)
 	if err != nil {
-		return nil, fmt.Errorf("error while fetching tag data, err=%w", err)
+		tagData = make(map[string]*api.Tag)
+		log.Warn().Msgf("ignored error fetching tag data for post md5=%s, err=%s", post.MD5, err)
 	}
 
 	title := embedTitle(post)
 	image := post.GetFileURL()
 
-	artistsField := embedFieldTags(splitTags(post.ArtistTags), tagData)
-	sourcesField := embedFieldTags(splitTags(post.CopyrightTags), tagData)
+	artistsField := embedFieldTags(artistTags, tagData)
+	sourcesField := embedFieldTags(copyrightTags, tagData)
 	linksField := d.embedLinks(query, post)
 
-	term := query.Term()
 	footer := fmt.Sprintf("Matched against: " + term)
 	if termTag, ok := tagData[term]; ok {
 		footer += fmt.Sprintf(" (%d)", termTag.PostCount)

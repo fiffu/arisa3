@@ -135,7 +135,7 @@ func embedFieldTags(tagNames []string, tagData map[string]*api.Tag) string {
 		}
 	}
 
-	maxLen := 512 // 1024 is the official limit but be conservative
+	maxLen := utils.MAX_MESSAGE_LENGTH / 2
 	if res, ok := fitString(
 		tagNames,
 		"\n",

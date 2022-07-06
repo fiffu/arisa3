@@ -3,6 +3,7 @@ package rng
 import (
 	"testing"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -52,15 +53,15 @@ func Test_parseGrid(t *testing.T) {
 			expectCols: 4,
 		},
 		{
-			desc:       "9 should be accepted",
-			size:       9,
+			desc:       "8 should be accepted",
+			size:       8,
 			ok:         true,
-			expectRows: 9,
-			expectCols: 9,
+			expectRows: 8,
+			expectCols: 8,
 		},
 		{
 			desc:         "Arg passed is too big",
-			size:         10,
+			size:         9,
 			ok:           true,
 			expectTooBig: true,
 		},
@@ -71,13 +72,19 @@ func Test_parseGrid(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			req := newTestPokiesRequest(ctrl, tc.size, tc.ok)
-			rows, cols, tooBig := parseGrid(req)
+			rows, cols, ok := parseGrid(req)
 			if tc.expectTooBig {
-				assert.True(t, tooBig)
+				assert.False(t, ok)
 			} else {
 				assert.Equal(t, tc.expectRows, rows)
 				assert.Equal(t, tc.expectCols, cols)
 			}
 		})
 	}
+}
+
+func Test_buildGrid_tooBig(t *testing.T) {
+	e := &discordgo.Emoji{Name: "aaaaaaaaaa", ID: "12345678"}
+	_, ok := buildGrid(100, 100, []*discordgo.Emoji{e})
+	assert.False(t, ok)
 }

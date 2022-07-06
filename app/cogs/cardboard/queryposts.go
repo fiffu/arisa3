@@ -20,7 +20,7 @@ func NewQuery(term string) *queryPosts {
 
 func (q *queryPosts) Tags() []string {
 	tags := []string{q.term}
-	if !q.MagicMode() && q.rating != "" {
+	if q.MagicMode() && q.rating != "" {
 		tags = append(tags, q.rating)
 	}
 	return tags

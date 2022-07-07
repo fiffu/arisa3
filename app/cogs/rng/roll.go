@@ -8,6 +8,7 @@ import (
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib"
 )
 
@@ -55,6 +56,11 @@ func (c *Cog) roll(req types.ICommandEvent) error {
 	var input string
 	if value, ok := req.Args().String(RollExpression); ok {
 		input = value
+	}
+	if len(input) > 10 {
+		return req.Respond(
+			types.NewResponse().Content("That's just way too much work " + utils.BIRB),
+		)
 	}
 	d, comment := parse(input)
 

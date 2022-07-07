@@ -76,6 +76,7 @@ func Test_parseGrid(t *testing.T) {
 			if tc.expectTooBig {
 				assert.False(t, ok)
 			} else {
+				assert.True(t, ok)
 				assert.Equal(t, tc.expectRows, rows)
 				assert.Equal(t, tc.expectCols, cols)
 			}

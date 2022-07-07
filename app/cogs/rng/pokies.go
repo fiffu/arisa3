@@ -99,6 +99,7 @@ func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.
 }
 
 func parseGrid(req types.ICommandEvent) (rows int, cols int, sizeCheck bool) {
+	sizeCheck = true
 	rows, cols = pokiesDefaultRows, pokiesDefaultCols
 	if size, ok := req.Args().Int(PokiesSize); ok {
 		if size > 8 {

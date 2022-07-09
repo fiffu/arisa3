@@ -3,6 +3,7 @@ package colours
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fiffu/arisa3/app/engine"
@@ -110,15 +111,19 @@ func formatDuration(delta time.Duration) string {
 	hours, remainder := lib.IntDivmod(deltaSeconds, 60*60)
 	mins, secs := lib.IntDivmod(remainder, 60)
 
+	output := make([]string, 0)
 	var h, m, s string
 	if hours > 0 {
-		h = fmt.Sprintf("%dhr ", hours)
+		h = fmt.Sprintf("%dhr", hours)
+		output = append(output, h)
 	}
 	if mins > 0 {
-		m = fmt.Sprintf("%dmin ", mins)
+		m = fmt.Sprintf("%dmin", mins)
+		output = append(output, m)
 	}
-	if secs > 0 && h != "" && m != "" {
+	if secs > 0 && h == "" && m == "" {
 		s = "less than a minute"
+		output = append(output, s)
 	}
-	return h + m + s
+	return strings.Join(output, " ")
 }

@@ -57,12 +57,13 @@ func (c *Cog) roll(req types.ICommandEvent) error {
 	if value, ok := req.Args().String(RollExpression); ok {
 		input = value
 	}
-	if len(input) > 10 {
+	d, comment := parse(input)
+
+	if d.sides > 999_999 || d.count > 999_999 {
 		return req.Respond(
 			types.NewResponse().Content("That's just way too much work " + utils.BIRB),
 		)
 	}
-	d, comment := parse(input)
 
 	// if expression couldn't be parsed, treat it as a comment
 	if !d.parsed && comment == "" {

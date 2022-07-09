@@ -64,6 +64,12 @@ func (c *Cog) roll(req types.ICommandEvent) error {
 	}
 	d, comment := parse(input)
 
+	if d.sides > 999_999 || d.count > 999_999 {
+		return req.Respond(
+			types.NewResponse().Content("That's just way too much work " + utils.BIRB),
+		)
+	}
+
 	// if expression couldn't be parsed, treat it as a comment
 	if !d.parsed && comment == "" {
 		comment = input

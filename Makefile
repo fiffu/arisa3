@@ -6,7 +6,7 @@ build: FORCE  ## Build app
 
 
 test:  ## Run unit tests
-	go test -failfast -covermode=count -coverprofile coverage.out ./...
+	gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./...
 	@go tool cover -func=coverage.out | grep 'total' | sed -e 's/\t\+/ /g'
 	@echo [make test] Done ✓
 
@@ -19,12 +19,17 @@ install: FORCE  ## Install build dependencies
 tooling: FORCE  ## Install development tooling
 	@echo Installing golangci-lint
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.45.2
+	golangci-lint --version
+	@echo
 
-	@echo ''
 	pip install pre-commit -q
 	pre-commit install
+	@echo
 
-	golangci-lint --version
+	go install gotest.tools/gotestsum@v1.8.1
+	gotestsum --version
+	@echo
+
 	@echo [make tooling] Done ✓
 
 help:  ## Show this help

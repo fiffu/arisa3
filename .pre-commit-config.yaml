@@ -1,5 +1,17 @@
 fail_fast: true
 repos:
+
+- repo: 'https://github.com/pre-commit/pre-commit-hooks'
+  rev: v2.3.0
+  hooks:
+  - id: trailing-whitespace
+  - id: check-yaml
+
+- repo: 'git://github.com/dnephin/pre-commit-golang'
+  rev: v0.4.0
+  hooks:
+  - id: golangci-lint
+
 - repo: local
   hooks:
   - id: go-generate
@@ -7,13 +19,8 @@ repos:
     entry: go generate ./...
     language: system
     pass_filenames: false
-- repo: 'git://github.com/dnephin/pre-commit-golang'
-  rev: v0.4.0
-  hooks:
-  - id: go-unit-tests
-  - id: golangci-lint
-- repo: 'https://github.com/pre-commit/pre-commit-hooks'
-  rev: v2.3.0
-  hooks:
-  - id: trailing-whitespace
-  - id: check-yaml
+  - id: go-test
+    name: go test
+    entry: gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./...
+    language: system
+    pass_filenames: false

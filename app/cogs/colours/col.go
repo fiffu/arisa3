@@ -39,7 +39,7 @@ func (c *Cog) col(req types.ICommandEvent) error {
 
 	// reroll here
 	newColour, err := c.domain.Reroll(s, mem)
-	if errors.As(err, &ErrCooldownPending) {
+	if errors.Is(err, ErrCooldownPending) {
 		engine.CommandLog(c, req, log.Info()).Err(err).
 			Msgf("Blocked reroll due to cooldown pending, guild=%s user=%s", guildID, userID)
 

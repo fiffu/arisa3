@@ -267,7 +267,7 @@ func (d *domain) GetColourRoleHeight(s IDomainSession, guild IDomainGuild) (int,
 	return -1, nil
 }
 
-func (d *domain) SetRoleHeight(s IDomainSession, g IDomainGuild, roleID string, height int) error {
+func (d *domain) SetRoleHeight(s IDomainSession, g IDomainGuild, newRoleID string, height int) error {
 	if height <= -1 {
 		return ErrInvalidRoleHeight
 	}
@@ -280,7 +280,8 @@ func (d *domain) SetRoleHeight(s IDomainSession, g IDomainGuild, roleID string, 
 	var theRole IDomainRole
 	found := false
 	for idx, role := range allRoles {
-		if role.ID() == roleID {
+		if role.ID() == newRoleID {
+			theRole = role
 			allRoles = append(allRoles[:idx], allRoles[idx+1:]...)
 			found = true
 			break

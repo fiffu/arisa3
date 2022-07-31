@@ -54,7 +54,7 @@ func (c *Cog) eightBallCommand() *types.Command {
 }
 
 func (c *Cog) eightBall(req types.ICommandEvent) error {
-	asker := req.User()
+	asker := formatAsker(req)
 	question, _ := req.Args().String(EightBallQuestion)
 	reply := lib.ChooseString(eightBallResponses)
 

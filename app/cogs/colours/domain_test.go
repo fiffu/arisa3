@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -402,5 +403,57 @@ func Test_HasColourRole(t *testing.T) {
 		mem := newTestingMember(ctrl, hasColourRole)
 		actual := d.HasColourRole(mem)
 		assert.Equal(t, hasColourRole, actual)
+	}
+}
+
+func Test_SetRoleHeight(t *testing.T) {
+	newRoleID := "new-role"
+	r := NewDomainRole("", "roleName", 0)
+	newRole := NewDomainRole(newRoleID, "roleName", 0)
+
+	testCases := []struct {
+		height int
+		expect []IDomainRole
+	}{
+		{
+			height: 0,
+			expect: []IDomainRole{newRole, r, r, r, r},
+		},
+		{
+			height: 1,
+			expect: []IDomainRole{r, newRole, r, r, r},
+		},
+		{
+			height: 2,
+			expect: []IDomainRole{r, r, newRole, r, r},
+		},
+		{
+			height: 3,
+			expect: []IDomainRole{r, r, r, newRole, r},
+		},
+		{
+			height: 4,
+			expect: []IDomainRole{r, r, r, r, newRole},
+		},
+	}
+
+	ctrl, _, _, d := newTestingDomain(t, newTestingConfig())
+	s := NewMockIDomainSession(ctrl)
+	g := NewMockIDomainGuild(ctrl)
+
+	guildID := "guildID"
+	g.EXPECT().ID().Return(guildID).AnyTimes()
+
+	for _, tc := range testCases {
+		desc := fmt.Sprintf("when height=%d, expect roles to be ordered as %+v", tc.height, tc.expect)
+
+		currentRoleOrdering := []IDomainRole{r, newRole, r, r, r}
+		s.EXPECT().GuildRoles(guildID).Return(currentRoleOrdering, nil).Times(1)
+
+		t.Run(desc, func(t *testing.T) {
+			s.EXPECT().GuildRoleReorder(guildID, tc.expect).Return(nil).Times(1)
+			err := d.SetRoleHeight(s, g, newRoleID, tc.height)
+			assert.NoError(t, err)
+		})
 	}
 }

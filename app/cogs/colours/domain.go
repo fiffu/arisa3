@@ -277,6 +277,17 @@ func (d *domain) SetRoleHeight(s IDomainSession, g IDomainGuild, newRoleID strin
 		return err
 	}
 
+	numRoles := len(allRoles)
+	if numRoles == 0 {
+		return nil
+	}
+	if height < 0 {
+		return nil
+	}
+	if height >= numRoles {
+		height = numRoles - 1
+	}
+
 	var theRole IDomainRole
 	found := false
 	for idx, role := range allRoles {
@@ -290,7 +301,10 @@ func (d *domain) SetRoleHeight(s IDomainSession, g IDomainGuild, newRoleID strin
 	if !found {
 		return nil
 	}
-	payload := append(allRoles[:height], theRole)
+
+	payload := make([]IDomainRole, 0)
+	payload = append(payload, allRoles[:height]...)
+	payload = append(payload, theRole)
 	payload = append(payload, allRoles[height:]...)
 	return s.GuildRoleReorder(guildID, payload)
 }

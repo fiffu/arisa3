@@ -6,7 +6,7 @@ build: FORCE  ## Build app
 
 
 test:  ## Run unit tests
-	go test -failfast -covermode=count -coverprofile coverage.out ./...
+	gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./...
 	@go tool cover -func=coverage.out | grep 'total' | sed -e 's/\t\+/ /g'
 	@echo [make test] Done ✓
 

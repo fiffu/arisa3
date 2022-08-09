@@ -66,6 +66,60 @@ func (c *Cog) col(req types.ICommandEvent) error {
 	)
 }
 
+func (c *Cog) freezeCommand() *types.Command {
+	return types.NewCommand("freeze").ForChat().
+		Desc("Stops your colour from mutating").
+		Handler(func(req types.ICommandEvent) error {
+			return c.setFreeze(req, true)
+		})
+}
+
+func (c *Cog) unfreezeCommand() *types.Command {
+	return types.NewCommand("unfreeze").ForChat().
+		Desc("Makes your colour start mutating").
+		Handler(func(req types.ICommandEvent) error {
+			return c.setFreeze(req, false)
+		})
+}
+
+func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
+	from := req.Interaction().Member
+	if from == nil {
+		return req.Respond(types.NewResponse().Content("You need to be in a guild to use this command."))
+	}
+
+	s := NewDomainSession(req.Session())
+	guildID := req.Interaction().GuildID
+	userID := req.User().ID
+	mem, err := s.GuildMember(guildID, userID)
+	if err != nil {
+		// failed to get member
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
+		return err
+	}
+
+	un := ""
+	if !toFrozen {
+		un = "un"
+	}
+
+	if role := c.domain.GetColourRole(mem); role == nil {
+		// user has no colour role
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("User has no role to %sfreeze, guild=%s user=%s", un, guildID, userID)
+		return req.Respond(types.NewResponse().Content("You don't even have a colour role..."))
+	}
+
+	if err := c.domain.Freeze(mem); err != nil {
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored while freezing colour, guild=%s user=%s", guildID, userID)
+		return err
+	}
+
+	return req.Respond(types.NewResponse().Contentf("Your colour has been %sfrozen.", un))
+}
+
 func (c *Cog) mutate(msg types.IMessageEvent) {
 	guildID := msg.GuildID()
 	if guildID == "" {

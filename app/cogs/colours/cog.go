@@ -79,6 +79,8 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 	err := c.commands.Register(
 		s,
 		c.colCommand(),
+		c.freezeCommand(),
+		c.unfreezeCommand(),
 	)
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"time"
 
 	dgo "github.com/bwmarrin/discordgo"
@@ -10,7 +11,9 @@ type IEmbed interface {
 	Data() *dgo.MessageEmbed
 	URL(string) IEmbed
 	Title(string) IEmbed
+	Titlef(string, ...interface{}) IEmbed
 	Description(string) IEmbed
+	Descriptionf(string, ...interface{}) IEmbed
 	Timestamp(time.Time) IEmbed
 	Colour(int) IEmbed
 	Image(url string) IEmbed
@@ -46,6 +49,14 @@ func (e *embed) Colour(i int) IEmbed          { e.d.Color = i; return e }
 
 // Complex setters
 
+func (e *embed) Titlef(s string, v ...interface{}) IEmbed {
+	e.d.Title = fmt.Sprintf(s, v...)
+	return e
+}
+func (e *embed) Descriptionf(s string, v ...interface{}) IEmbed {
+	e.d.Description = fmt.Sprintf(s, v...)
+	return e
+}
 func (e *embed) Image(url string) IEmbed {
 	e.d.Image = &dgo.MessageEmbedImage{URL: url}
 	return e

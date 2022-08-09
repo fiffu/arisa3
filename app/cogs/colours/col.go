@@ -3,6 +3,7 @@ package colours
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fiffu/arisa3/app/engine"
@@ -11,10 +12,42 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func (c *Cog) onMessage(evt types.IMessageEvent) {
+	if evt.IsFromSelf() {
+		// Ignore bot's own messages
+		return
+	}
+	c.mutate(evt)
+}
+
 func (c *Cog) colCommand() *types.Command {
 	return types.NewCommand("col").ForChat().
 		Desc("Gives you a shiny new colour").
 		Handler(c.col)
+}
+
+func (c *Cog) freezeCommand() *types.Command {
+	return types.NewCommand("freeze").ForChat().
+		Desc("Stops your colour from mutating").
+		Handler(func(req types.ICommandEvent) error {
+			return c.setFreeze(req, true)
+		})
+}
+
+func (c *Cog) unfreezeCommand() *types.Command {
+	return types.NewCommand("unfreeze").ForChat().
+		Desc("Makes your colour start mutating").
+		Handler(func(req types.ICommandEvent) error {
+			return c.setFreeze(req, false)
+		})
+}
+
+func (c *Cog) colInfoCommand() *types.Command {
+	return types.NewCommand("colinfo").ForChat().
+		Desc("Tells you about your colour").
+		Handler(func(req types.ICommandEvent) error {
+			return c.colInfo(req)
+		})
 }
 
 func (c *Cog) col(req types.ICommandEvent) error {
@@ -56,55 +89,31 @@ func (c *Cog) col(req types.ICommandEvent) error {
 	}
 	engine.CommandLog(c, req, log.Info()).Msgf("Generated colour: #%s", newColour.ToHexcode())
 
-	r, g, b := newColour.scale255()
-	hex := newColour.ToHexcode()
-	title := fmt.Sprintf("#%s · rgb(%d, %d, %d)", hex, r, g, b)
-	embed := types.NewEmbed().Title(title).Colour(newColour.ToDecimal())
-
+	embed := newEmbed(newColour)
 	return req.Respond(
 		types.NewResponse().Embeds(embed),
 	)
 }
 
-func (c *Cog) freezeCommand() *types.Command {
-	return types.NewCommand("freeze").ForChat().
-		Desc("Stops your colour from mutating").
-		Handler(func(req types.ICommandEvent) error {
-			return c.setFreeze(req, true)
-		})
-}
-
-func (c *Cog) unfreezeCommand() *types.Command {
-	return types.NewCommand("unfreeze").ForChat().
-		Desc("Makes your colour start mutating").
-		Handler(func(req types.ICommandEvent) error {
-			return c.setFreeze(req, false)
-		})
-}
-
+// setFreeze will freeze or unfreeze a member's colour role.
 func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
-	from := req.Interaction().Member
-	if from == nil {
-		return req.Respond(types.NewResponse().Content("You need to be in a guild to use this command."))
-	}
-
-	s := NewDomainSession(req.Session())
-	guildID := req.Interaction().GuildID
-	userID := req.User().ID
-	mem, err := s.GuildMember(guildID, userID)
+	mem, resp, err := c.fetchMember(req)
 	if err != nil {
-		// failed to get member
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
 		return err
 	}
+	if resp != nil {
+		return req.Respond(resp)
+	}
 
+	guildID := mem.Guild().ID()
+	userID := mem.UserID()
 	un := ""
 	if !toFrozen {
 		un = "un"
 	}
 
-	if role := c.domain.GetColourRole(mem); role == nil {
+	role := c.domain.GetColourRole(mem)
+	if role == nil {
 		// user has no colour role
 		engine.CommandLog(c, req, log.Error()).Err(err).
 			Msgf("User has no role to %sfreeze, guild=%s user=%s", un, guildID, userID)
@@ -117,7 +126,8 @@ func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
 		return err
 	}
 
-	return req.Respond(types.NewResponse().Contentf("Your colour has been %sfrozen.", un))
+	emb := newEmbed(role.Colour()).Descriptionf("Your colour has been %sfrozen.", un)
+	return req.Respond(types.NewResponse().Embeds(emb))
 }
 
 func (c *Cog) mutate(msg types.IMessageEvent) {
@@ -154,4 +164,100 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 		engine.EventLog(c, msg.Event(), log.Error()).Err(err).
 			Msgf("Errored while mutating member, guild=%s user=%s", guildID, userID)
 	}
+}
+
+func (c *Cog) colInfo(req types.ICommandEvent) error {
+	mem, resp, err := c.fetchMember(req)
+	if err != nil {
+		return err
+	}
+	if resp != nil {
+		return req.Respond(resp)
+	}
+
+	guildID := mem.Guild().ID()
+	userID := mem.UserID()
+
+	role := c.domain.GetColourRole(mem)
+	if role == nil {
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("No colour role found, guild=%s user=%s", guildID, userID)
+		return req.Respond(types.NewResponse().
+			Content("You don't have a colour role. Use /col to get a random colour!"))
+	}
+
+	now := time.Now()
+	desc := make([]string, 0)
+
+	desc = append(desc, "**Reroll cooldown:**")
+	rerollCDEnds, err := c.domain.GetRerollCooldownEndTime(mem)
+	switch {
+	case err != nil:
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored getting cooldown end time, guild=%s user=%s", guildID, userID)
+		return err
+	case now.Before(rerollCDEnds):
+		desc = append(desc, utils.FormatDuration(rerollCDEnds.Sub(now)))
+	default:
+		desc = append(desc, "_(No cooldown, reroll available)_")
+	}
+
+	desc = append(desc, "\n")
+	desc = append(desc, "**Last mutate:**")
+	lastMutateTime, ok, err := c.domain.GetLastMutate(mem)
+	switch {
+	case err != nil:
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored getting last mutate time, guild=%s user=%s", guildID, userID)
+		return err
+	case !ok:
+		desc = append(desc, "_(Never)_")
+	default:
+		desc = append(desc, utils.FormatDuration(now.Sub(lastMutateTime)))
+	}
+
+	lastFrozenTime, err := c.domain.GetLastFrozen(mem)
+	switch {
+	case err != nil:
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored getting last frozen time, guild=%s user=%s", guildID, userID)
+		return err
+	case lastFrozenTime != Never:
+		desc = append(desc, utils.FormatDuration(now.Sub(lastFrozenTime)))
+	default:
+		// do nothing
+	}
+
+	embed := newEmbed(role.Colour()).Description(strings.Join(desc, "\n"))
+	return req.Respond(types.NewResponse().Embeds(embed))
+}
+
+func (c *Cog) fetchMember(req types.ICommandEvent) (IDomainMember, types.ICommandResponse, error) {
+	from := req.Interaction().Member
+	if from == nil {
+		resp := types.NewResponse().Content("You need to be in a guild to use this command.")
+		return nil, resp, nil
+	}
+
+	s := NewDomainSession(req.Session())
+	guildID := req.Interaction().GuildID
+	userID := req.User().ID
+	mem, err := s.GuildMember(guildID, userID)
+	if err != nil {
+		// failed to get member
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
+		return nil, nil, err
+	}
+
+	return mem, nil, nil
+}
+
+// newEmbed creates an embed object with title and colour defined.
+func newEmbed(colour *Colour) types.IEmbed {
+	r, g, b := colour.scale255()
+	hex := colour.ToHexcode()
+	return types.NewEmbed().
+		Titlef("#%s · rgb(%d, %d, %d)", hex, r, g, b).
+		Colour(colour.ToDecimal())
 }

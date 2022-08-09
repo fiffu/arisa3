@@ -33,6 +33,10 @@ type repo struct {
 }
 
 func NewRepository(db database.IDatabase) IDomainRepository {
+	return newRepo(db)
+}
+
+func newRepo(db database.IDatabase) *repo {
 	return &repo{
 		db:    db,
 		cache: make(map[string]map[Reason]time.Time),
@@ -79,7 +83,7 @@ func (r *repo) FetchUserState(user IDomainMember, reason Reason) (time.Time, err
 		return state, nil
 	}
 	if state, err := r.queryUserState(userID); err != nil {
-		if !errors.As(err, &database.ErrNoRecords) {
+		if errors.Is(err, database.ErrNoRecords) {
 			return Never, nil
 		}
 		return Never, err
@@ -110,11 +114,6 @@ func (r *repo) queryUserState(userID string) (*ColourState, error) {
 		records = append(records, rec)
 	}
 
-	// Collate records into a singular state object
-	// No records means no state
-	if len(records) == 0 {
-		return NoState, nil
-	}
 	state := ColourState{
 		UserID:     userID,
 		LastMutate: Never,

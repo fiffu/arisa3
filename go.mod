@@ -3,6 +3,7 @@ module github.com/fiffu/arisa3
 go 1.16
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/bwmarrin/discordgo v0.24.0
 	github.com/carlmjohnson/requests v0.21.10 // indirect
 	github.com/go-playground/validator/v10 v10.10.1 // indirect

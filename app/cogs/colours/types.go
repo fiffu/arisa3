@@ -23,9 +23,6 @@ const (
 
 /* Sentinel values */
 
-// NoState indicates user has never interacted with the Colour Roles domain.
-var NoState = &ColourState{}
-
 // Never indicates that user has state within the domain, but no records for the given Reason.
 var Never = time.Time{} // the zero value
 

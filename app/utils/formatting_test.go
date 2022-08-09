@@ -1,4 +1,4 @@
-package colours
+package utils
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_formatDuration(t *testing.T) {
+func Test_FormatDuration(t *testing.T) {
 	testCases := []struct {
 		hours, mins, secs int
 		expect            string
@@ -64,7 +64,7 @@ func Test_formatDuration(t *testing.T) {
 		desc := fmt.Sprintf("duration %v should be formatted as %s", duration, tc.expect)
 
 		t.Run(desc, func(t *testing.T) {
-			actual := formatDuration(duration)
+			actual := FormatDuration(duration)
 			assert.Equal(t, tc.expect, actual)
 		})
 	}

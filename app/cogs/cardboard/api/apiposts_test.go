@@ -40,7 +40,7 @@ func Test_GetPosts(t *testing.T) {
 	client := newClient("username", "apikey", 0)
 
 	expect := []*Post{samplePost}
-	expectURL := "https://danbooru.donmai.us/posts.json?limit=100&tags=capybara"
+	expectURL := "https://danbooru.donmai.us/posts.json?limit=100&tags=capybara+original"
 
 	stubJSON := `[
 		{
@@ -59,7 +59,7 @@ func Test_GetPosts(t *testing.T) {
 	]`
 	client.fetch = lib.StubJSONFetcher(t, expectURL, http.StatusOK, stubJSON)
 
-	actual, err := client.GetPosts([]string{"capybara"})
+	actual, err := client.GetPosts([]string{"capybara", "original"})
 
 	assert.NoError(t, err)
 	assert.Equal(t, expect, actual)

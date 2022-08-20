@@ -24,9 +24,4 @@ func Test_Slice_ChainingCalls(t *testing.T) {
 		99,
 		s.Take(1).Shuffle().TakeRandom(),
 	)
-	assert.Equal(
-		t,
-		[]Tuple[int, int]{{99, 55}},
-		s.Take(1).Shuffle().Zip([]int{55}),
-	)
 }

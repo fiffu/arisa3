@@ -12,12 +12,14 @@ func Test_Tags_WithMagic_ShouldYieldRatingTags(t *testing.T) {
 	q.WithSafe()
 	actual := q.Tags()
 	assert.Contains(t, actual, "xyz")
-	assert.Contains(t, actual, tagRatingSafe)
+	assert.Contains(t, actual, noRatingS)
+	assert.Contains(t, actual, noRatingE)
 
 	q.WithUnsafe()
 	actual = q.Tags()
 	assert.Contains(t, actual, "xyz")
-	assert.Contains(t, actual, tagRatingUnsafe)
+	// assert.Contains(t, actual, noRatingQ)
+	assert.Contains(t, actual, noRatingG)
 }
 
 func Test_Tags_WithNoMagic_ShouldDropRatingTags(t *testing.T) {
@@ -26,10 +28,16 @@ func Test_Tags_WithNoMagic_ShouldDropRatingTags(t *testing.T) {
 	q.WithSafe()
 	actual := q.Tags()
 	assert.Contains(t, actual, "xyz")
-	assert.NotContains(t, actual, tagRatingSafe)
+	assert.NotContains(t, actual, noRatingQ)
+	assert.NotContains(t, actual, noRatingE)
+	assert.NotContains(t, actual, noRatingS)
+	assert.NotContains(t, actual, noRatingG)
 
 	q.WithUnsafe()
 	actual = q.Tags()
 	assert.Contains(t, actual, "xyz")
-	assert.NotContains(t, actual, tagRatingUnsafe)
+	assert.NotContains(t, actual, noRatingQ)
+	assert.NotContains(t, actual, noRatingE)
+	assert.NotContains(t, actual, noRatingS)
+	assert.NotContains(t, actual, noRatingG)
 }

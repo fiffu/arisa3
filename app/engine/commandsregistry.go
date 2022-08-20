@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/lib/functional"
 
 	dgo "github.com/bwmarrin/discordgo"
 	"github.com/rs/zerolog/log"
@@ -136,6 +137,8 @@ func parseArgs(cmd types.ICommand, args []*dgo.ApplicationCommandInteractionData
 			mapping[opt] = arg
 		}
 	}
-	registryLog(log.Info()).Str(types.CtxCommand, cmd.Name()).Msgf("Parsed options: %v", args)
+	registryLog(log.Info()).
+		Str(types.CtxCommand, cmd.Name()).
+		Msgf("Parsed options: %+v", functional.Deref(args))
 	return types.NewArgs(cmd, mapping)
 }

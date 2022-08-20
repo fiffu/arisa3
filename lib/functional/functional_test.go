@@ -163,3 +163,15 @@ func Test_Contains(t *testing.T) {
 	assert.False(t, Contains(empty, "c"))
 	assert.False(t, Contains(empty, "z"))
 }
+
+func Test_Deref(t *testing.T) {
+	one, two, three := 1, 2, 3
+	abc := []*int{
+		&one, &two, &three,
+	}
+	assert.ElementsMatch(
+		t,
+		Deref(abc),
+		[]int{1, 2, 3},
+	)
+}

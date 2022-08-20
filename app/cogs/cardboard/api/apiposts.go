@@ -72,7 +72,7 @@ func (c *client) GetPosts(tags []string) ([]*Post, error) {
 
 	var result []*Post
 	builder := c.requestPosts().
-		Param("tags", commaJoin(tags)).
+		Param("tags", spaceJoin(tags)).
 		Param("limit", fmt.Sprint(MaxPosts)).
 		ToJSON(&result)
 

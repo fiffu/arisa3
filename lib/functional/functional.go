@@ -83,8 +83,8 @@ func Map[T, U any](elems []T, mapper func(T) U) []U {
 	return result
 }
 
-// Deref takes an input slice of pointers and returns a slice storing their dereferenced
-// values.
+// Deref takes an input slice of pointers and returns a slice storing their
+// dereferenced values.
 func Deref[T any](elems []*T) []T {
 	return Map(elems, func(in *T) T {
 		return *in

@@ -71,12 +71,12 @@ func spaceJoin(strs []string) string {
 }
 
 func defaultFetcher(ctx context.Context, builder *requests.Builder) error {
-	startAt := time.Now()
+	startTime := time.Now()
 	var interceptor requests.RoundTripFunc = func(req *http.Request) (*http.Response, error) {
 		reqID := newRequestID()
-		logRequest(reqID, req, startAt)
+		logRequest(reqID, req, startTime)
 		res, err := http.DefaultTransport.RoundTrip(req)
-		logResponse(reqID, req, res, startAt, err)
+		logResponse(reqID, req, res, startTime, err)
 		return res, err
 	}
 	return builder.Transport(interceptor).Fetch(ctx)
@@ -88,14 +88,14 @@ func newRequestID() string {
 	return strings.ToUpper(s)
 }
 
-func logRequest(reqID string, req *http.Request, startAt time.Time) {
+func logRequest(reqID string, req *http.Request, startTime time.Time) {
 	log.Info().
 		Str("reqID", reqID).
 		Msgf("%s %s", req.Method, req.URL.String())
 }
 
-func logResponse(reqID string, req *http.Request, res *http.Response, startAt time.Time, err error) {
-	elapsed := time.Since(startAt)
+func logResponse(reqID string, req *http.Request, res *http.Response, startTime time.Time, err error) {
+	elapsed := time.Since(startTime)
 
 	body, ioErr := io.ReadAll(res.Body)
 	res.Body = io.NopCloser(bytes.NewBuffer(body))

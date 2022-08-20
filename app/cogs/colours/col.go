@@ -164,7 +164,6 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 		desc = append(desc, "_(No cooldown, reroll available)_")
 	}
 
-	desc = append(desc, "\n")
 	desc = append(desc, "**Last mutate:**")
 	lastMutateTime, ok, err := c.domain.GetLastMutate(mem)
 	switch {

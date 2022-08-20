@@ -75,61 +75,108 @@ func Test_EscapeMarkdown(t *testing.T) {
 
 func Test_FormatDuration(t *testing.T) {
 	testCases := []struct {
-		hours, mins, secs int
-		expect            string
+		days, hours, mins, secs int
+		minusEpsilon            bool
+		expect                  string
 	}{
-		// h
-		{
-			hours:  1,
-			expect: "1hr",
-		},
-		// m
-		{
-			mins:   2,
-			expect: "2min",
-		},
-		// s
-		{
-			secs:   3,
-			expect: "less than a minute",
-		},
-		// h,m
-		{
-			hours:  1,
-			mins:   2,
-			expect: "1hr 2min",
-		},
-		// h,s
-		{
-			hours:  1,
-			secs:   2,
-			expect: "1hr",
-		},
-		// m,s
-		{
-			mins:   2,
-			secs:   3,
-			expect: "2min",
-		},
-
-		// h, m, s
-		{
-			hours:  1,
-			mins:   2,
-			secs:   3,
-			expect: "1hr 2min",
-		},
-
-		// none
+		// <1 min
 		{
 			expect: "none",
 		},
+		{
+			secs:   1,
+			expect: "less than a minute",
+		},
+		{
+			secs:   30,
+			expect: "less than a minute",
+		},
+		{
+			mins:         1,
+			minusEpsilon: true,
+			expect:       "less than a minute",
+		},
+
+		// 1 to 59.99 mins
+		{
+			mins:   1,
+			expect: "1 min",
+		},
+		{
+			mins:   3,
+			secs:   2,
+			expect: "3 mins",
+		},
+		{
+			hours:        1,
+			minusEpsilon: true,
+			expect:       "59 mins",
+		},
+
+		// 1 to 23.99 hours
+		{
+			hours:  1,
+			expect: "1 hour",
+		},
+		{
+			hours:  3,
+			secs:   4,
+			expect: "3 hours",
+		},
+		{
+			hours:  3,
+			mins:   4,
+			secs:   4,
+			expect: "3 hours 4 mins",
+		},
+		{
+			days:         1,
+			minusEpsilon: true,
+			expect:       "23 hours 59 mins",
+		},
+
+		// 1 to 13.99 days
+		{
+			days:   1,
+			expect: "1 day",
+		},
+		{
+			days:   1,
+			hours:  4,
+			expect: "1 day, 4 hours",
+		},
+		{
+			days:   3,
+			hours:  4,
+			expect: "3 days, 4 hours",
+		},
+		{
+			days:         14,
+			minusEpsilon: true,
+			expect:       "13 days, 23 hours",
+		},
+
+		// 14 days and over
+		{
+			days:   14,
+			expect: "14 days",
+		},
+		{
+			days:   16,
+			hours:  4,
+			expect: "16 days",
+		},
 	}
 	for _, tc := range testCases {
+		d := time.Duration(tc.days) * time.Hour * 24
 		h := time.Duration(tc.hours) * time.Hour
 		m := time.Duration(tc.mins) * time.Minute
 		s := time.Duration(tc.secs) * time.Second
-		duration := h + m + s
+		duration := d + h + m + s
+		if tc.minusEpsilon {
+			epsilon := 1 * time.Millisecond
+			duration -= epsilon
+		}
 
 		desc := fmt.Sprintf("duration %v should be formatted as %s", duration, tc.expect)
 

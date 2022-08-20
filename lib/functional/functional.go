@@ -63,9 +63,10 @@ func TakeRandom[T any](elems []T) T {
 	return elems[n]
 }
 
-func Contains[T comparable](elems []T, needle T) bool {
+// Contains returns whether the given elem is found in the input slice of elems.
+func Contains[T comparable](elems []T, elem T) bool {
 	for _, e := range elems {
-		if e == needle {
+		if e == elem {
 			return true
 		}
 	}

@@ -76,6 +76,7 @@ func Test_EscapeMarkdown(t *testing.T) {
 func Test_FormatDuration(t *testing.T) {
 	testCases := []struct {
 		days, hours, mins, secs int
+		minusEpsilon            bool
 		expect                  string
 	}{
 		// <1 min
@@ -83,9 +84,17 @@ func Test_FormatDuration(t *testing.T) {
 			expect: "none",
 		},
 		{
-			mins:   1,
-			secs:   -1,
+			secs:   1,
 			expect: "less than a minute",
+		},
+		{
+			secs:   30,
+			expect: "less than a minute",
+		},
+		{
+			mins:         1,
+			minusEpsilon: true,
+			expect:       "less than a minute",
 		},
 
 		// 1 to 59.99 mins
@@ -99,9 +108,9 @@ func Test_FormatDuration(t *testing.T) {
 			expect: "3 mins",
 		},
 		{
-			mins:   4,
-			secs:   -1,
-			expect: "3 mins",
+			hours:        1,
+			minusEpsilon: true,
+			expect:       "59 mins",
 		},
 
 		// 1 to 23.99 hours
@@ -121,12 +130,12 @@ func Test_FormatDuration(t *testing.T) {
 			expect: "3 hours 4 mins",
 		},
 		{
-			hours:  24,
-			secs:   -1,
-			expect: "23 hours 59 mins",
+			days:         1,
+			minusEpsilon: true,
+			expect:       "23 hours 59 mins",
 		},
 
-		// at least 1 day
+		// 1 to 13.99 days
 		{
 			days:   1,
 			expect: "1 day",
@@ -142,8 +151,15 @@ func Test_FormatDuration(t *testing.T) {
 			expect: "3 days, 4 hours",
 		},
 		{
-			days:   16,
-			expect: "16 days",
+			days:         14,
+			minusEpsilon: true,
+			expect:       "13 days, 23 hours",
+		},
+
+		// 14 days and over
+		{
+			days:   14,
+			expect: "14 days",
 		},
 		{
 			days:   16,
@@ -157,6 +173,10 @@ func Test_FormatDuration(t *testing.T) {
 		m := time.Duration(tc.mins) * time.Minute
 		s := time.Duration(tc.secs) * time.Second
 		duration := d + h + m + s
+		if tc.minusEpsilon {
+			epsilon := 1 * time.Millisecond
+			duration -= epsilon
+		}
 
 		desc := fmt.Sprintf("duration %v should be formatted as %s", duration, tc.expect)
 

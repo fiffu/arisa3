@@ -1,11 +1,16 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"io"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/carlmjohnson/requests"
+	"github.com/fiffu/arisa3/lib/functional"
 	"github.com/rs/zerolog/log"
 )
 
@@ -61,8 +66,54 @@ func commaJoin(strs []string) string {
 	return strings.Join(strs, ",")
 }
 
+func spaceJoin(strs []string) string {
+	return strings.Join(strs, " ")
+}
+
 func defaultFetcher(ctx context.Context, builder *requests.Builder) error {
-	return builder.Fetch(ctx)
+	startTime := time.Now()
+	var interceptor requests.RoundTripFunc = func(req *http.Request) (*http.Response, error) {
+		reqID := newRequestID()
+		logRequest(reqID, req, startTime)
+		res, err := http.DefaultTransport.RoundTrip(req)
+		logResponse(reqID, req, res, startTime, err)
+		return res, err
+	}
+	return builder.Transport(interceptor).Fetch(ctx)
+}
+
+func newRequestID() string {
+	seed := time.Now().UnixMicro()
+	s := strconv.FormatInt(seed, 36)
+	return strings.ToUpper(s)
+}
+
+func logRequest(reqID string, req *http.Request, startTime time.Time) {
+	log.Info().
+		Str("reqID", reqID).
+		Msgf("%s %s", req.Method, req.URL.String())
+}
+
+func logResponse(reqID string, req *http.Request, res *http.Response, startTime time.Time, err error) {
+	elapsed := time.Since(startTime)
+
+	body, ioErr := io.ReadAll(res.Body)
+	res.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	if err != nil {
+		log.Error().
+			Str("reqID", reqID).
+			Msgf("%s %s in %dms - request error: %s", req.Method, res.Status, elapsed.Milliseconds(), err)
+	} else if ioErr != nil {
+		log.Error().
+			Str("reqID", reqID).
+			Msgf("%s %s in %dms - io error: %s", req.Method, res.Status, elapsed.Milliseconds(), ioErr)
+	} else {
+		peek300Bytes := functional.SliceOf(body).Take(100) // First 100 bytes
+		log.Info().
+			Str("reqID", reqID).
+			Msgf("%s %s in %dms - body: %s ...", req.Method, res.Status, elapsed.Milliseconds(), peek300Bytes)
+	}
 }
 
 // UseAuth implements IClient.

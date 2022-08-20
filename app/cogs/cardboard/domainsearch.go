@@ -10,7 +10,9 @@ import (
 func (d *domain) boringSearch(q IQueryPosts) ([]*api.Post, error) {
 	tags := q.Tags()
 	log.Info().Msgf("Querying for posts tagged='%v'", strings.Join(tags, " "))
-	return d.client.GetPosts(tags)
+	posts, err := d.client.GetPosts(tags)
+	log.Info().Msgf("Got %d posts, err=%v", len(posts), err)
+	return posts, err
 }
 
 func (d *domain) magicSearch(q IQueryPosts, tryGuessTerm bool) ([]*api.Post, error) {
@@ -51,10 +53,12 @@ func (d *domain) magicSearch(q IQueryPosts, tryGuessTerm bool) ([]*api.Post, err
 	switch {
 	// Found results, we are done
 	case len(posts) > 0:
+		log.Info().Msgf("magicSearch returning with %d posts", len(posts))
 		return posts, nil
 
 	// If we still have a chance to guess, do it
 	case tryGuessTerm:
+		log.Info().Msgf("magicSearch attempting to guess another tag from query: %+v", q)
 		guess, err := d.guessTag(q)
 		if err != nil {
 			// Log the error then give up

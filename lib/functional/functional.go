@@ -16,23 +16,6 @@ type Tuple[T, U any] struct {
 	Right U
 }
 
-// Zip combines both input slice into a slice of tuples.
-// Each nth tuple holds the nth element from both lists.
-// The two input slices can hold different types.
-func Zip[T any, U any](left []T, right []U) []Tuple[T, U] {
-	var result []Tuple[T, U]
-
-	size := min(len(left), len(right))
-	for i, t := range left {
-		if i == size {
-			break
-		}
-		u := right[i]
-		result = append(result, Tuple[T, U]{Left: t, Right: u})
-	}
-	return result
-}
-
 // Shuffle returns a copy of input, with elements randomly reordered.
 func Shuffle[T any](input []T) []T {
 	elems := make([]T, len(input))
@@ -71,4 +54,39 @@ func Contains[T comparable](elems []T, elem T) bool {
 		}
 	}
 	return false
+}
+
+// Zip combines both input slice into a slice of tuples.
+// Each nth tuple holds the nth element from both lists.
+// The two input slices can hold different types.
+func Zip[T, U any](left []T, right []U) []Tuple[T, U] {
+	var result []Tuple[T, U]
+
+	size := min(len(left), len(right))
+	for i, t := range left {
+		if i == size {
+			break
+		}
+		u := right[i]
+		result = append(result, Tuple[T, U]{Left: t, Right: u})
+	}
+	return result
+}
+
+// Map applies the given mapper function to every element of the input slice.
+// The result is a slice holding each result returned by the mapper function.
+func Map[T, U any](elems []T, mapper func(T) U) []U {
+	var result []U
+	for _, t := range elems {
+		result = append(result, mapper(t))
+	}
+	return result
+}
+
+// Deref takes an input slice of pointers and returns a slice storing their
+// dereferenced values.
+func Deref[T any](elems []*T) []T {
+	return Map(elems, func(in *T) T {
+		return *in
+	})
 }

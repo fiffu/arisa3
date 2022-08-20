@@ -67,14 +67,15 @@ func (p *Post) repairURL(url string) string {
 
 // GetPosts lists posts matching the given query.
 func (c *client) GetPosts(tags []string) ([]*Post, error) {
-	ctx, cancel := c.context()
+	ctx, cancel := c.httpContext()
 	defer cancel()
 
 	var result []*Post
-	err := c.requestPosts().
+	builder := c.requestPosts().
 		Param("tags", commaJoin(tags)).
 		Param("limit", fmt.Sprint(MaxPosts)).
-		ToJSON(&result).
-		Fetch(ctx)
+		ToJSON(&result)
+
+	err := c.fetch(ctx, builder)
 	return result, err
 }

@@ -11,6 +11,7 @@ type ICommandResponse interface {
 	Data() *dgo.InteractionResponse
 	TTS() ICommandResponse
 	Content(string) ICommandResponse
+	Contentf(string, ...interface{}) ICommandResponse
 	Embeds(...IEmbed) ICommandResponse
 	// Components() ICommandResponse
 	// Files() ICommandResponse

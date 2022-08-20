@@ -7,3 +7,6 @@ arisa3
 
 # code coverage
 coverage.out
+
+# IDE
+.vscode

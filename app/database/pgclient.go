@@ -47,7 +47,7 @@ func (c *pgclient) Close() error {
 func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {
 	log.Info().Msgf("Query: %s", query)
 	rows, err := c.pool.Query(query, args...)
-	if errors.Is(err, sql.ErrNoRows) {
+	if err == sql.ErrNoRows {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
 	}
 	return rows, err
@@ -64,15 +64,15 @@ func (c *pgclient) Begin() (ITransaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pgtxn{t}, nil
+	return sqlTxWrap{t}, nil
 }
 
-// pgtxn implements ITransaction for database/sql + lib/pq.
-type pgtxn struct {
+// sqlTxWrap implements ITransaction for (database/sql).*Tx.
+type sqlTxWrap struct {
 	*sql.Tx
 }
 
-func (t pgtxn) Query(query string, args ...interface{}) (IRows, error) {
+func (t sqlTxWrap) Query(query string, args ...interface{}) (IRows, error) {
 	log.Info().Msgf("Query: %s", query)
 	rows, err := t.Tx.Query(query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -81,7 +81,7 @@ func (t pgtxn) Query(query string, args ...interface{}) (IRows, error) {
 	return rows, err
 }
 
-func (t pgtxn) Exec(query string, args ...interface{}) (IResult, error) {
+func (t sqlTxWrap) Exec(query string, args ...interface{}) (IResult, error) {
 	log.Info().Msgf("Exec: %s", query)
 	return t.Tx.Exec(query, args...)
 }

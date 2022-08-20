@@ -85,8 +85,9 @@ func Shuffle() Filter {
 
 func HasMediaFile() Filter {
 	condition := func(post *api.Post) bool {
-		return lib.ContainsStr(api.MediaFileExts, post.FileExt) &&
-			post.GetFileURL() != ""
+		hasMediaExt := lib.ContainsStr(api.MediaFileExts, post.FileExt)
+		hasURL := post.GetFileURL() != ""
+		return hasMediaExt && hasURL
 	}
 	return postsFilter(condition)
 }

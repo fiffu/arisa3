@@ -79,6 +79,9 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 	err := c.commands.Register(
 		s,
 		c.colCommand(),
+		c.freezeCommand(),
+		c.unfreezeCommand(),
+		c.colInfoCommand(),
 	)
 	if err != nil {
 		return err
@@ -90,10 +93,44 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 func (c *Cog) registerEvents(sess *dgo.Session) {
 	sess.AddHandler(func(s *dgo.Session, m *dgo.MessageCreate) {
 		evt := types.NewMessageEvent(s, m)
-		if evt.IsFromSelf() {
-			// Ignore bot's own messages
-			return
-		}
-		c.mutate(evt)
+		c.onMessage(evt)
 	})
+}
+
+func (c *Cog) onMessage(evt types.IMessageEvent) {
+	if evt.IsFromSelf() {
+		// Ignore bot's own messages
+		return
+	}
+	c.mutate(evt)
+}
+
+func (c *Cog) colCommand() *types.Command {
+	return types.NewCommand("col").ForChat().
+		Desc("Gives you a shiny new colour").
+		Handler(c.col)
+}
+
+func (c *Cog) freezeCommand() *types.Command {
+	return types.NewCommand("freeze").ForChat().
+		Desc("Stops your colour from mutating").
+		Handler(func(req types.ICommandEvent) error {
+			return c.setFreeze(req, true)
+		})
+}
+
+func (c *Cog) unfreezeCommand() *types.Command {
+	return types.NewCommand("unfreeze").ForChat().
+		Desc("Makes your colour start mutating").
+		Handler(func(req types.ICommandEvent) error {
+			return c.setFreeze(req, false)
+		})
+}
+
+func (c *Cog) colInfoCommand() *types.Command {
+	return types.NewCommand("colinfo").ForChat().
+		Desc("Tells you about your colour").
+		Handler(func(req types.ICommandEvent) error {
+			return c.colInfo(req)
+		})
 }

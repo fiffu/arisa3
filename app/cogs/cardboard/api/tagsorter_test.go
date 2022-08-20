@@ -33,6 +33,12 @@ func Test_TagsSorter(t *testing.T) {
 			comparer:    ByTagLength,
 			expectOrder: []string{"ham", "spam", "bacon"},
 		},
+		{
+			desc:        "Sorted ByTagLength uses alphabetical order for tie-breaker",
+			input:       factory("cantankerous", "candle", "cancer"),
+			comparer:    ByTagLength,
+			expectOrder: []string{"cancer", "candle", "cantankerous"},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {

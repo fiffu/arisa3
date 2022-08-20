@@ -4,7 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
-	"github.com/fiffu/arisa3/lib"
+	"github.com/fiffu/arisa3/lib/functional"
 )
 
 type opsHelper struct {
@@ -85,7 +85,7 @@ func Shuffle() Filter {
 
 func HasMediaFile() Filter {
 	condition := func(post *api.Post) bool {
-		hasMediaExt := lib.ContainsStr(api.MediaFileExts, post.FileExt)
+		hasMediaExt := functional.Contains(api.MediaFileExts, post.FileExt)
 		hasURL := post.GetFileURL() != ""
 		return hasMediaExt && hasURL
 	}

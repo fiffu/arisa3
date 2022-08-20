@@ -65,7 +65,7 @@ func (c *Colour) Random() *Colour {
 func (c *Colour) Nudge() *Colour {
 	step := func() float64 {
 		distance := lib.UniformRange(0.08, 0.15)
-		if lib.ChooseBool() {
+		if lib.CoinFlip() {
 			distance *= -1
 		}
 		return distance

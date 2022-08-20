@@ -10,7 +10,7 @@ test:  ## Run unit tests
 	# Ensure gotestsum is installed
 	go install gotest.tools/gotestsum@v1.8.1
 
-	gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./...
+	gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./... | column -t -s '()' | sed 's/ of statements//g'
 
 	# Strip mock files from the coverage count 😔
 	sed -i '/.*_mock.go:.*/d' coverage.out

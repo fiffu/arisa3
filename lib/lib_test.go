@@ -97,37 +97,46 @@ func Test_UniformRange(t *testing.T) {
 			assert.GreaterOrEqual(t, tc.hi, out)
 		}
 	}
+
+	out := UniformRange(1.0, -1.0) // expect this to work even if hi and lo are swapped in inputs
+	assert.LessOrEqual(t, -1.0, out)
+	assert.GreaterOrEqual(t, 1.0, out)
 }
 
-func Test_ChooseString(t *testing.T) {
-	choices := []string{"a", "b"}
-	outcome := make(map[string]bool)
-
-	i := 0
-	for len(outcome) < 2 && i < 1000 {
-		choice := ChooseString(choices)
-		outcome[choice] = true
-	}
-	assert.Len(t, outcome, len(choices))
-}
-
-func Test_ChooseBool(t *testing.T) {
+func Test_CoinFlip(t *testing.T) {
 	outcome := make(map[bool]bool)
 
 	i := 0
 	for len(outcome) < 2 && i < 1000 {
-		choice := ChooseBool()
+		choice := CoinFlip()
 		outcome[choice] = true
 	}
 	assert.Len(t, outcome, 2)
 }
 
-func Test_ContainsStr(t *testing.T) {
-	abcList := []string{"a", "b", "c"}
-	list := []string{}
-	for _, abc := range abcList {
-		assert.True(t, ContainsStr(abcList, abc))
-		assert.False(t, ContainsStr(abcList, "xyz"))
-		assert.False(t, ContainsStr(list, abc))
+func Test_IntDivmod(t *testing.T) {
+	testCases := []struct {
+		left, right                     int
+		expectQuotient, expectRemainder int
+	}{
+		{
+			5, 3,
+			1, 2,
+		},
+		{
+			99, 11,
+			9, 0,
+		},
+	}
+	for _, tc := range testCases {
+		desc := fmt.Sprintf(
+			"%d // %d should yield quotient of %d and remainder of %d",
+			tc.left, tc.right, tc.expectQuotient, tc.expectRemainder,
+		)
+		t.Run(desc, func(t *testing.T) {
+			q, r := IntDivmod(tc.left, tc.right)
+			assert.Equal(t, tc.expectQuotient, q)
+			assert.Equal(t, tc.expectRemainder, r)
+		})
 	}
 }

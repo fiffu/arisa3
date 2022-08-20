@@ -10,6 +10,7 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
+	"github.com/fiffu/arisa3/lib/functional"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,6 +18,7 @@ const (
 	PokiesSize        = "grid_size"
 	pokiesDefaultRows = 1
 	pokiesDefaultCols = 3
+	pokiesNumSymbols  = 20 // Number of symbols per slot
 )
 
 type cachedEmojis struct {
@@ -118,14 +120,16 @@ func buildGrid(rows, cols int, emojis []*discordgo.Emoji) (result string, sizeCh
 	// Reset the rand seed otherwise it will always yield the same result
 	rand.Seed(time.Now().Unix())
 
-	emojiCount := len(emojis)
+	slotPool := functional.SliceOf(emojis).
+		Shuffle().
+		Take(pokiesNumSymbols)
+
 	grid := make([]string, rows)
 
 	for y := range grid {
 		row := make([]string, cols)
 		for x := range row {
-			n := rand.Intn(emojiCount)
-			row[x] = emojis[n].MessageFormat()
+			row[x] = slotPool.TakeRandom().MessageFormat()
 		}
 		grid[y] = strings.Join(row, " ")
 	}

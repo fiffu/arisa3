@@ -21,6 +21,6 @@ repos:
     pass_filenames: false
   - id: go-test
     name: go test
-    entry: gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./...
+    entry: gotestsum -f dots -- -failfast ./...
     language: system
     pass_filenames: false

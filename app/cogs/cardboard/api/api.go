@@ -26,9 +26,14 @@ type client struct {
 	apiKey      string
 	host        string
 	timeoutSecs int
+	fetch       func(context.Context, *requests.Builder) error
 }
 
 func NewClient(username, apiKey string, timeoutSecs int) IClient {
+	return newClient(username, apiKey, timeoutSecs)
+}
+
+func newClient(username, apiKey string, timeoutSecs int) *client {
 	auth := false
 	switch {
 	case username != "" && apiKey != "":
@@ -48,18 +53,29 @@ func NewClient(username, apiKey string, timeoutSecs int) IClient {
 		apiKey,
 		apiHost,
 		timeoutSecs,
+		defaultFetcher,
 	}
-}
-
-func (c *client) FaviconURL() string {
-	return apiHostHTTPS + faviconPath
 }
 
 func commaJoin(strs []string) string {
 	return strings.Join(strs, ",")
 }
 
-func (c *client) context() (context.Context, context.CancelFunc) {
+func defaultFetcher(ctx context.Context, builder *requests.Builder) error {
+	return builder.Fetch(ctx)
+}
+
+// UseAuth implements IClient.
+func (c *client) UseAuth() bool {
+	return c.auth
+}
+
+// FaviconURL implements IClient.
+func (c *client) FaviconURL() string {
+	return apiHostHTTPS + faviconPath
+}
+
+func (c *client) httpContext() (context.Context, context.CancelFunc) {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.timeoutSecs)*time.Second)
 	return ctx, cancel
@@ -68,7 +84,7 @@ func (c *client) context() (context.Context, context.CancelFunc) {
 func (c *client) baseRequest() *requests.Builder {
 	b := &requests.Builder{}
 	b.Host(c.host)
-	if c.auth {
+	if c.UseAuth() {
 		b.BasicAuth(c.username, c.apiKey)
 	}
 	return b

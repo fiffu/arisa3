@@ -11,6 +11,10 @@ test:  ## Run unit tests
 	go install gotest.tools/gotestsum@v1.8.1
 
 	gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./...
+
+	# Strip mock files from the coverage count 😔
+	sed -i '/.*_mock.go:.*/d' coverage.out
+
 	@go tool cover -func=coverage.out | grep 'total' | sed -e 's/\t\+/ /g'
 	@echo [make test] Done ✓
 

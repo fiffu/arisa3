@@ -21,7 +21,7 @@ func (d *domain) magicSearch(q IQueryPosts, tryGuessTerm bool) ([]*api.Post, err
 	if err != nil {
 		// Log the error but don't break the flow
 		log.Error().Err(err).Msgf("Errored while fetching aliases")
-	} else {
+	} else if newTerm != q.Term() {
 		log.Info().Msgf("Resolved alias %s -> %s", q.Term(), newTerm)
 		q.SetTerm(newTerm)
 	}
@@ -90,17 +90,23 @@ func (d *domain) filter(q IQueryPosts, posts []*api.Post) ([]*api.Post, error) {
 	}
 
 	helper := &opsHelper{opsMapping}
-	for _, f := range []Filter{
-		HasMediaFile(),
-		HasURL(),
-		Shuffle(),
+	for fName, f := range map[string]Filter{
+		"HasMediaFile": HasMediaFile(),
+		"HasURL":       HasURL(),
+		"Shuffle":      Shuffle(),
 
-		OmitFilter(helper),
-		PromoteFilter(helper),
-		DemoteFilter(helper),
+		"OmitFilter":    OmitFilter(helper),
+		"PromoteFilter": PromoteFilter(helper),
+		"DemoteFilter":  DemoteFilter(helper),
 	} {
+		before := len(posts)
 		posts = f(posts)
-		if len(posts) == 0 {
+		after := len(posts)
+
+		if after < before {
+			log.Info().Msgf("%d posts excluded by filter %s", before-after, fName)
+		}
+		if after == 0 {
 			break
 		}
 	}
@@ -138,5 +144,6 @@ func (d *domain) guessTag(q IQueryPosts) (string, error) {
 		return term, nil
 	}
 
+	matches = api.TagsSorter{Data: matches, Compare: api.ByTagLength}.Sorted()
 	return matches[0].Name, nil
 }

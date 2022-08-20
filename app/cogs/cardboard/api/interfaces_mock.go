@@ -91,3 +91,17 @@ func (mr *MockIClientMockRecorder) GetTagsMatching(pattern interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsMatching", reflect.TypeOf((*MockIClient)(nil).GetTagsMatching), pattern)
 }
+
+// UseAuth mocks base method.
+func (m *MockIClient) UseAuth() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UseAuth")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// UseAuth indicates an expected call of UseAuth.
+func (mr *MockIClientMockRecorder) UseAuth() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UseAuth", reflect.TypeOf((*MockIClient)(nil).UseAuth))
+}

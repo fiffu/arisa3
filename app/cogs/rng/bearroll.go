@@ -3,7 +3,7 @@ package rng
 import (
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
-	"github.com/fiffu/arisa3/lib"
+	"github.com/fiffu/arisa3/lib/functional"
 )
 
 var (
@@ -22,7 +22,7 @@ func (c *Cog) bearRollCommand() *types.Command {
 }
 
 func (c *Cog) bearRoll(req types.ICommandEvent) error {
-	bear := lib.ChooseString(bears)
+	bear := functional.SliceOf(bears).TakeRandom()
 	resp := types.NewResponse().Content(bear)
 	return req.Respond(resp)
 }

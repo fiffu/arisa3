@@ -61,24 +61,9 @@ func UniformRange(floor, ceiling float64) float64 {
 	return floor + ratio*delta
 }
 
-func ChooseString(options []string) string {
-	size := len(options)
-	n := rand.Intn(size)
-	return options[n]
-}
-
-func ChooseBool() bool {
+func CoinFlip() bool {
 	n := rand.Intn(2)
 	return n == 0
-}
-
-func ContainsStr(list []string, str string) bool {
-	for _, s := range list {
-		if s == str {
-			return true
-		}
-	}
-	return false
 }
 
 func IntDivmod(numerator, denominator int) (quotient, remainder int) {

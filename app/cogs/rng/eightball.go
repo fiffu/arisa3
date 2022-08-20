@@ -5,7 +5,7 @@ import (
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
-	"github.com/fiffu/arisa3/lib"
+	"github.com/fiffu/arisa3/lib/functional"
 )
 
 const (
@@ -56,7 +56,7 @@ func (c *Cog) eightBallCommand() *types.Command {
 func (c *Cog) eightBall(req types.ICommandEvent) error {
 	asker := formatAsker(req)
 	question, _ := req.Args().String(EightBallQuestion)
-	reply := lib.ChooseString(eightBallResponses)
+	reply := functional.SliceOf(eightBallResponses).TakeRandom()
 
 	embed := types.NewEmbed().Description(reply)
 

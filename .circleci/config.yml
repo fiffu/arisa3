@@ -1,0 +1,16 @@
+version: 2.1
+
+jobs:
+  build-and-test:
+    docker:
+      - image: golang:1.18
+    steps:
+      - checkout
+      - run:
+        - make deps
+        - make test
+
+workflows:
+  build-and-test:
+    jobs:
+      - build-and-test

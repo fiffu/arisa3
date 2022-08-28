@@ -5,8 +5,6 @@ jobs:
     docker:
       - image: golang:1.18
     steps:
-      - checkout
-
       - restore_cache:
           keys:
             - go-mod-v4-{{ checksum "go.sum" }}

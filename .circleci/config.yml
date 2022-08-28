@@ -21,6 +21,7 @@ jobs:
       - run:
           name: Run unit tests
           command: |
+            go install gotest.tools/gotestsum@v1.8.1
             gotestsum -- -failfast -covermode=count -coverprofile coverage.out ./...
             go tool cover -func=coverage.out | grep 'total' | sed -e 's/\t\+/ /g'
 

@@ -11,7 +11,7 @@ jobs:
           keys:
             - go-mod-v4-{{ checksum "go.sum" }}
 
-      - run: make deps
+      - run: make install 
 
       - save_cache:
           key: go-mod-v4-{{ checksum "go.sum" }}

@@ -6,9 +6,25 @@ jobs:
       - image: golang:1.18
     steps:
       - checkout
+
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
+
+      - run: make deps
+
+      - save_cache:
+          key: go-mod-v4-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
       - run:
-        - make deps
-        - make test
+          name: Run unit tests
+          command: make test
+
+      - run:
+          name: Compile
+          command: go build ./...
 
 workflows:
   build-and-test:

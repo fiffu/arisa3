@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  build-and-test:
+  build-test:
     docker:
       - image: golang:1.18
     steps:
@@ -30,6 +30,9 @@ jobs:
           command: go build ./...
 
 workflows:
-  build-and-test:
+  build-and-test-main-branch:
     jobs:
-      - build-and-test
+      - build-test:
+          filters:
+            branches:
+              only: main

@@ -80,3 +80,38 @@ func Test_Handler(t *testing.T) {
 	assert.Error(t, actualErr)
 	assert.Equal(t, actualErr.Error(), expectErr.Error())
 }
+
+func Test_mustValidate(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		commandName string
+		expectOK    bool
+	}{
+		{
+			desc:        "lowercase and compliant",
+			commandName: "asdf",
+			expectOK:    true,
+		},
+		{
+			desc:        "must utilize lowercase variant of any letters used",
+			commandName: "ASDF",
+			expectOK:    false,
+		},
+		{
+			desc:        "empty name should not work",
+			commandName: "",
+			expectOK:    false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.expectOK {
+				NewCommand(tc.commandName)
+			} else {
+				assert.Panics(t, func() {
+					NewCommand(tc.commandName)
+				})
+			}
+		})
+	}
+}

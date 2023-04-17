@@ -1,7 +1,19 @@
 package types
 
 import (
+	"fmt"
+	"regexp"
+	"strings"
+
 	dgo "github.com/bwmarrin/discordgo"
+)
+
+var (
+	// Application command naming requirements
+	// This is a Golang adaptation of the given Regexp pattern from the docs:
+	//      /^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u
+	// Ref: https://discord.com/developers/docs/interactions/application-commands#application-command-object-application-command-naming
+	commandNamePattern = regexp.MustCompile(`^[a-z-_\p{L}\p{N}\p{Devanagari}\p{Thai}]{1,32}$`)
 )
 
 type ICommand interface {
@@ -28,10 +40,23 @@ type Command struct {
 func NewCommand(name string) *Command {
 	data := dgo.ApplicationCommand{Name: name}
 	opts := make(map[string]IOption)
-	return &Command{
+	cmd := &Command{
 		name: name,
 		data: &data,
 		opts: opts,
+	}
+	cmd.mustValidate()
+	return cmd
+}
+
+func (c *Command) mustValidate() {
+	if !commandNamePattern.MatchString(c.name) {
+		msg := fmt.Sprintf("invalid command name (regexp mismatch), got: %s, expected: %s", c.name, commandNamePattern.String())
+		panic(msg)
+	}
+	if c.name != strings.ToLower(c.name) {
+		msg := fmt.Sprintf("invalid command name (must use lowercase), got: %s, expected: %s", c.name, strings.ToLower(c.name))
+		panic(msg)
 	}
 }
 

@@ -29,33 +29,33 @@ func Test_Data(t *testing.T) {
 	}{
 		{
 			desc: "Desc() sets command description in data",
-			cmd:  NewCommand("Name").Desc("Description"),
+			cmd:  NewCommand("name").Desc("Description"),
 			expect: &dgo.ApplicationCommand{
-				Name:        "Name",
+				Name:        "name",
 				Description: "Description",
 			},
 		},
 		{
 			desc: "ForChat() sets command type as ChatApplicationCommand",
-			cmd:  NewCommand("Name").ForChat(),
+			cmd:  NewCommand("name").ForChat(),
 			expect: &dgo.ApplicationCommand{
-				Name: "Name",
+				Name: "name",
 				Type: dgo.ChatApplicationCommand,
 			},
 		},
 		{
 			desc: "ForUser() sets command type as UserApplicationCommand",
-			cmd:  NewCommand("Name").ForUser(),
+			cmd:  NewCommand("name").ForUser(),
 			expect: &dgo.ApplicationCommand{
-				Name: "Name",
+				Name: "name",
 				Type: dgo.UserApplicationCommand,
 			},
 		},
 		{
 			desc: "ForMessage() sets command type as MessageApplicationCommand",
-			cmd:  NewCommand("Name").ForMessage(),
+			cmd:  NewCommand("name").ForMessage(),
 			expect: &dgo.ApplicationCommand{
-				Name: "Name",
+				Name: "name",
 				Type: dgo.MessageApplicationCommand,
 			},
 		},
@@ -79,4 +79,39 @@ func Test_Handler(t *testing.T) {
 	actualErr := cmd.HandlerFunc()(nil)
 	assert.Error(t, actualErr)
 	assert.Equal(t, actualErr.Error(), expectErr.Error())
+}
+
+func Test_mustValidate(t *testing.T) {
+	testCases := []struct {
+		desc        string
+		commandName string
+		expectOK    bool
+	}{
+		{
+			desc:        "lowercase and compliant",
+			commandName: "asdf",
+			expectOK:    true,
+		},
+		{
+			desc:        "must utilize lowercase variant of any letters used",
+			commandName: "ASDF",
+			expectOK:    false,
+		},
+		{
+			desc:        "empty name should not work",
+			commandName: "",
+			expectOK:    false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.expectOK {
+				NewCommand(tc.commandName)
+			} else {
+				assert.Panics(t, func() {
+					NewCommand(tc.commandName)
+				})
+			}
+		})
+	}
 }

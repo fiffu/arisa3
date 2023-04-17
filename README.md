@@ -1,6 +1,6 @@
 ## arisa3
 
-![Build and tests](https://github.com/fiffu/arisa3/actions/workflows/ci.yml/badge.svg?branch=main)
+[![Build and tests](https://github.com/fiffu/arisa3/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fiffu/arisa3/actions/workflows/ci.yml)
 
 Arisa is a [Discord](https://discordapp.com/) bot written in Go, using the
 [discordgo](https://github.com/bwmarrin/discordgo) library.

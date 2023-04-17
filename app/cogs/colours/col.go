@@ -105,6 +105,7 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 	if err != nil {
 		engine.EventLog(c, msg.Event(), log.Error()).Err(err).
 			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
+		return
 	}
 
 	newColour, err := c.domain.Mutate(s, member)

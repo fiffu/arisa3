@@ -203,8 +203,6 @@ func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
 			return role
 		}
 	}
-	who := mem.Username()
-	engine.CogLog(d.cog, log.Info()).Msgf("%s doesn't have colour role (expected: %s)", who, rolePattern.String())
 	return nil
 }
 

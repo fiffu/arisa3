@@ -2,6 +2,7 @@ package colours
 
 import (
 	"errors"
+	"regexp"
 	"time"
 
 	"github.com/fiffu/arisa3/app/engine"
@@ -14,6 +15,8 @@ import (
 var (
 	ErrCooldownPending   = errors.New("cooldown is still in progress")
 	ErrInvalidRoleHeight = errors.New("invalid target role height, it should be >=0")
+
+	rolePattern = regexp.MustCompile(`\w+#\d{4}`)
 )
 
 type domain struct {
@@ -194,14 +197,14 @@ func (d *domain) HasColourRole(mem IDomainMember) bool {
 }
 
 func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
-	expectName := d.GetColourRoleName(mem)
-	who := mem.Username()
 	for _, role := range mem.Roles() {
-		if role.Name() == expectName {
+		roleName := role.Name()
+		if rolePattern.MatchString(roleName) {
 			return role
 		}
 	}
-	engine.CogLog(d.cog, log.Info()).Msgf("%s doesn't have colour role (expected: %s)", who, expectName)
+	who := mem.Username()
+	engine.CogLog(d.cog, log.Info()).Msgf("%s doesn't have colour role (expected: %s)", who, rolePattern.String())
 	return nil
 }
 

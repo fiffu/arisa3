@@ -52,6 +52,61 @@ func newTestingConfig() *Config {
 	}
 }
 
+func Test_GetColourRole(t *testing.T) {
+	const testUsername = "test#1234"
+
+	testCases := []struct {
+		desc            string
+		currentRoleName string
+		expectFound     bool
+	}{
+		{
+			desc:        "no roles at all",
+			expectFound: false,
+		},
+		{
+			desc:            "have roles, wrong pattern",
+			currentRoleName: "asd",
+			expectFound:     false,
+		},
+		{
+			desc:            "have roles, role name matches username",
+			currentRoleName: testUsername,
+			expectFound:     true,
+		},
+		{
+			desc:            "have roles, role name matches regex",
+			currentRoleName: "abcd#1234",
+			expectFound:     true,
+		},
+	}
+	for _, tc := range testCases {
+		ctrl := gomock.NewController(t)
+		t.Run(tc.desc, func(t *testing.T) {
+			roles := make([]IDomainRole, 0)
+			if tc.currentRoleName != "" {
+				role := NewMockIDomainRole(ctrl)
+				role.EXPECT().Name().AnyTimes().Return(tc.currentRoleName)
+				roles = append(roles, role)
+			}
+
+			mem := NewMockIDomainMember(ctrl)
+			mem.EXPECT().Username().AnyTimes().Return(testUsername)
+			mem.EXPECT().Roles().AnyTimes().Return(roles)
+
+			_, _, _, d := newTestingDomain(t, newTestingConfig())
+			role := d.GetColourRole(mem)
+
+			if tc.expectFound {
+				assert.NotNil(t, role)
+			} else {
+				assert.Nil(t, role)
+			}
+
+		})
+	}
+}
+
 func Test_Reroll(t *testing.T) {
 	const (
 		Disallow  = 0

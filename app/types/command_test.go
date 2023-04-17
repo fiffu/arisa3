@@ -29,33 +29,33 @@ func Test_Data(t *testing.T) {
 	}{
 		{
 			desc: "Desc() sets command description in data",
-			cmd:  NewCommand("Name").Desc("Description"),
+			cmd:  NewCommand("name").Desc("Description"),
 			expect: &dgo.ApplicationCommand{
-				Name:        "Name",
+				Name:        "name",
 				Description: "Description",
 			},
 		},
 		{
 			desc: "ForChat() sets command type as ChatApplicationCommand",
-			cmd:  NewCommand("Name").ForChat(),
+			cmd:  NewCommand("name").ForChat(),
 			expect: &dgo.ApplicationCommand{
-				Name: "Name",
+				Name: "name",
 				Type: dgo.ChatApplicationCommand,
 			},
 		},
 		{
 			desc: "ForUser() sets command type as UserApplicationCommand",
-			cmd:  NewCommand("Name").ForUser(),
+			cmd:  NewCommand("name").ForUser(),
 			expect: &dgo.ApplicationCommand{
-				Name: "Name",
+				Name: "name",
 				Type: dgo.UserApplicationCommand,
 			},
 		},
 		{
 			desc: "ForMessage() sets command type as MessageApplicationCommand",
-			cmd:  NewCommand("Name").ForMessage(),
+			cmd:  NewCommand("name").ForMessage(),
 			expect: &dgo.ApplicationCommand{
-				Name: "Name",
+				Name: "name",
 				Type: dgo.MessageApplicationCommand,
 			},
 		},

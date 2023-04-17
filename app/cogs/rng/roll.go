@@ -14,7 +14,6 @@ import (
 
 // Command consts
 const (
-	RollCommand        = "roll"
 	RollExpression     = "expression_or_comment"
 	DefaultRollContent = "0-99"
 )
@@ -42,7 +41,7 @@ type dice struct {
 }
 
 func (c *Cog) rollCommand() *types.Command {
-	return types.NewCommand(RollCommand).ForChat().
+	return types.NewCommand("roll").ForChat().
 		Desc("Rolls dice (supports algebraic notation)").
 		Options(
 			types.NewOption(RollExpression).

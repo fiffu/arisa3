@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	EightBallCommand  = "8ball"
 	EightBallQuestion = "a_burning_question"
 )
 
@@ -43,7 +42,7 @@ var eightBallResponses = []string{
 }
 
 func (c *Cog) eightBallCommand() *types.Command {
-	return types.NewCommand(EightBallCommand).ForChat().
+	return types.NewCommand("8ball").ForChat().
 		Desc("Concentrate and ask again").
 		Options(
 			types.NewOption(EightBallQuestion).

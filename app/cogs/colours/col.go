@@ -69,8 +69,11 @@ func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
 
 	guildID := mem.Guild().ID()
 	userID := mem.UserID()
+
+	action := c.domain.Freeze
 	un := ""
 	if !toFrozen {
+		action = c.domain.Unfreeze
 		un = "un"
 	}
 
@@ -82,9 +85,9 @@ func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
 		return req.Respond(types.NewResponse().Content("You don't even have a colour role..."))
 	}
 
-	if err := c.domain.Freeze(mem); err != nil {
+	if err := action(mem); err != nil {
 		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored while freezing colour, guild=%s user=%s", guildID, userID)
+			Msgf("Errored while %sfreezing colour, guild=%s user=%s", un, guildID, userID)
 		return err
 	}
 

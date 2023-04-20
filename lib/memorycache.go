@@ -1,53 +1,66 @@
 package lib
 
-// memorycache.go implements an in-memory cache.
-
 import "time"
 
-type ICache interface {
-	Peek(key string) (ICacheable, bool)
-	Put(data ICacheable)
-	Delete(key string)
+// memorycache.go implements an in-memory cache.
+
+type ICacheable[K comparable] interface {
+	CacheKey() K
 }
 
-type ICacheable interface {
-	CacheKey() string
-	CacheData() interface{}
-	CacheDuration() time.Duration
+type ICache[T ICacheable[K], K comparable] interface {
+	Peek(key K) (T, bool)
+	Put(data T)
+	Delete(key K)
+	Drop()
 }
 
-// memoryCache implements ICache
-type memoryCache map[string]*cacheRecord
-type cacheRecord struct {
-	data   ICacheable
-	expiry time.Time
+type memoryCache[T ICacheable[K], K comparable] struct {
+	data    map[K]T
+	dataTTL map[K]time.Time
+	expiry  time.Duration
+	clock   func() time.Time
 }
 
-func NewMemoryCache() ICache {
-	cache := memoryCache(make(map[string]*cacheRecord))
-	return &cache
+func NewCache[T ICacheable[K], K comparable](expiry time.Duration) ICache[T, K] {
+	return newMemoryCache[T, K](expiry)
 }
 
-func (c *memoryCache) Peek(key string) (ICacheable, bool) {
-	record, ok := (*c)[key]
+func newMemoryCache[T ICacheable[K], K comparable](expiry time.Duration) *memoryCache[T, K] {
+	return &memoryCache[T, K]{
+		data:    make(map[K]T),
+		dataTTL: make(map[K]time.Time),
+		expiry:  expiry,
+		clock:   time.Now,
+	}
+}
+
+func (c *memoryCache[T, K]) Peek(key K) (t T, ok bool) {
+	expiryTime, ok := c.dataTTL[key]
 	if !ok {
-		return nil, false
+		return
 	}
-	if time.Now().After(record.expiry) {
-		// cache expired
-		delete(*c, key)
-		return nil, false
+	if c.clock().After(expiryTime) {
+		ok = false
+		return
 	}
-	return record.data, true
+
+	t, ok = c.data[key]
+	return
 }
 
-func (c *memoryCache) Put(data ICacheable) {
+func (c *memoryCache[T, K]) Put(data T) {
 	key := data.CacheKey()
-	duration := data.CacheDuration()
-	expiry := time.Now().Add(duration)
-	(*c)[key] = &cacheRecord{data, expiry}
+	c.dataTTL[key] = time.Now().Add(c.expiry)
+	c.data[key] = data
 }
 
-func (c *memoryCache) Delete(key string) {
-	delete(*c, key)
+func (c *memoryCache[T, K]) Delete(key K) {
+	delete(c.dataTTL, key)
+	delete(c.data, key)
+}
+
+func (c *memoryCache[T, K]) Drop() {
+	c.data = make(map[K]T)
+	c.dataTTL = make(map[K]time.Time)
 }

@@ -2,6 +2,7 @@ package rng
 
 import (
 	"context"
+	"time"
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
@@ -13,13 +14,13 @@ import (
 // Cog implements ICog and IDefaultStartup
 type Cog struct {
 	commands    *engine.CommandsRegistry
-	pokiesCache lib.ICache
+	pokiesCache lib.ICache[*cachedEmojis, string]
 }
 
 func NewCog(a types.IApp) types.ICog {
 	return &Cog{
 		commands:    engine.NewCommandRegistry(),
-		pokiesCache: lib.NewMemoryCache(),
+		pokiesCache: lib.NewCache[*cachedEmojis, string](1 * time.Hour),
 	}
 }
 

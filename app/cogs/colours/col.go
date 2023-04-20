@@ -149,49 +149,61 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 			Content("You don't have a colour role. Use /col to get a random colour!"))
 	}
 
-	now := time.Now()
-	desc := make([]string, 0)
-
-	desc = append(desc, "**Reroll cooldown:**")
-	rerollCDEnds, err := c.domain.GetRerollCooldownEndTime(mem)
-	switch {
-	case err != nil:
+	rerollCDEndTime, err := c.domain.GetRerollCooldownEndTime(mem)
+	if err != nil {
 		engine.CommandLog(c, req, log.Error()).Err(err).
 			Msgf("Errored getting cooldown end time, guild=%s user=%s", guildID, userID)
 		return err
-	case now.Before(rerollCDEnds):
-		desc = append(desc, utils.FormatDuration(rerollCDEnds.Sub(now)))
-	default:
-		desc = append(desc, "_(No cooldown, reroll available)_")
 	}
 
-	desc = append(desc, "**Last mutate:**")
-	lastMutateTime, ok, err := c.domain.GetLastMutate(mem)
-	switch {
-	case err != nil:
+	lastMutateTime, _, err := c.domain.GetLastMutate(mem)
+	if err != nil {
 		engine.CommandLog(c, req, log.Error()).Err(err).
 			Msgf("Errored getting last mutate time, guild=%s user=%s", guildID, userID)
 		return err
-	case !ok:
-		desc = append(desc, "_(Never)_")
-	default:
-		desc = append(desc, utils.FormatDuration(now.Sub(lastMutateTime)))
 	}
 
 	lastFrozenTime, err := c.domain.GetLastFrozen(mem)
-	switch {
-	case err != nil:
+	if err != nil {
 		engine.CommandLog(c, req, log.Error()).Err(err).
 			Msgf("Errored getting last frozen time, guild=%s user=%s", guildID, userID)
 		return err
-	case lastFrozenTime != Never:
-		desc = append(desc, utils.FormatDuration(now.Sub(lastFrozenTime)))
-	default:
-		// do nothing
 	}
 
-	embed := newEmbed(role.Colour()).Description(strings.Join(desc, "\n"))
+	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
+	embed := newEmbed(role.Colour()).Description(desc)
 	return req.Respond(types.NewResponse().Embeds(embed))
+}
+
+func (c *Cog) formatColInfo(
+	now time.Time,
+	rerollCDEndTime, lastMutateTime, lastFrozenTime time.Time,
+) string {
+	desc := make([]string, 0)
+
+	desc = append(desc, "**Reroll cooldown:**")
+	if now.Before(rerollCDEndTime) {
+		desc = append(desc, utils.FormatDuration(rerollCDEndTime.Sub(now)))
+	} else {
+		desc = append(desc, "_(No cooldown, reroll available)_")
+	}
+
+	desc = append(desc, "", "**Last mutate:**")
+	if lastMutateTime == Never {
+		desc = append(desc, "_(Never)_")
+	} else if now.After(lastMutateTime) {
+		diff := now.Sub(lastMutateTime)
+		desc = append(desc, utils.FormatDuration(diff)+" ago")
+	} else {
+		desc = append(desc, "Moments ago")
+	}
+
+	if lastFrozenTime != Never {
+		desc = append(desc, "**Colour has been frozen for:**")
+		desc = append(desc, utils.FormatDuration(now.Sub(lastFrozenTime)))
+	}
+
+	return strings.Join(desc, "\n")
 }
 
 func (c *Cog) fetchMember(req types.ICommandEvent) (IDomainMember, types.ICommandResponse, error) {

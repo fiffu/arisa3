@@ -73,8 +73,6 @@ type IDomainMember interface {
 	Roles() []IDomainRole
 
 	CacheKey() string
-	CacheData() interface{}
-	CacheDuration() time.Duration
 }
 
 // IDomainRole describes information that IColoursDomain derives from discordgo.Role.
@@ -85,8 +83,6 @@ type IDomainRole interface {
 	Colour() *Colour
 
 	CacheKey() string
-	CacheData() interface{}
-	CacheDuration() time.Duration
 }
 
 // IDomainRepository describes methods that IColoursDomain uses to fetch/store data.

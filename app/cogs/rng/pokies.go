@@ -1,7 +1,6 @@
 package rng
 
 import (
-	"errors"
 	"math/rand"
 	"strings"
 	"time"
@@ -26,9 +25,7 @@ type cachedEmojis struct {
 	emojis  []*discordgo.Emoji
 }
 
-func (ce *cachedEmojis) CacheKey() string             { return ce.guildID }
-func (ce *cachedEmojis) CacheData() interface{}       { return ce.emojis }
-func (ce *cachedEmojis) CacheDuration() time.Duration { return 1 * time.Hour }
+func (ce *cachedEmojis) CacheKey() string { return ce.guildID }
 
 func (c *Cog) pokiesCommand() *types.Command {
 	return types.NewCommand("pokies").ForChat().
@@ -78,11 +75,7 @@ func (c *Cog) getReply(req types.ICommandEvent) (string, error) {
 func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.Emoji, error) {
 	// Cache lookup
 	if cached, ok := c.pokiesCache.Peek(guildID); ok {
-		if mem, ok := (cached.CacheData()).([]*discordgo.Emoji); ok {
-			return mem, nil
-		} else {
-			return nil, errors.New("error coercing cached emojis")
-		}
+		return cached.emojis, nil
 	}
 	engine.CommandLog(c, req, log.Info()).Msgf("Cache miss")
 

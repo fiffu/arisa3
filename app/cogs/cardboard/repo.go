@@ -7,20 +7,21 @@ import (
 	"github.com/fiffu/arisa3/lib"
 )
 
-const (
-	cacheKeyAlias      string = "aliases"
-	cacheKeyOperations string = "operations"
-)
+type perGuildCache struct {
+	aliases    lib.ICache[AliasesMap, guildKey]
+	operations lib.ICache[OperationsMap, guildKey]
+	ops2tags   lib.ICache[TagsPerOperation, TagOperation]
+}
 
 type repo struct {
 	db     database.IDatabase
-	caches map[string]lib.ICache // one cache instance per guildID
+	caches map[string]perGuildCache // one cache instance per guildID
 }
 
 func NewRepository(db database.IDatabase) IRepository {
 	return &repo{
 		db,
-		make(map[string]lib.ICache),
+		make(map[string]perGuildCache),
 	}
 }
 
@@ -85,7 +86,7 @@ func (r *repo) getTagsByOperation(guildID string, oper TagOperation) ([]string, 
 
 	r.putTagOperations(
 		guildID,
-		CachedTagList{string(oper), tags},
+		TagsPerOperation{oper, tags},
 	)
 
 	return tags, nil

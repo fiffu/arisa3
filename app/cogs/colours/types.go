@@ -3,7 +3,6 @@ package colours
 // types.go implements the interfaces defined by interfaces.go.
 
 import (
-	"errors"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -37,24 +36,22 @@ type ColourState struct {
 // session implements IDomainSession
 type session struct {
 	sess         *discordgo.Session
-	cacheMembers lib.ICache
-	cacheRoles   lib.ICache
+	cacheMembers lib.ICache[IDomainMember, string]
+	cacheRoles   lib.ICache[IDomainRole, string]
 }
 
 func NewDomainSession(sess *discordgo.Session) IDomainSession {
 	return &session{
-		sess, lib.NewMemoryCache(), lib.NewMemoryCache(),
+		sess,
+		lib.NewCache[IDomainMember, string](1 * time.Hour),
+		lib.NewCache[IDomainRole, string](1 * time.Hour),
 	}
 }
 
 func (s *session) GuildMember(guildID, userID string) (IDomainMember, error) {
 	// Cache lookup
 	if cached, ok := s.cacheMembers.Peek(userID); ok {
-		if mem, ok := (cached.CacheData()).(*member); ok {
-			return mem, nil
-		} else {
-			return nil, errors.New("error coercing cached member")
-		}
+		return cached, nil
 	}
 
 	// Query API for guild member
@@ -86,11 +83,7 @@ func (s *session) GuildMember(guildID, userID string) (IDomainMember, error) {
 
 func (s *session) GuildRole(guildID, roleID string) (IDomainRole, error) {
 	if cached, ok := s.cacheRoles.Peek(roleID); ok {
-		if role, ok := (cached.CacheData()).(*colourRole); ok {
-			return role, nil
-		} else {
-			return nil, errors.New("error coercing cached colourRole")
-		}
+		return cached, nil
 	}
 	roles, err := s.GuildRoles(guildID)
 	if err != nil {
@@ -199,14 +192,12 @@ func NewDomainMember(mem *discordgo.Member, roles []IDomainRole) IDomainMember {
 	return &member{mem, roles}
 }
 
-func (m *member) Guild() IDomainGuild          { return NewDomainGuild(m.mem.GuildID) }
-func (m *member) UserID() string               { return m.mem.User.ID }
-func (m *member) Nick() string                 { return m.mem.Nick }
-func (m *member) Username() string             { return m.mem.User.Username + "#" + m.mem.User.Discriminator }
-func (m *member) Roles() []IDomainRole         { return m.roles }
-func (m *member) CacheKey() string             { return m.UserID() }
-func (m *member) CacheData() interface{}       { return m }
-func (m *member) CacheDuration() time.Duration { return time.Hour + 1 }
+func (m *member) Guild() IDomainGuild  { return NewDomainGuild(m.mem.GuildID) }
+func (m *member) UserID() string       { return m.mem.User.ID }
+func (m *member) Nick() string         { return m.mem.Nick }
+func (m *member) Username() string     { return m.mem.User.Username + "#" + m.mem.User.Discriminator }
+func (m *member) Roles() []IDomainRole { return m.roles }
+func (m *member) CacheKey() string     { return m.UserID() }
 
 // colourRole implements IDomainRole.
 type colourRole struct {
@@ -220,9 +211,7 @@ func NewDomainRole(id, name string, colour int) IDomainRole {
 	return &colourRole{id, name, col}
 }
 
-func (r *colourRole) ID() string                   { return r.roleID }
-func (r *colourRole) Name() string                 { return r.name }
-func (r *colourRole) Colour() *Colour              { return r.colour }
-func (r *colourRole) CacheKey() string             { return r.ID() }
-func (r *colourRole) CacheData() interface{}       { return r }
-func (r *colourRole) CacheDuration() time.Duration { return time.Hour * 1 }
+func (r *colourRole) ID() string       { return r.roleID }
+func (r *colourRole) Name() string     { return r.name }
+func (r *colourRole) Colour() *Colour  { return r.colour }
+func (r *colourRole) CacheKey() string { return r.ID() }

@@ -6,69 +6,70 @@ import (
 	"github.com/fiffu/arisa3/lib"
 )
 
+type guildKey string
+
+const (
+	aliasKey      guildKey = "aliases"
+	operationsKey guildKey = "operations"
+)
+
+// AliasesMap indicates all aliases defined by a guild.
+// Cache hierarchy: global -> guildID -> AliasMap
 type AliasesMap map[Alias]Actual
+
+// OperationsMap indicates all tags defined by a guild to receive any kind of operation.
+// This mapping is derived from a union of all TagsPerOperation.
+// Cache hierarchy: global -> guildID -> OperationsMap
 type OperationsMap map[string]TagOperation
 
-type CachedTagList struct {
-	operation string
-	list      []string
+// TagsPerOperation indicates the tags defined by a guild to receive a particular operation.
+// Cache hierarchy: global -> guildID -> operation -> TagsPerOperation
+type TagsPerOperation struct {
+	op   TagOperation
+	list []string
 }
 
-func (c AliasesMap) CacheKey() string             { return cacheKeyAlias }
-func (c AliasesMap) CacheData() interface{}       { return c }
-func (c AliasesMap) CacheDuration() time.Duration { return 24 * 7 * time.Hour }
+func (c AliasesMap) CacheKey() guildKey           { return aliasKey }
+func (t TagsPerOperation) CacheKey() TagOperation { return t.op }
+func (o OperationsMap) CacheKey() guildKey        { return operationsKey }
 
-func (o OperationsMap) CacheKey() string             { return cacheKeyOperations }
-func (o OperationsMap) CacheData() interface{}       { return o }
-func (o OperationsMap) CacheDuration() time.Duration { return 24 * 14 * time.Hour } // longer as this is derived cache
-
-func (t CachedTagList) CacheKey() string             { return t.operation }
-func (t CachedTagList) CacheData() interface{}       { return t.list }
-func (t CachedTagList) CacheDuration() time.Duration { return 24 * 7 * time.Hour }
-
-func (r *repo) newGuildCache(guildID string) lib.ICache {
-	cache := lib.NewMemoryCache()
+func (r *repo) newGuildCache(guildID string) perGuildCache {
+	cache := perGuildCache{
+		aliases:    lib.NewCache[AliasesMap, guildKey](7 * 24 * time.Hour),
+		ops2tags:   lib.NewCache[TagsPerOperation, TagOperation](7 * 24 * time.Hour),
+		operations: lib.NewCache[OperationsMap, guildKey](14 * 24 * time.Hour), // derived from ops2tags
+	}
 	r.caches[guildID] = cache
 	return cache
 }
 
-func (r *repo) getGuildCache(guildID string) (lib.ICache, bool) {
+func (r *repo) getGuildCache(guildID string) (perGuildCache, bool) {
 	guildCache, ok := r.caches[guildID]
 	return guildCache, ok
 }
 
-func (r *repo) ensureGuildCache(guildID string) lib.ICache {
-	if guildCache, ok := r.getGuildCache(guildID); ok {
+func (r *repo) ensureGuildCache(guildID string) perGuildCache {
+	if guildCache, ok := r.caches[guildID]; ok {
 		return guildCache
 	}
 	return r.newGuildCache(guildID)
 }
 
-func (r *repo) clearGuildCacheKey(guildID string, cacheKey string) {
-	if guildCache, ok := r.getGuildCache(guildID); ok {
-		guildCache.Delete(cacheKey)
-	}
-
-}
-
 // AliasesMap
 
 func (r *repo) putAliasesMap(guildID string, mapping AliasesMap) {
-	r.ensureGuildCache(guildID).Put(mapping)
+	r.ensureGuildCache(guildID).aliases.Put(mapping)
 }
 
 func (r *repo) clearAliasesMap(guildID string) {
-	r.clearGuildCacheKey(guildID, (&AliasesMap{}).CacheKey())
+	if guildCache, ok := r.caches[guildID]; ok {
+		guildCache.aliases.Drop()
+	}
 }
 
 func (r *repo) peekAliasesMap(guildID string) (AliasesMap, bool) {
-	cacheKey := (&AliasesMap{}).CacheKey()
-	if guildCache, ok := r.getGuildCache(guildID); ok {
-		if cached, ok := guildCache.Peek(cacheKey); ok {
-			if data, ok := (cached.CacheData()).(AliasesMap); ok {
-				return data, ok
-			}
-		}
+	if guildCache, ok := r.caches[guildID]; ok {
+		return guildCache.aliases.Peek(aliasKey)
 	}
 	return nil, false
 }
@@ -76,42 +77,38 @@ func (r *repo) peekAliasesMap(guildID string) (AliasesMap, bool) {
 // OperationsMap
 
 func (r *repo) putOperationsMap(guildID string, mapping OperationsMap) {
-	r.ensureGuildCache(guildID).Put(mapping)
+	r.ensureGuildCache(guildID).operations.Put(mapping)
 }
 
 func (r *repo) clearOperationsMap(guildID string) {
-	r.clearGuildCacheKey(guildID, (&OperationsMap{}).CacheKey())
+	if guildCache, ok := r.caches[guildID]; ok {
+		guildCache.operations.Drop()
+	}
 }
 
 func (r *repo) peekOperationsMap(guildID string) (OperationsMap, bool) {
-	cacheKey := (&OperationsMap{}).CacheKey()
-	if guildCache, ok := r.getGuildCache(guildID); ok {
-		if cached, ok := guildCache.Peek(cacheKey); ok {
-			if data, ok := (cached.CacheData()).(OperationsMap); ok {
-				return data, ok
-			}
-		}
+	if guildCache, ok := r.caches[guildID]; ok {
+		return guildCache.operations.Peek(aliasKey)
 	}
 	return nil, false
 }
 
-// TagOperation lists
+// TagsPerOperation
 
-func (r *repo) putTagOperations(guildID string, tagList CachedTagList) {
-	r.ensureGuildCache(guildID).Put(tagList)
+func (r *repo) putTagOperations(guildID string, tagList TagsPerOperation) {
+	r.ensureGuildCache(guildID).ops2tags.Put(tagList)
 }
 
 func (r *repo) clearTagOperation(guildID string, oper TagOperation) {
-	r.clearGuildCacheKey(guildID, string(oper))
+	if guildCache, ok := r.caches[guildID]; ok {
+		guildCache.ops2tags.Drop()
+	}
 }
 
 func (r *repo) peekTagOperation(guildID string, oper TagOperation) ([]string, bool) {
-	cacheKey := string(oper)
 	if guildCache, ok := r.getGuildCache(guildID); ok {
-		if cached, ok := guildCache.Peek(cacheKey); ok {
-			if data, ok := (cached.CacheData()).([]string); ok {
-				return data, ok
-			}
+		if tags, ok := guildCache.ops2tags.Peek(oper); ok {
+			return tags.list, true
 		}
 	}
 	return nil, false

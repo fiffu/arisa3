@@ -179,7 +179,7 @@ func Test_UpdateFoo(t *testing.T) {
 		func() error { return repo.UpdateMutate(mem, col) },
 		func() error { return repo.UpdateReroll(mem, col) },
 		func() error { return repo.UpdateFreeze(mem) },
-		func() error { return repo.UpdateUnfreeze(mem) },
+		// func() error { return repo.UpdateUnfreeze(mem) },
 	} {
 		dbMock.ExpectBegin()
 		dbMock.ExpectExec(`DELETE FROM colours WHERE userid = \$1 AND reason = \$2`).
@@ -192,6 +192,22 @@ func Test_UpdateFoo(t *testing.T) {
 		err = method()
 		assert.NoError(t, err)
 	}
+}
+
+func Test_UpdateUnfreeze(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mem := newTestMember(ctrl)
+	db, dbMock, err := database.NewMockDBClient(t)
+	assert.NoError(t, err)
+	dbMock.ExpectExec(`DELETE FROM colours WHERE userid = \$1 AND reason = \$2`).
+		WillReturnResult(sqlmock.NewResult(1, 0))
+	dbMock.ExpectExec(`INSERT INTO colours_log\(.+\) VALUES \(.+\)`).
+		WillReturnResult(sqlmock.NewResult(1, 0))
+
+	repo := newRepo(db)
+	err = repo.UpdateUnfreeze(mem)
+
+	assert.NoError(t, err)
 }
 
 func Test_UpdateReroll(t *testing.T) {

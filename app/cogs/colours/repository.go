@@ -74,6 +74,15 @@ func (r *repo) cachePatch(userID string, reason Reason, tstamp time.Time) {
 	}
 }
 
+func (r *repo) cacheDelete(userID string, reason Reason) {
+	if state, ok := r.cache[userID]; ok {
+		state[reason] = Never
+	}
+	r.cache[userID] = map[Reason]time.Time{
+		reason: Never,
+	}
+}
+
 /* Exported methods for IDomainRepository, and their supporting internals. */
 
 // FetchUserState returns the user's state for the given Reason.
@@ -143,13 +152,13 @@ func (r *repo) UpdateFreeze(user IDomainMember) error {
 	return r.update(user, Freeze, nil, time.Now())
 }
 func (r *repo) UpdateUnfreeze(user IDomainMember) error {
-	return r.update(user, Freeze, nil, Never)
+	return r.unset(user, Freeze)
 }
 
 func (r *repo) update(user IDomainMember, reason Reason, colour *Colour, tstamp time.Time) error {
 	userID := user.UserID()
 	// Insert the change inside a transaction
-	if err := r.insert(userID, reason.String(), tstamp); err != nil {
+	if err := r.upsert(userID, reason.String(), tstamp); err != nil {
 		return err
 	}
 
@@ -165,7 +174,31 @@ func (r *repo) update(user IDomainMember, reason Reason, colour *Colour, tstamp 
 	return nil
 }
 
-func (r *repo) insert(userID string, reason string, tstamp time.Time) error {
+func (r *repo) unset(user IDomainMember, reason Reason) error {
+	userID := user.UserID()
+
+	if err := r.delete(userID, reason.String()); err != nil {
+		return err
+	}
+
+	// Log the change to the audit db
+	auditReason := reason.String() + " deleted"
+	if err := r.log(userID, user.Username(), auditReason, "", time.Now()); err != nil {
+		return err
+	}
+	r.cacheDelete(userID, reason)
+	return nil
+}
+
+func (r *repo) delete(userID string, reason string) error {
+	_, err := r.db.Exec(
+		"DELETE FROM colours WHERE userid = $1 AND reason = $2",
+		userID, reason,
+	)
+	return err
+}
+
+func (r *repo) upsert(userID string, reason string, tstamp time.Time) error {
 	rec := ColoursRecord{
 		UserID: userID,
 		Reason: reason,

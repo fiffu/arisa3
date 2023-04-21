@@ -13,8 +13,10 @@ import (
 // domain.go implements IColoursDomain defined by interfaces.go.
 
 var (
-	ErrCooldownPending   = errors.New("cooldown is still in progress")
-	ErrInvalidRoleHeight = errors.New("invalid target role height, it should be >=0")
+	ErrMutateFrozen          = errors.New("colour is frozen")
+	ErrMutateCooldownPending = errors.New("mutate cooldown is still in progress")
+	ErrRerollCooldownPending = errors.New("reroll cooldown is still in progress")
+	ErrInvalidRoleHeight     = errors.New("invalid target role height, it should be >=0")
 
 	rolePattern = regexp.MustCompile(`\w+#\d{4}`)
 )
@@ -73,12 +75,12 @@ func (d *domain) hasCooldownFinished(cooldownStartTime time.Time, cooldownPeriod
 	if cooldownPeriod == 0 {
 		return true
 	}
-	cooldownEndTime := d.getCooldownEndTime(cooldownStartTime, cooldownPeriod)
+	cooldownEndTime := d.offsetTime(cooldownStartTime, cooldownPeriod)
 	finished := time.Now().After(cooldownEndTime)
 	return finished
 }
 
-func (d *domain) getCooldownEndTime(startTime time.Time, cooldownPeriod time.Duration) time.Time {
+func (d *domain) offsetTime(startTime time.Time, cooldownPeriod time.Duration) time.Time {
 	return startTime.Add(cooldownPeriod)
 }
 
@@ -88,7 +90,7 @@ func (d *domain) GetRerollCooldownEndTime(mem IDomainMember) (time.Time, error) 
 		return time.Time{}, err
 	}
 	cooldownPeriod := time.Duration(d.rerollCooldownMins) * time.Minute
-	endTime := d.getCooldownEndTime(last, cooldownPeriod)
+	endTime := d.offsetTime(last, cooldownPeriod)
 	return endTime, nil
 }
 
@@ -99,13 +101,18 @@ func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {
 		return nil, nil
 	}
 
-	// Check cooldown
-	_, ok, err := d.GetLastMutate(mem)
-	if err != nil {
+	// Check frozen
+	if lastFrozen, err := d.GetLastFrozen(mem); err != nil {
 		return nil, err
+	} else if lastFrozen != Never {
+		return nil, ErrMutateFrozen
 	}
-	if !ok {
-		return nil, ErrCooldownPending
+
+	// Check cooldown
+	if _, isCooldownDone, err := d.GetLastMutate(mem); err != nil {
+		return nil, err
+	} else if !isCooldownDone {
+		return nil, ErrMutateCooldownPending
 	}
 
 	// Generate new colour, apply cooldown
@@ -150,7 +157,7 @@ func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
 				return nil, err
 			}
 		}
-		return nil, ErrCooldownPending
+		return nil, ErrRerollCooldownPending
 	}
 
 	// Generate new colour, apply cooldown

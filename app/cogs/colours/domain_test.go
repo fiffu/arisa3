@@ -183,7 +183,7 @@ func Test_Reroll(t *testing.T) {
 			switch tc.expectOutcome {
 			case Disallow:
 				repo.EXPECT().UpdateRerollPenalty(Any, Any).Return(nil)
-				expectError = ErrCooldownPending
+				expectError = ErrRerollCooldownPending
 
 			case Provision:
 				repo.EXPECT().UpdateReroll(Any, Any).Return(nil)
@@ -216,13 +216,15 @@ func Test_Reroll(t *testing.T) {
 
 func Test_Mutate(t *testing.T) {
 	const (
-		Noop     = 0
-		Disallow = 1
-		Allow    = 2
+		Noop = iota
+		InCooldown
+		Frozen
+		Allow
 	)
 	type testCases struct {
 		name              string
 		cooldownStartTime time.Time
+		frozenTime        time.Time
 		hasColourRole     bool
 
 		expectOutcome int
@@ -231,9 +233,23 @@ func Test_Mutate(t *testing.T) {
 	tests := []testCases{
 		{
 			name:              "cooldown not finished should not allow mutate",
-			cooldownStartTime: time.Now().Add(-1 * time.Minute), // 1 min ago
+			cooldownStartTime: time.Now().Add(-1 * time.Minute), // cooldown not finished
 			hasColourRole:     true,
-			expectOutcome:     Disallow,
+			expectOutcome:     InCooldown,
+		},
+		{
+			name:              "frozen should not allow mutate",
+			cooldownStartTime: Never,
+			frozenTime:        time.Now().Add(-1 * time.Minute), // colour is frozen
+			hasColourRole:     true,
+			expectOutcome:     Frozen,
+		},
+		{
+			name:              "frozen check supersedes cooldown check",
+			cooldownStartTime: time.Now().Add(-1 * time.Minute), // cooldown not finished
+			frozenTime:        time.Now().Add(-1 * time.Minute), // colour is frozen
+			hasColourRole:     true,
+			expectOutcome:     Frozen,
 		},
 		{
 			name:              "no cooldown, has colourRole: mutate",
@@ -249,13 +265,13 @@ func Test_Mutate(t *testing.T) {
 		},
 		{
 			name:              "cooldown finished, has colourRole: mutate",
-			cooldownStartTime: time.Now().Add(-3000 * time.Minute), // 3000 min ago
+			cooldownStartTime: time.Now().Add(-3000 * time.Minute), // cooldown is finished
 			hasColourRole:     true,
 			expectOutcome:     Allow,
 		},
 		{
 			name:              "cooldown finished, no colourRole: reroll with provision",
-			cooldownStartTime: time.Now().Add(-3000 * time.Minute), // 3000 min ago
+			cooldownStartTime: time.Now().Add(-3000 * time.Minute), // cooldown is finished
 			hasColourRole:     false,
 			expectOutcome:     Noop,
 		},
@@ -282,15 +298,17 @@ func Test_Mutate(t *testing.T) {
 
 			repo.EXPECT().FetchUserState(Any, Mutate).
 				AnyTimes().Return(tc.cooldownStartTime, nil)
+			repo.EXPECT().FetchUserState(Any, Freeze).
+				AnyTimes().Return(tc.frozenTime, nil)
 
 			var expectError error
 			switch tc.expectOutcome {
 			case Noop:
 				break
-
-			case Disallow:
-				expectError = ErrCooldownPending
-
+			case InCooldown:
+				expectError = ErrMutateCooldownPending
+			case Frozen:
+				expectError = ErrMutateFrozen
 			case Allow:
 				repo.EXPECT().UpdateMutate(Any, Any).Return(nil)
 				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any)
@@ -384,7 +402,7 @@ func Test_GetLastReroll(t *testing.T) {
 		assert.Equal(t, expectErr, err)
 	}
 	{
-		// happy case
+		// unhappy case
 		var expect time.Time
 		var expectOK = false
 		var expectErr = assert.AnError
@@ -392,6 +410,32 @@ func Test_GetLastReroll(t *testing.T) {
 		actual, ok, err := d.GetLastReroll(nil)
 		assert.Equal(t, expect, actual)
 		assert.Equal(t, expectOK, ok)
+		assert.Equal(t, expectErr, err)
+	}
+}
+
+func Test_GetRerollCooldownEndTime(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	repo := NewMockIDomainRepository(ctrl)
+	cooldownMins := 1
+	d := &domain{repo: repo, rerollCooldownMins: cooldownMins}
+	{
+		// happy case
+		var rerolledTime = time.Now().Add(-10 * time.Minute)
+		var expectEndTime = rerolledTime.Add(time.Duration(cooldownMins) * time.Minute)
+		var expectErr error
+		repo.EXPECT().FetchUserState(Any, Reroll).Return(rerolledTime, expectErr)
+		actual, err := d.GetRerollCooldownEndTime(nil)
+		assert.Equal(t, expectEndTime, actual)
+		assert.Equal(t, expectErr, err)
+	}
+	{
+		// unhappy case
+		var rerolledTime time.Time
+		var expectErr = assert.AnError
+		repo.EXPECT().FetchUserState(Any, Reroll).Return(rerolledTime, expectErr)
+		actual, err := d.GetRerollCooldownEndTime(nil)
+		assert.Equal(t, rerolledTime, actual)
 		assert.Equal(t, expectErr, err)
 	}
 }

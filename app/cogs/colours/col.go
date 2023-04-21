@@ -33,7 +33,7 @@ func (c *Cog) col(req types.ICommandEvent) error {
 
 	// reroll here
 	newColour, err := c.domain.Reroll(s, mem)
-	if errors.Is(err, ErrCooldownPending) {
+	if errors.Is(err, ErrMutateCooldownPending) {
 		engine.CommandLog(c, req, log.Info()).Err(err).
 			Msgf("Blocked reroll due to cooldown pending, guild=%s user=%s", guildID, userID)
 
@@ -122,7 +122,7 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 		engine.EventLog(c, msg.Event(), log.Info()).
 			Msgf("Mutated colour: #%s, guild=%s user=%s", newColour.ToHexcode(), guildID, userID)
 
-	case errors.Is(err, ErrCooldownPending):
+	case errors.Is(err, ErrMutateCooldownPending):
 		engine.EventLog(c, msg.Event(), log.Info()).
 			Msgf("Skipped mutate due to cooldown pending, guild=%s user=%s", guildID, userID)
 

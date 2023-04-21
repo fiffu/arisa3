@@ -33,7 +33,7 @@ func (c *Cog) col(req types.ICommandEvent) error {
 
 	// reroll here
 	newColour, err := c.domain.Reroll(s, mem)
-	if errors.Is(err, ErrMutateCooldownPending) {
+	if errors.Is(err, ErrRerollCooldownPending) {
 		engine.CommandLog(c, req, log.Info()).Err(err).
 			Msgf("Blocked reroll due to cooldown pending, guild=%s user=%s", guildID, userID)
 
@@ -202,8 +202,8 @@ func (c *Cog) formatColInfo(
 	}
 
 	if lastFrozenTime != Never {
-		desc = append(desc, "**Colour has been frozen for:**")
-		desc = append(desc, utils.FormatDuration(now.Sub(lastFrozenTime)))
+		frozenDuration := utils.FormatDuration(now.Sub(lastFrozenTime))
+		desc = append(desc, "Frozen "+frozenDuration+" ago")
 	}
 
 	return strings.Join(desc, "\n")

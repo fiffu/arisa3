@@ -135,17 +135,17 @@ func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {
 
 func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
 	// Check cooldown
-	last, ok, err := d.GetLastReroll(mem)
+	last, cooldownFinished, err := d.GetLastReroll(mem)
 	engine.CogLog(d.cog, log.Info()).Msgf(
 		"%s last roll was %s, %d mins cooldown finished? %v",
-		mem.Username(), last, d.rerollCooldownMins, ok,
+		mem.Username(), last.Format(time.RFC3339), d.rerollCooldownMins, cooldownFinished,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	// Apply penalty if reroll cooldown not finished
-	if !ok {
+	if !cooldownFinished {
 		// Skip DB call if no penalty configured
 		engine.CogLog(d.cog, log.Info()).Msgf(
 			"Applying %v mins penalty on %s",

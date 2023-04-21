@@ -54,7 +54,7 @@ func Test_formatColInfo(t *testing.T) {
 			expectDesc: lineJoin(
 				"**Reroll cooldown:**\n_(No cooldown, reroll available)_\n\n",
 				"**Last mutate:**\n1 hour ago\n",
-				"**Colour has been frozen for:**\n1 hour",
+				"Frozen 1 hour ago",
 			),
 		},
 		{
@@ -64,7 +64,7 @@ func Test_formatColInfo(t *testing.T) {
 			expectDesc: lineJoin(
 				"**Reroll cooldown:**\n_(No cooldown, reroll available)_\n\n",
 				"**Last mutate:**\n_(Never)_\n",
-				"**Colour has been frozen for:**\n1 hour",
+				"Frozen 1 hour ago",
 			),
 		},
 	}

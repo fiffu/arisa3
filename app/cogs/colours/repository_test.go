@@ -175,11 +175,10 @@ func Test_UpdateFoo(t *testing.T) {
 	repo := newRepo(db)
 
 	col := &Colour{1, 1, 1}
-	for _, method := range [](func() error){
-		func() error { return repo.UpdateMutate(mem, col) },
-		func() error { return repo.UpdateReroll(mem, col) },
-		func() error { return repo.UpdateFreeze(mem) },
-		// func() error { return repo.UpdateUnfreeze(mem) },
+	for reason, method := range map[Reason](func() error){
+		Mutate: func() error { return repo.UpdateMutate(mem, col) },
+		Reroll: func() error { return repo.UpdateReroll(mem, col) },
+		Freeze: func() error { return repo.UpdateFreeze(mem) },
 	} {
 		dbMock.ExpectBegin()
 		dbMock.ExpectExec(`DELETE FROM colours WHERE userid = \$1 AND reason = \$2`).
@@ -189,8 +188,13 @@ func Test_UpdateFoo(t *testing.T) {
 		dbMock.ExpectCommit()
 		dbMock.ExpectExec(`INSERT INTO colours_log\(.+\) VALUES \(.+\)`).
 			WillReturnResult(sqlmock.NewResult(1, 0))
+
 		err = method()
 		assert.NoError(t, err)
+
+		tstamp, ok := repo.cachePeek(mem.UserID(), reason)
+		assert.True(t, ok)
+		assert.False(t, tstamp.IsZero())
 	}
 }
 
@@ -206,8 +210,11 @@ func Test_UpdateUnfreeze(t *testing.T) {
 
 	repo := newRepo(db)
 	err = repo.UpdateUnfreeze(mem)
-
 	assert.NoError(t, err)
+
+	freezeTime, ok := repo.cachePeek(mem.UserID(), Freeze)
+	assert.True(t, ok)
+	assert.Equal(t, Never, freezeTime)
 }
 
 func Test_UpdateReroll(t *testing.T) {

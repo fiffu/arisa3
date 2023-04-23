@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"io"
 	"math"
+	"os"
 	"strings"
 	"time"
 
@@ -77,6 +77,11 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 
 	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
 	embed := newEmbed(role.Colour()).Description(desc).Image("attachment://history.bmp")
+
+	if err := os.WriteFile("history.bmp", img.Bytes(), os.ModeAppend); err != nil {
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("failed to save history.bmp to disk")
+	}
 	return req.Respond(types.NewResponse().Embeds(embed).File("history.bmp", "image/bmp", img))
 }
 
@@ -111,7 +116,7 @@ func (c *Cog) formatColInfo(
 	return strings.Join(desc, "\n")
 }
 
-func formatColHistory(h *History, interval time.Duration) io.Reader {
+func formatColHistory(h *History, interval time.Duration) *bytes.Buffer {
 	colours := partitionColours(h, interval)
 	pixelsPerInterval := 4
 	buf := bytes.NewBuffer(make([]byte, 0))

@@ -76,7 +76,7 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 	img := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
 
 	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
-	embed := newEmbed(role.Colour()).Description(desc)
+	embed := newEmbed(role.Colour()).Description(desc).Image("attachment://history.bmp")
 	return req.Respond(types.NewResponse().Embeds(embed).File("history.bmp", "image/bmp", img))
 }
 
@@ -120,7 +120,7 @@ func formatColHistory(h *History, interval time.Duration) io.Reader {
 		partitionWidth:  pixelsPerInterval,
 		partitionHeight: pixelsPerInterval * 5,
 	})
-	return buf
+	return bytes.NewBuffer(buf.Bytes())
 }
 
 type horizontalPartitionImage struct {

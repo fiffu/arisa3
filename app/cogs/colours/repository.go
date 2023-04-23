@@ -142,6 +142,15 @@ func (r *repo) queryUserState(userID string) (*ColourState, error) {
 	return &state, nil
 }
 
+func (r *repo) FetchUserHistory(user IDomainMember, since time.Time) ([]*ColoursLogRecord, error) {
+	// TODO: caching
+	history, err := r.getLogs(user, since)
+	if err != nil {
+		return nil, err
+	}
+	return history, err
+}
+
 func (r *repo) UpdateMutate(user IDomainMember, c *Colour) error {
 	return r.update(user, Mutate, c, time.Now())
 }
@@ -153,6 +162,28 @@ func (r *repo) UpdateFreeze(user IDomainMember) error {
 }
 func (r *repo) UpdateUnfreeze(user IDomainMember) error {
 	return r.unset(user, Freeze)
+}
+
+func (r *repo) getLogs(user IDomainMember, since time.Time) ([]*ColoursLogRecord, error) {
+	rows, err := r.db.Query(`
+	SELECT colour, tstamp FROM colours_logview
+	WHERE userid = $1 AND tstamp > $2`,
+		user.UserID(), since,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parsing records.
+	records := make([]*ColoursLogRecord, 0)
+	for rows.Next() {
+		rec := ColoursLogRecord{}
+		if err := rows.Scan(&rec.UserID, &rec.TStamp, &rec.Reason); err != nil {
+			return nil, err
+		}
+		records = append(records, &rec)
+	}
+	return records, nil
 }
 
 func (r *repo) update(user IDomainMember, reason Reason, colour *Colour, tstamp time.Time) error {

@@ -1,10 +1,25 @@
 package functional
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+type S struct{ int }
+
+func (s *S) String() string { return fmt.Sprint(s.int) }
+
+func Test_Map(t *testing.T) {
+	assert.Equal(t,
+		[]string{"1", "2", "3"},
+		Map(
+			[]*S{{1}, {2}, {3}},
+			func(s *S) string { return s.String() },
+		),
+	)
+}
 
 func Test_Zip(t *testing.T) {
 	testCases := []struct {

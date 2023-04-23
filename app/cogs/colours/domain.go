@@ -7,6 +7,7 @@ import (
 
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/lib/functional"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,6 +23,7 @@ var (
 )
 
 type domain struct {
+	now               func() time.Time
 	cog               types.ICog
 	repo              IDomainRepository
 	maxHeightRoleName string
@@ -35,6 +37,7 @@ type domain struct {
 // NewColoursDomain implements IColoursDomain
 func NewColoursDomain(c types.ICog, repo IDomainRepository, cfg *Config) IColoursDomain {
 	return &domain{
+		now:               time.Now,
 		cog:               c,
 		repo:              repo,
 		maxHeightRoleName: cfg.MaxRoleHeightName,
@@ -92,6 +95,22 @@ func (d *domain) GetRerollCooldownEndTime(mem IDomainMember) (time.Time, error) 
 	cooldownPeriod := time.Duration(d.rerollCooldownMins) * time.Minute
 	endTime := d.offsetTime(last, cooldownPeriod)
 	return endTime, nil
+}
+
+func (d *domain) GetHistory(mem IDomainMember) (*History, error) {
+	endTime := d.now()
+	startTime := endTime.Add(-14 * 24 * time.Hour)
+
+	logs, err := d.repo.FetchUserHistory(mem, startTime)
+	if err != nil {
+		return nil, err
+	}
+
+	cols, err := functional.Slice[*ColoursLogRecord, *Colour](logs).
+		Filter(func(c *ColoursLogRecord) bool {
+			return isPartOfHistory(Reason(c.Reason))
+		}), nil
+	return &History{cols, startTime, endTime}, err
 }
 
 func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {

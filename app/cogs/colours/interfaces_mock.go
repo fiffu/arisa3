@@ -120,6 +120,21 @@ func (mr *MockIColoursDomainMockRecorder) GetColourRoleName(mem interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetColourRoleName", reflect.TypeOf((*MockIColoursDomain)(nil).GetColourRoleName), mem)
 }
 
+// GetHistory mocks base method.
+func (m *MockIColoursDomain) GetHistory(arg0 IDomainMember) (*History, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHistory", arg0)
+	ret0, _ := ret[0].(*History)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHistory indicates an expected call of GetHistory.
+func (mr *MockIColoursDomainMockRecorder) GetHistory(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistory", reflect.TypeOf((*MockIColoursDomain)(nil).GetHistory), arg0)
+}
+
 // GetLastFrozen mocks base method.
 func (m *MockIColoursDomain) GetLastFrozen(arg0 IDomainMember) (time.Time, error) {
 	m.ctrl.T.Helper()
@@ -439,34 +454,6 @@ func (m *MockIDomainMember) EXPECT() *MockIDomainMemberMockRecorder {
 	return m.recorder
 }
 
-// CacheData mocks base method.
-func (m *MockIDomainMember) CacheData() interface{} {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CacheData")
-	ret0, _ := ret[0].(interface{})
-	return ret0
-}
-
-// CacheData indicates an expected call of CacheData.
-func (mr *MockIDomainMemberMockRecorder) CacheData() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CacheData", reflect.TypeOf((*MockIDomainMember)(nil).CacheData))
-}
-
-// CacheDuration mocks base method.
-func (m *MockIDomainMember) CacheDuration() time.Duration {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CacheDuration")
-	ret0, _ := ret[0].(time.Duration)
-	return ret0
-}
-
-// CacheDuration indicates an expected call of CacheDuration.
-func (mr *MockIDomainMemberMockRecorder) CacheDuration() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CacheDuration", reflect.TypeOf((*MockIDomainMember)(nil).CacheDuration))
-}
-
 // CacheKey mocks base method.
 func (m *MockIDomainMember) CacheKey() string {
 	m.ctrl.T.Helper()
@@ -574,34 +561,6 @@ func (m *MockIDomainRole) EXPECT() *MockIDomainRoleMockRecorder {
 	return m.recorder
 }
 
-// CacheData mocks base method.
-func (m *MockIDomainRole) CacheData() interface{} {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CacheData")
-	ret0, _ := ret[0].(interface{})
-	return ret0
-}
-
-// CacheData indicates an expected call of CacheData.
-func (mr *MockIDomainRoleMockRecorder) CacheData() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CacheData", reflect.TypeOf((*MockIDomainRole)(nil).CacheData))
-}
-
-// CacheDuration mocks base method.
-func (m *MockIDomainRole) CacheDuration() time.Duration {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CacheDuration")
-	ret0, _ := ret[0].(time.Duration)
-	return ret0
-}
-
-// CacheDuration indicates an expected call of CacheDuration.
-func (mr *MockIDomainRoleMockRecorder) CacheDuration() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CacheDuration", reflect.TypeOf((*MockIDomainRole)(nil).CacheDuration))
-}
-
 // CacheKey mocks base method.
 func (m *MockIDomainRole) CacheKey() string {
 	m.ctrl.T.Helper()
@@ -679,6 +638,21 @@ func NewMockIDomainRepository(ctrl *gomock.Controller) *MockIDomainRepository {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockIDomainRepository) EXPECT() *MockIDomainRepositoryMockRecorder {
 	return m.recorder
+}
+
+// FetchUserHistory mocks base method.
+func (m *MockIDomainRepository) FetchUserHistory(arg0 IDomainMember, arg1 time.Time) ([]*ColoursLogRecord, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FetchUserHistory", arg0, arg1)
+	ret0, _ := ret[0].([]*ColoursLogRecord)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchUserHistory indicates an expected call of FetchUserHistory.
+func (mr *MockIDomainRepositoryMockRecorder) FetchUserHistory(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchUserHistory", reflect.TypeOf((*MockIDomainRepository)(nil).FetchUserHistory), arg0, arg1)
 }
 
 // FetchUserState mocks base method.

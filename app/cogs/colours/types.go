@@ -33,6 +33,21 @@ type ColourState struct {
 	LastReroll time.Time
 }
 
+// History models a participant's history of colours.
+type History struct {
+	records    []*ColoursLogRecord
+	start, end time.Time
+}
+
+func isPartOfHistory(r Reason) bool {
+	switch r {
+	case Reroll, Mutate:
+		return true
+	default:
+		return false
+	}
+}
+
 // session implements IDomainSession
 type session struct {
 	sess         *discordgo.Session

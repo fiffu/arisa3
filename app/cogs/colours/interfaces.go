@@ -18,8 +18,10 @@ type IColoursDomain interface {
 	// Get a member's last reroll time.
 	GetLastReroll(IDomainMember) (time.Time, bool, error)
 
-	// Get the reroll cooldown end time for
+	// Get the reroll cooldown end time for member.
 	GetRerollCooldownEndTime(IDomainMember) (time.Time, error)
+	// Get history of colours associated with member.
+	GetHistory(IDomainMember) (*History, error)
 
 	// Apply a mutation on member's colour role. If frozen, mutation is not allowed.
 	Mutate(IDomainSession, IDomainMember) (*Colour, error)
@@ -88,6 +90,7 @@ type IDomainRole interface {
 // IDomainRepository describes methods that IColoursDomain uses to fetch/store data.
 type IDomainRepository interface {
 	FetchUserState(IDomainMember, Reason) (time.Time, error)
+	FetchUserHistory(IDomainMember, time.Time) ([]*ColoursLogRecord, error)
 	UpdateMutate(IDomainMember, *Colour) error
 	UpdateReroll(IDomainMember, *Colour) error
 	UpdateRerollPenalty(IDomainMember, time.Time) error

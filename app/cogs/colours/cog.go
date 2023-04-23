@@ -126,11 +126,3 @@ func (c *Cog) unfreezeCommand() *types.Command {
 			return c.setFreeze(req, false)
 		})
 }
-
-func (c *Cog) colInfoCommand() *types.Command {
-	return types.NewCommand("colinfo").ForChat().
-		Desc("Tells you about your colour").
-		Handler(func(req types.ICommandEvent) error {
-			return c.colInfo(req)
-		})
-}

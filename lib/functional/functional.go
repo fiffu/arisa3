@@ -83,6 +83,17 @@ func Map[T, U any](elems []T, mapper func(T) U) []U {
 	return result
 }
 
+// Filter returns elements of the input slice that satisfy the given predicate.
+func Filter[T any](elems []T, predicate func(T) bool) []T {
+	var result []T
+	for _, t := range elems {
+		if predicate(t) {
+			result = append(result, t)
+		}
+	}
+	return result
+}
+
 // Deref takes an input slice of pointers and returns a slice storing their
 // dereferenced values.
 func Deref[T any](elems []*T) []T {

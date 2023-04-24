@@ -134,7 +134,7 @@ type horizontalPartitionImage struct {
 	partitionHeight int
 }
 
-func (b horizontalPartitionImage) ColorModel() color.Model { return color.Alpha16Model }
+func (b horizontalPartitionImage) ColorModel() color.Model { return color.RGBAModel }
 func (b horizontalPartitionImage) At(x, y int) color.Color { return b.partitions[x/b.partitionWidth] }
 func (b horizontalPartitionImage) Bounds() image.Rectangle {
 	return image.Rectangle{

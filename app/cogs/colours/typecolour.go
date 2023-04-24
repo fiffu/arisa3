@@ -25,10 +25,18 @@ func (c *Colour) scale255() (r, g, b int) {
 	return
 }
 
+func (c *Colour) scale0xFFFF() (r, g, b uint32) {
+	delta := 0.0
+	r = uint32((c.R + delta) * 0xFFFF)
+	g = uint32((c.G + delta) * 0xFFFF)
+	b = uint32((c.B + delta) * 0xFFFF)
+	return
+}
+
 // RGBA implements interface color.Color of standard lib.
 func (c *Colour) RGBA() (uint32, uint32, uint32, uint32) {
-	r, g, b := c.scale255()
-	return uint32(r), uint32(g), uint32(b), uint32(1)
+	r, g, b := c.scale0xFFFF()
+	return r, g, b, 0xFFFF
 }
 
 func (c *Colour) ToDecimal() int {

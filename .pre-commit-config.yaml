@@ -22,15 +22,11 @@ repos:
   - id: no-go-testing
   - id: go-critic
   - id: go-build
+  # - id: go-generate
   - id: go-mod-tidy
 
 - repo: local
   hooks:
-  # - id: go-generate
-  #   name: go generate
-  #   entry: go generate ./...
-  #   language: system
-  #   pass_filenames: false
   - id: go-test
     name: gotestsum
     entry: gotestsum -f dots -- -failfast ./...

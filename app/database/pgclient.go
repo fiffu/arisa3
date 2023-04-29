@@ -56,6 +56,7 @@ func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {
 
 func (c *pgclient) Exec(query string, args ...interface{}) (IResult, error) {
 	log.Info().Msgf("Exec: %s", query)
+	log.Info().Msgf("Args: %v", args)
 	affected, err := c.pool.Exec(query, args...)
 	return affected, err
 }

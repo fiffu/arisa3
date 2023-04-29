@@ -1,26 +1,35 @@
 fail_fast: true
-repos:
+default_install_hook_types: [pre-commit, pre-push]
 
+repos:
 - repo: 'https://github.com/pre-commit/pre-commit-hooks'
   rev: v2.3.0
   hooks:
   - id: trailing-whitespace
   - id: check-yaml
 
-- repo: 'git://github.com/dnephin/pre-commit-golang'
-  rev: v0.4.0
+- repo: https://github.com/dnephin/pre-commit-golang
+  rev: v0.5.1
   hooks:
-  - id: golangci-lint
+    - id: go-fmt
+    - id: go-vet
+    - id: go-lint
+    - id: go-imports
+    - id: no-go-testing
+    - id: go-critic
+    - id: go-build
+    - id: go-mod-tidy
 
 - repo: local
   hooks:
-  - id: go-generate
-    name: go generate
-    entry: go generate ./...
-    language: system
-    pass_filenames: false
+  # - id: go-generate
+  #   name: go generate
+  #   entry: go generate ./...
+  #   language: system
+  #   pass_filenames: false
   - id: go-test
-    name: go test
+    name: gotestsum
     entry: gotestsum -f dots -- -failfast ./...
     language: system
     pass_filenames: false
+    stages: [pre-push]

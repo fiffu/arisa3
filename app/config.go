@@ -10,6 +10,7 @@ import (
 type Config struct {
 	BotSecret   string                 `mapstructure:"bot_secret" envvar:"BOT_SECRET" validator:"required"`
 	DatabaseDSN string                 `mapstructure:"database_dsn" envvar:"DATABASE_URL"`
+	EnableDebug bool                   `mapstructure:"enable_debug" envvar:"ENABLE_DEBUG"`
 	Cogs        map[string]interface{} `mapstructure:"cogs"`
 }
 

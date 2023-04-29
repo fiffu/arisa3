@@ -22,14 +22,6 @@ repos:
     stages: [pre-commit]
     entry: go build
 
-  - id: go-generate
-    name: go generate
-    entry: go generate ./...
-    files: '\.go$'
-    language: system
-    stages: [pre-push]
-    pass_filenames: false
-
   - id: go-test
     name: gotestsum
     entry: gotestsum -f dots -- -failfast ./...

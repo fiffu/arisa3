@@ -74,7 +74,6 @@ func (c *Colour) FromHSV(h, s, v float64) *Colour {
 // FromRGBHex returns a new instance of Colour, converting hex-encoded RGB.
 func (c *Colour) FromRGBHex(rgbHex string) *Colour {
 	byteArr, err := hex.DecodeString(rgbHex)
-	// fmt.Println(byteArr)
 	if err != nil || len(byteArr) != 3 {
 		return &Colour{0, 0, 0}
 	}

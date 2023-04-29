@@ -1,7 +1,6 @@
 package colours
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -76,7 +75,6 @@ func Test_partitionColours(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			fmt.Println(tc.desc)
 			actual := partitionColours(
 				&History{tc.records, unix(0), unix(50)},
 				time.Duration(tc.interval)*time.Second,

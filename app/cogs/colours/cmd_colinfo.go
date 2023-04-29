@@ -66,6 +66,10 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 		return err
 	}
 
+	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
+	embed := newEmbed(role.Colour()).Description(desc)
+	reply := types.NewResponse().Embeds(embed)
+
 	history, err := c.domain.GetHistory(mem)
 	if err != nil {
 		engine.CommandLog(c, req, log.Error()).Err(err).
@@ -77,23 +81,23 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 			return r.ColourHex
 		}))
 
-	img, fileExt, fileContent, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
-	if err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored generating image file, guild=%s user=%s", guildID, userID)
-		return err
+	if len(history.records) > 0 {
+		img, fileExt, fileContent, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
+		if err != nil {
+			engine.CommandLog(c, req, log.Error()).Err(err).
+				Msgf("Errored generating image file, guild=%s user=%s", guildID, userID)
+			return err
+		}
+
+		fileName := "history." + fileExt
+		engine.CommandLog(c, req, log.Info()).
+			Msgf("Generated image file=%s mime=%s base64=%s", fileName, fileContent, base64.StdEncoding.EncodeToString(img.Bytes()))
+
+		embed.Image("attachment://" + fileName)
+		reply.File(fileName, fileContent, img)
 	}
 
-	fileName := "history." + fileExt
-	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
-
-	engine.CommandLog(c, req, log.Info()).
-		Msgf("Generated image file=%s mime=%s base64=%s", fileName, fileContent, base64.StdEncoding.EncodeToString(img.Bytes()))
-	embed := newEmbed(role.Colour()).
-		Description(desc).
-		Image("attachment://" + fileName).
-		Thumbnail("attachment://" + fileName)
-	return req.Respond(types.NewResponse().Embeds(embed).File(fileName, fileContent, img))
+	return req.Respond(reply)
 }
 
 func (c *Cog) formatColInfo(

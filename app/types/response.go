@@ -62,6 +62,6 @@ func (r *Response) Data() *dgo.InteractionResponse {
 }
 
 func (r *Response) String() string {
-	data, _ := json.MarshalIndent(r.data, "  ", "  ")
+	data, _ := json.MarshalIndent(r.data, "| ", "  ")
 	return string(data)
 }

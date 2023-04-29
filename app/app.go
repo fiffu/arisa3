@@ -114,9 +114,9 @@ func newApp(deps IDependencyInjector, configPath string) (types.IApp, error) {
 
 func setupLogger() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout}
-	output.TimeFormat = "02-Jan-06 15:04:05 -0700"
+	output.TimeFormat = "2006/01/02 15:04:05"
 	output.FormatMessage = func(i interface{}) string {
-		return fmt.Sprintf("%-5s   ", i)
+		return fmt.Sprintf(":: %s  ", i)
 	}
 	zerolog.TimestampFunc = func() time.Time {
 		return time.Now().UTC()

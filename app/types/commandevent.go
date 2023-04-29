@@ -45,6 +45,6 @@ func (evt *commandEvent) Respond(resp ICommandResponse) error {
 	log.Info().
 		Str(CtxCommand, evt.Command().Name()).
 		Str(CtxInteraction, itr.ID).
-		Msgf("Interaction response >>> resp %s", resp.String())
+		Msgf("Interaction response >>> resp: \n| %s", resp.String())
 	return evt.s.InteractionRespond(itr, data)
 }

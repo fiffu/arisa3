@@ -166,8 +166,8 @@ func (r *repo) UpdateUnfreeze(user IDomainMember) error {
 
 func (r *repo) getLogs(user IDomainMember, since time.Time) ([]*ColoursLogRecord, error) {
 	rows, err := r.db.Query(`
-	SELECT colour, tstamp, reason FROM colours_logview
-	WHERE userid = $1 AND tstamp > $2`,
+		SELECT colour, tstamp, reason FROM colours_logview
+		WHERE userid = $1 AND tstamp > $2`,
 		user.UserID(), since,
 	)
 	if err != nil {
@@ -178,7 +178,7 @@ func (r *repo) getLogs(user IDomainMember, since time.Time) ([]*ColoursLogRecord
 	records := make([]*ColoursLogRecord, 0)
 	for rows.Next() {
 		rec := ColoursLogRecord{}
-		if err := rows.Scan(&rec.UserID, &rec.TStamp, &rec.Reason); err != nil {
+		if err := rows.Scan(&rec.ColourHex, &rec.TStamp, &rec.Reason); err != nil {
 			return nil, err
 		}
 		records = append(records, &rec)

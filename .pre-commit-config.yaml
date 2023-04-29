@@ -1,5 +1,9 @@
 fail_fast: true
-default_install_hook_types: [pre-commit, pre-push]
+default_install_hook_types:
+- pre-commit
+- pre-push
+default_stages:
+- pre-commit
 
 repos:
 - repo: 'https://github.com/pre-commit/pre-commit-hooks'
@@ -11,14 +15,14 @@ repos:
 - repo: https://github.com/dnephin/pre-commit-golang
   rev: v0.5.1
   hooks:
-    - id: go-fmt
-    - id: go-vet
-    - id: go-lint
-    - id: go-imports
-    - id: no-go-testing
-    - id: go-critic
-    - id: go-build
-    - id: go-mod-tidy
+  - id: go-fmt
+  - id: go-vet
+  - id: go-lint
+  - id: go-imports
+  - id: no-go-testing
+  - id: go-critic
+  - id: go-build
+  - id: go-mod-tidy
 
 - repo: local
   hooks:

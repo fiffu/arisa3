@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math"
 
@@ -12,12 +13,30 @@ type Colour struct {
 	R, G, B float64
 }
 
+func (c *Colour) String() string {
+	return c.ToHexcode()
+}
+
 func (c *Colour) scale255() (r, g, b int) {
 	delta := 1 / 512.0 // to make truncation round to nearest number instead of flooring
 	r = int((c.R + delta) * 255)
 	g = int((c.G + delta) * 255)
 	b = int((c.B + delta) * 255)
 	return
+}
+
+func (c *Colour) scale0xFFFF() (r, g, b uint32) {
+	delta := 0.0
+	r = uint32((c.R + delta) * 0xFFFF)
+	g = uint32((c.G + delta) * 0xFFFF)
+	b = uint32((c.B + delta) * 0xFFFF)
+	return
+}
+
+// RGBA implements interface color.Color of standard lib.
+func (c *Colour) RGBA() (uint32, uint32, uint32, uint32) {
+	r, g, b := c.scale0xFFFF()
+	return r, g, b, 0xFFFF
 }
 
 func (c *Colour) ToDecimal() int {
@@ -50,6 +69,20 @@ func (c *Colour) FromDecimal(colour int) *Colour {
 func (c *Colour) FromHSV(h, s, v float64) *Colour {
 	r, g, b := hsvToRGB(h, s, v)
 	return &Colour{r, g, b}
+}
+
+// FromRGBHex returns a new instance of Colour, converting hex-encoded RGB.
+func (c *Colour) FromRGBHex(rgbHex string) *Colour {
+	byteArr, err := hex.DecodeString(rgbHex)
+	// fmt.Println(byteArr)
+	if err != nil || len(byteArr) != 3 {
+		return &Colour{0, 0, 0}
+	}
+	return &Colour{
+		R: float64(byteArr[0]) / 255.0,
+		G: float64(byteArr[1]) / 255.0,
+		B: float64(byteArr[2]) / 255.0,
+	}
 }
 
 // Random returns a new instance of Colour with freshly-seeded values.

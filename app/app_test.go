@@ -17,7 +17,7 @@ func (d testDependencyInjector) NewDatabase(dsn string) (database.IDatabase, err
 	return database.NewMockIDatabase(d.ctrl), nil
 }
 
-func (d testDependencyInjector) Bot(token string) (*discordgo.Session, error) {
+func (d testDependencyInjector) Bot(token string, debugMode bool) (*discordgo.Session, error) {
 	return nil, nil
 }
 

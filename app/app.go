@@ -19,7 +19,7 @@ import (
 // IDependencyInjector is an interface for initializing injected dependencies.
 type IDependencyInjector interface {
 	NewDatabase(dsn string) (database.IDatabase, error)
-	Bot(token string) (*discordgo.Session, error)
+	Bot(token string, debugMode bool) (*discordgo.Session, error)
 }
 
 // DefaultInjector provides default methods satisfying IDependencyInjector.
@@ -29,8 +29,14 @@ func (d DefaultInjector) NewDatabase(dsn string) (database.IDatabase, error) {
 	return database.NewDBClient(dsn)
 }
 
-func (d DefaultInjector) Bot(token string) (*discordgo.Session, error) {
-	return discordgo.New("Bot " + token)
+func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, error) {
+	sess, err := discordgo.New("Bot " + token)
+	if err != nil {
+		return nil, err
+	}
+
+	sess.Debug = debugMode
+	return sess, nil
 }
 
 // app implements IApp
@@ -94,7 +100,7 @@ func newApp(deps IDependencyInjector, configPath string) (types.IApp, error) {
 		return nil, err
 	}
 
-	sess, err := deps.Bot(cfg.BotSecret)
+	sess, err := deps.Bot(cfg.BotSecret, cfg.EnableDebug)
 	if err != nil {
 		return nil, fmt.Errorf("invalid bot parameters: %w", err)
 	}
@@ -108,9 +114,9 @@ func newApp(deps IDependencyInjector, configPath string) (types.IApp, error) {
 
 func setupLogger() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout}
-	output.TimeFormat = "02-Jan-06 15:04:05 -0700"
+	output.TimeFormat = "2006/01/02 15:04:05"
 	output.FormatMessage = func(i interface{}) string {
-		return fmt.Sprintf("%-5s   ", i)
+		return fmt.Sprintf(":: %s  ", i)
 	}
 	zerolog.TimestampFunc = func() time.Time {
 		return time.Now().UTC()

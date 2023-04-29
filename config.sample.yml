@@ -1,4 +1,6 @@
 bot_secret: 'sample'  # replace or overwrite by setting BOT_SECRET in env vars!
+database_dsn: 'postgres://username:password@host:port/database'
+enable_debug: false
 cogs:
   general:
     motd: "Don't forget to drink water!"

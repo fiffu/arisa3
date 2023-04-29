@@ -53,3 +53,66 @@ func Test_Random(t *testing.T) {
 		}
 	}
 }
+
+func Test_Hexcode(t *testing.T) {
+	const F float64 = 15.0 / 255.0
+
+	testCases := []struct {
+		hex string
+		rgb *Colour
+	}{
+
+		{"ff0000", &Colour{1, 0, 0}},
+		{"ff000f", &Colour{1, 0, F}},
+		{"ff00ff", &Colour{1, 0, 1}},
+		{"ff0fff", &Colour{1, F, 1}},
+		{"ffffff", &Colour{1, 1, 1}},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.hex, func(t *testing.T) {
+			// One-way conversion
+			assert.Equal(t, tc.hex, tc.rgb.ToHexcode())
+			assert.Equal(t, (&Colour{}).FromRGBHex(tc.hex), tc.rgb)
+
+			// Reversibility
+			assert.Equal(t, tc.hex, (&Colour{}).FromRGBHex(tc.hex).ToHexcode())
+			assert.Equal(t, tc.rgb, (&Colour{}).FromRGBHex(tc.rgb.ToHexcode()))
+		})
+	}
+}
+
+func Test_HexcodeIdentity(t *testing.T) {
+	hx := "ff0000"
+	r := &Colour{1, 0, 0}
+	assert.Equal(t,
+		hx,
+		r.ToHexcode(),
+	)
+	assert.Equal(t,
+		r,
+		(&Colour{}).FromRGBHex(hx),
+	)
+	assert.Equal(t,
+		hx,
+		(&Colour{}).FromRGBHex(hx).ToHexcode(),
+	)
+}
+
+func Test_FromRGBHex(t *testing.T) {
+	hx := "ff0000"
+	r := &Colour{1, 0, 0}
+
+	assert.Equal(t,
+		*r,
+		*(&Colour{}).FromRGBHex(hx),
+	)
+}
+
+func Test_ToHexcode(t *testing.T) {
+	r := &Colour{1, 0, 0}
+
+	assert.Equal(t,
+		"ff0000",
+		r.ToHexcode(),
+	)
+}

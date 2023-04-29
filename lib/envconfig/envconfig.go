@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 const ExpectStructTag = "envvar"
@@ -92,15 +91,11 @@ func assign(key, val string, field reflect.Value) error {
 
 	case reflect.Bool:
 		// case-insensitive
-		switch strings.ToLower(val) {
-		case "true", "1":
-			field.SetBool(true)
-		case "false", "0":
-			field.SetBool(false)
-		default:
-			err := fmt.Errorf("cannot parse '%s' as bool, wanted true / false / 1 / 0", val)
+		ok, err := strconv.ParseBool(val)
+		if err != nil {
 			return conversionErr(err)
 		}
+		field.SetBool(ok)
 
 	case reflect.Int:
 		if v, err := strconv.ParseInt(val, 0, 0); err != nil {

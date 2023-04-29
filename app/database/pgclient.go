@@ -46,6 +46,7 @@ func (c *pgclient) Close() error {
 
 func (c *pgclient) Query(query string, args ...interface{}) (IRows, error) {
 	log.Info().Msgf("Query: %s", query)
+	log.Info().Msgf(" Args: %v", args)
 	rows, err := c.pool.Query(query, args...)
 	if err == sql.ErrNoRows {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)

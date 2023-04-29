@@ -62,15 +62,6 @@ func (r *Response) Data() *dgo.InteractionResponse {
 }
 
 func (r *Response) String() string {
-	embeds := make([]dgo.MessageEmbed, 0)
-	if r.data.Data.Embeds != nil {
-		for _, e := range r.data.Data.Embeds {
-			embeds = append(embeds, *e)
-		}
-	}
-	emb, _ := json.Marshal(embeds)
-	return fmt.Sprintf(
-		"content='%s' embeds=%s",
-		r.data.Data.Content, string(emb),
-	)
+	data, _ := json.MarshalIndent(r.data, "  ", "  ")
+	return string(data)
 }

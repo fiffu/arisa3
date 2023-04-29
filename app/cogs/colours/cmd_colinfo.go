@@ -81,7 +81,7 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 	fileName := "history." + fileExt
 	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
 
-	embed := newEmbed(role.Colour()).Description(desc) //.Image("attachment://" + fileName)
+	embed := newEmbed(role.Colour()).Description(desc).Image("attachment://" + fileName)
 	return req.Respond(types.NewResponse().Embeds(embed).File(fileName, fileContent, img))
 }
 
@@ -119,16 +119,16 @@ func (c *Cog) formatColInfo(
 func formatColHistory(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {
 	colours := partitionColours(h, interval)
 	pixelsPerInterval := 4
-	buf := bytes.NewBuffer(make([]byte, 0))
 
-	fileExt = "gif"
-	fileContent = "image/gif"
+	buf := bytes.NewBuffer(make([]byte, 0))
 	err = gif.Encode(buf, horizontalPartitionImage{
 		partitions:      colours,
 		partitionWidth:  pixelsPerInterval,
 		partitionHeight: pixelsPerInterval * 5,
 	}, nil)
 	file = bytes.NewBuffer(buf.Bytes())
+	fileExt = "gif"
+	fileContent = "image/gif"
 	return file, fileExt, fileContent, err
 }
 

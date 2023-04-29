@@ -167,7 +167,9 @@ func (r *repo) UpdateUnfreeze(user IDomainMember) error {
 func (r *repo) getLogs(user IDomainMember, since time.Time) ([]*ColoursLogRecord, error) {
 	rows, err := r.db.Query(`
 		SELECT colour, tstamp, reason FROM colours_logview
-		WHERE userid = $1 AND tstamp > $2`,
+		WHERE userid = $1
+			AND tstamp > $2
+			AND colour != ''`,
 		user.UserID(), since,
 	)
 	if err != nil {

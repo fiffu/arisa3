@@ -140,7 +140,7 @@ func (c *Cog) formatColInfo(
 			return nil, err
 		}
 
-		desc = append(desc, "", "**Image history:**", "(oldest → newest)")
+		desc = append(desc, "", "**Image history, oldest → newest:**")
 		ret.img.ok = true
 		ret.img.file = buf
 		ret.img.filename = "history." + ext

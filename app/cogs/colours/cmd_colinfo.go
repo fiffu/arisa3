@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"image"
 	"image/color"
-	"image/gif"
+	"image/png"
 	"math"
 	"strings"
 	"time"
@@ -81,8 +81,9 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 	reply := types.NewResponse()
 	embed := newEmbed(role.Colour()).Description(info.desc)
 	if info.img.ok {
-		reply.File(info.img.filename, info.img.contentType, info.img.file)
-		embed.Image("attachment://" + info.img.filename)
+		img := info.img
+		reply.File(img.filename, img.contentType, img.file)
+		embed.Image("attachment://" + img.filename)
 	}
 
 	return req.Respond(reply.Embeds(embed))
@@ -134,8 +135,7 @@ func (c *Cog) formatColInfo(
 			return nil, err
 		}
 
-		desc = append(desc, "", "**Image history:**")
-		desc = append(desc, "", "(oldest → newest)")
+		desc = append(desc, "", "**Image history:**", "(oldest → newest)")
 		ret.img.ok = true
 		ret.img.file = buf
 		ret.img.filename = "history." + ext
@@ -152,14 +152,14 @@ func formatColHistory(h *History, interval time.Duration) (file *bytes.Buffer, f
 	pixelsPerInterval := 4
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	err = gif.Encode(buf, horizontalPartitionImage{
+	err = png.Encode(buf, horizontalPartitionImage{
 		partitions:      colours,
 		partitionWidth:  pixelsPerInterval,
 		partitionHeight: pixelsPerInterval * 5,
-	}, nil)
+	})
 	file = bytes.NewBuffer(buf.Bytes())
-	fileExt = "gif"
-	fileContent = "image/gif"
+	fileExt = "png"
+	fileContent = "image/png"
 	return file, fileExt, fileContent, err
 }
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/gif"
 	"math"
-	"os"
 	"strings"
 	"time"
 
@@ -15,7 +15,6 @@ import (
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/image/bmp"
 )
 
 func (c *Cog) colInfoCommand() *types.Command {
@@ -73,16 +72,13 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 			Msgf("Errored getting last frozen time, guild=%s user=%s", guildID, userID)
 		return err
 	}
-	img := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
 
+	img, fileExt, fileContent := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
+	fileName := "history." + fileExt
 	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
-	embed := newEmbed(role.Colour()).Description(desc).Image("attachment://history.bmp")
 
-	if err := os.WriteFile("history.bmp", img.Bytes(), os.ModeAppend); err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("failed to save history.bmp to disk")
-	}
-	return req.Respond(types.NewResponse().Embeds(embed).File("history.bmp", "image/bmp", img))
+	embed := newEmbed(role.Colour()).Description(desc).Image("attachment://" + fileName)
+	return req.Respond(types.NewResponse().Embeds(embed).File(fileName, fileContent, img))
 }
 
 func (c *Cog) formatColInfo(
@@ -116,16 +112,20 @@ func (c *Cog) formatColInfo(
 	return strings.Join(desc, "\n")
 }
 
-func formatColHistory(h *History, interval time.Duration) *bytes.Buffer {
+func formatColHistory(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string) {
 	colours := partitionColours(h, interval)
 	pixelsPerInterval := 4
 	buf := bytes.NewBuffer(make([]byte, 0))
-	bmp.Encode(buf, horizontalPartitionImage{
+
+	fileExt = "gif"
+	fileContent = "image/gif"
+	gif.Encode(buf, horizontalPartitionImage{
 		partitions:      colours,
 		partitionWidth:  pixelsPerInterval,
 		partitionHeight: pixelsPerInterval * 5,
-	})
-	return bytes.NewBuffer(buf.Bytes())
+	}, nil)
+	file = bytes.NewBuffer(buf.Bytes())
+	return file, fileExt, fileContent
 }
 
 type horizontalPartitionImage struct {

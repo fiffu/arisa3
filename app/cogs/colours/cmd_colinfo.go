@@ -2,6 +2,7 @@ package colours
 
 import (
 	"bytes"
+	"encoding/base64"
 	"image"
 	"image/color"
 	"image/gif"
@@ -81,6 +82,8 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 	fileName := "history." + fileExt
 	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
 
+	engine.CommandLog(c, req, log.Info()).
+		Msgf("Generated image file=%s mime=%s base64=%s", fileName, fileContent, base64.StdEncoding.EncodeToString(img.Bytes()))
 	embed := newEmbed(role.Colour()).
 		Description(desc).
 		Image("attachment://" + fileName).

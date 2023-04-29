@@ -13,6 +13,7 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
+	"github.com/fiffu/arisa3/lib/functional"
 	"github.com/rs/zerolog/log"
 )
 
@@ -71,6 +72,10 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 			Msgf("Errored getting last frozen time, guild=%s user=%s", guildID, userID)
 		return err
 	}
+	engine.CommandLog(c, req, log.Info()).
+		Msgf("Colour history: %v", functional.Map(history.records, func(r *ColoursLogRecord) string {
+			return r.ColourHex
+		}))
 
 	img, fileExt, fileContent, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
 	if err != nil {

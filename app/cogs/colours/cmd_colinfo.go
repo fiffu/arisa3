@@ -81,7 +81,10 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 	fileName := "history." + fileExt
 	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
 
-	embed := newEmbed(role.Colour()).Description(desc).Image("attachment://" + fileName)
+	embed := newEmbed(role.Colour()).
+		Description(desc).
+		Image("attachment://" + fileName).
+		Thumbnail("attachment://" + fileName)
 	return req.Respond(types.NewResponse().Embeds(embed).File(fileName, fileContent, img))
 }
 

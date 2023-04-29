@@ -70,13 +70,15 @@ func Test_formatColInfo(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			reply := (&Cog{}).formatColInfo(
+			reply, err := (&Cog{}).formatColInfo(
 				now,
 				tc.rerollCDEndTime,
 				tc.lastMutateTime,
 				tc.lastFrozenTime,
+				&History{},
 			)
-			assert.Equal(t, tc.expectDesc, reply)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectDesc, reply.desc)
 		})
 	}
 }

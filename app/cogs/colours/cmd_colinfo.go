@@ -2,7 +2,6 @@ package colours
 
 import (
 	"bytes"
-	"encoding/base64"
 	"image"
 	"image/color"
 	"image/gif"
@@ -13,7 +12,6 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
-	"github.com/fiffu/arisa3/lib/functional"
 	"github.com/rs/zerolog/log"
 )
 
@@ -66,44 +64,44 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 		return err
 	}
 
-	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
-	embed := newEmbed(role.Colour()).Description(desc)
-	reply := types.NewResponse().Embeds(embed)
-
 	history, err := c.domain.GetHistory(mem)
 	if err != nil {
 		engine.CommandLog(c, req, log.Error()).Err(err).
 			Msgf("Errored getting last frozen time, guild=%s user=%s", guildID, userID)
 		return err
 	}
-	engine.CommandLog(c, req, log.Info()).
-		Msgf("Colour history: %v", functional.Map(history.records, func(r *ColoursLogRecord) string {
-			return r.ColourHex
-		}))
 
-	if len(history.records) > 0 {
-		img, fileExt, fileContent, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
-		if err != nil {
-			engine.CommandLog(c, req, log.Error()).Err(err).
-				Msgf("Errored generating image file, guild=%s user=%s", guildID, userID)
-			return err
-		}
-
-		fileName := "history." + fileExt
-		engine.CommandLog(c, req, log.Info()).
-			Msgf("Generated image file=%s mime=%s base64=%s", fileName, fileContent, base64.StdEncoding.EncodeToString(img.Bytes()))
-
-		embed.Image("attachment://" + fileName)
-		reply.File(fileName, fileContent, img)
+	info, err := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime, history)
+	if err != nil {
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored formatting colour info, guild=%s user=%s", guildID, userID)
+		return err
 	}
 
-	return req.Respond(reply)
+	reply := types.NewResponse()
+	embed := newEmbed(role.Colour()).Description(info.desc)
+	if info.img.ok {
+		reply.File(info.img.filename, info.img.contentType, info.img.file)
+		embed.Image("attachment://" + info.img.filename)
+	}
+
+	return req.Respond(reply.Embeds(embed))
+}
+
+type colInfo struct {
+	desc string
+	img  struct {
+		ok                               bool
+		file                             *bytes.Buffer
+		filename, extension, contentType string
+	}
 }
 
 func (c *Cog) formatColInfo(
 	now time.Time,
 	rerollCDEndTime, lastMutateTime, lastFrozenTime time.Time,
-) string {
+	history *History,
+) (*colInfo, error) {
 	desc := make([]string, 0)
 
 	desc = append(desc, "**Reroll cooldown:**")
@@ -128,7 +126,25 @@ func (c *Cog) formatColInfo(
 		desc = append(desc, "Frozen "+frozenDuration+" ago")
 	}
 
-	return strings.Join(desc, "\n")
+	ret := &colInfo{}
+
+	if len(history.records) > 0 {
+		buf, ext, mime, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
+		if err != nil {
+			return nil, err
+		}
+
+		desc = append(desc, "", "**Image history:**")
+		desc = append(desc, "", "(oldest → newest)")
+		ret.img.ok = true
+		ret.img.file = buf
+		ret.img.filename = "history." + ext
+		ret.img.extension = ext
+		ret.img.contentType = mime
+	}
+
+	ret.desc = strings.Join(desc, "\n")
+	return ret, nil
 }
 
 func formatColHistory(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {

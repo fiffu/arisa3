@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/bwmarrin/discordgo v0.24.0
+	github.com/bwmarrin/discordgo v0.27.1
 	github.com/carlmjohnson/requests v0.22.3
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/golang/mock v1.6.0

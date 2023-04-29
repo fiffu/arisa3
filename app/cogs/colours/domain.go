@@ -242,14 +242,8 @@ func (d *domain) CreateColourRole(s IDomainSession, mem IDomainMember, colour *C
 	guildID := mem.Guild().ID()
 
 	// Create role
-	id, err := s.GuildRoleCreate(guildID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set colour
 	col := colour.ToDecimal()
-	err = s.GuildRoleEdit(guildID, id, roleName, col)
+	id, err := s.GuildRoleCreate(guildID, roleName, col)
 	if err != nil {
 		return nil, err
 	}

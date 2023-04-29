@@ -157,8 +157,8 @@ func (s *session) GuildRoleReorder(guildID string, roles []IDomainRole) error {
 	return err
 }
 
-func (s *session) GuildRoleCreate(guildID string) (roleID string, err error) {
-	role, err := s.sess.GuildRoleCreate(guildID)
+func (s *session) GuildRoleCreate(guildID string, name string, colour int) (roleID string, err error) {
+	role, err := s.sess.GuildRoleCreate(guildID, &discordgo.RoleParams{Name: name, Color: &colour})
 	if err != nil {
 		return "", err
 	}
@@ -167,8 +167,8 @@ func (s *session) GuildRoleCreate(guildID string) (roleID string, err error) {
 
 func (s *session) GuildRoleEdit(guildID, roleID, name string, colour int) error {
 	_, err := s.sess.GuildRoleEdit(
-		guildID, roleID, name, colour,
-		false, 0, false,
+		guildID, roleID,
+		&discordgo.RoleParams{Name: name, Color: &colour},
 	)
 	if err != nil {
 		return err

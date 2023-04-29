@@ -187,8 +187,7 @@ func Test_Reroll(t *testing.T) {
 
 			case Provision:
 				repo.EXPECT().UpdateReroll(Any, Any).Return(nil)
-				s.EXPECT().GuildRoleCreate(Any)
-				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any)
+				s.EXPECT().GuildRoleCreate(Any, Any, Any)
 				s.EXPECT().GuildRoles(Any)
 				// s.EXPECT().GuildRoleReorder(Any, Any)  // commented out; lazy to mock guild roles
 				s.EXPECT().GuildMemberRoleAdd(Any, Any, Any)

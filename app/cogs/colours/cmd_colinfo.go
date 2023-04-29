@@ -2,7 +2,6 @@ package colours
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"image/color"
 	"image/gif"
@@ -13,7 +12,6 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
-	"github.com/fiffu/arisa3/lib/functional"
 	"github.com/rs/zerolog/log"
 )
 
@@ -73,7 +71,13 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 		return err
 	}
 
-	img, fileExt, fileContent := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
+	img, fileExt, fileContent, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
+	if err != nil {
+		engine.CommandLog(c, req, log.Error()).Err(err).
+			Msgf("Errored generating image file, guild=%s user=%s", guildID, userID)
+		return err
+	}
+
 	fileName := "history." + fileExt
 	desc := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime)
 
@@ -112,20 +116,20 @@ func (c *Cog) formatColInfo(
 	return strings.Join(desc, "\n")
 }
 
-func formatColHistory(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string) {
+func formatColHistory(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {
 	colours := partitionColours(h, interval)
 	pixelsPerInterval := 4
 	buf := bytes.NewBuffer(make([]byte, 0))
 
 	fileExt = "gif"
 	fileContent = "image/gif"
-	gif.Encode(buf, horizontalPartitionImage{
+	err = gif.Encode(buf, horizontalPartitionImage{
 		partitions:      colours,
 		partitionWidth:  pixelsPerInterval,
 		partitionHeight: pixelsPerInterval * 5,
 	}, nil)
 	file = bytes.NewBuffer(buf.Bytes())
-	return file, fileExt, fileContent
+	return file, fileExt, fileContent, err
 }
 
 type horizontalPartitionImage struct {
@@ -168,6 +172,5 @@ func partitionColours(h *History, interval time.Duration) []*Colour {
 
 		spans[retIdx] = (&Colour{}).FromRGBHex(rec.ColourHex)
 	}
-	fmt.Println(functional.Map(spans, func(c *Colour) string { return c.ToHexcode() }))
 	return spans
 }

@@ -183,7 +183,7 @@ func Test_formatColInfo(t *testing.T) {
 	}
 }
 
-func Test_formatColHistory(t *testing.T) {
+func Test_makeColHistoryImg(t *testing.T) {
 	h := &History{
 		start: unix(00),
 		end:   unix(40),
@@ -193,7 +193,7 @@ func Test_formatColHistory(t *testing.T) {
 		},
 	}
 
-	file, fileExt, fileContent, err := formatColHistory(h, 20*time.Second)
+	file, fileExt, fileContent, err := makeColHistoryImg(h, 20*time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, file)
 	assert.Equal(t, "png", fileExt)

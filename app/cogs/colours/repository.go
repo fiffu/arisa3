@@ -170,7 +170,7 @@ func (r *repo) getLogs(user IDomainMember, since time.Time) ([]*ColoursLogRecord
 		WHERE userid = $1
 			AND tstamp > $2
 			AND colour != ''
-		ORDER BY tstamp ASC`,
+		ORDER BY tstamp DESC`,
 		user.UserID(), since,
 	)
 	if err != nil {

@@ -17,15 +17,15 @@ func concat(s ...string) string {
 	return strings.Join(s, "")
 }
 
-func Test_partitionColours(t *testing.T) {
-	colours := func(hxs ...int) []*Colour {
-		ret := make([]*Colour, len(hxs))
-		for i, hx := range hxs {
-			ret[i] = (&Colour{}).FromDecimal(hx)
-		}
-		return ret
+func colours(hxs ...int) []*Colour {
+	ret := make([]*Colour, len(hxs))
+	for i, hx := range hxs {
+		ret[i] = (&Colour{}).FromDecimal(hx)
 	}
+	return ret
+}
 
+func Test_partitionColours(t *testing.T) {
 	testCases := []struct {
 		desc     string
 		records  []*ColoursLogRecord
@@ -180,6 +180,33 @@ func Test_formatColInfo(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expectDesc, reply.desc)
 		})
+	}
+}
+
+func Test_horizontalPartitionImage(t *testing.T) {
+	r, g, b := 0xff0000, 0x00ff00, 0x0000ff
+	hpi := horizontalPartitionImage{
+		partitions:      colours(r, g, b),
+		partitionWidth:  3,
+		partitionHeight: 2,
+	}
+
+	bitmap := [][]int{
+		{r, r, r, g, g, g, b, b, b},
+		{r, r, r, g, g, g, b, b, b},
+	}
+	for y, row := range bitmap {
+		for x, pixel := range row {
+			expect := (&Colour{}).FromDecimal(pixel)
+			actual := hpi.At(x, y)
+
+			xr, xg, xb, xa := expect.RGBA()
+			ar, ag, ab, aa := actual.RGBA()
+			assert.Equal(t, xr, ar)
+			assert.Equal(t, xg, ag)
+			assert.Equal(t, xb, ab)
+			assert.Equal(t, xa, aa)
+		}
 	}
 }
 

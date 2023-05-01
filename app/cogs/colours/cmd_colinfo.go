@@ -154,6 +154,13 @@ func (c *Cog) formatColInfo(
 
 func makeColHistoryImg(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {
 	colours := partitionColours(h, interval)
+
+	// reverse colours before drawing
+	last := len(colours) - 1
+	for i := 0; i < len(colours)/2; i++ {
+		colours[i], colours[last-i] = colours[last-i], colours[i]
+	}
+
 	pixelsPerInterval := 4
 
 	buf := bytes.NewBuffer(make([]byte, 0))

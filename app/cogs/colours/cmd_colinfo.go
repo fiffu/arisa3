@@ -134,13 +134,13 @@ func (c *Cog) formatColInfo(
 
 	ret := &colInfo{}
 
-	if len(history.records) > 0 {
-		buf, ext, mime, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
+	if history != nil && len(history.records) > 0 {
+		buf, ext, mime, err := makeColHistoryImg(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
 		if err != nil {
 			return nil, err
 		}
 
-		desc = append(desc, "", "**Image history, oldest → newest:**")
+		desc = append(desc, "", "**Image history, newest → oldest:**")
 		ret.img.ok = true
 		ret.img.file = buf
 		ret.img.filename = "history." + ext
@@ -152,7 +152,7 @@ func (c *Cog) formatColInfo(
 	return ret, nil
 }
 
-func formatColHistory(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {
+func makeColHistoryImg(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {
 	colours := partitionColours(h, interval)
 	pixelsPerInterval := 4
 

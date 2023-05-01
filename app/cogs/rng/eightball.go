@@ -55,7 +55,7 @@ func (c *Cog) eightBallCommand() *types.Command {
 func (c *Cog) eightBall(req types.ICommandEvent) error {
 	asker := formatAsker(req)
 	question, _ := req.Args().String(EightBallQuestion)
-	reply := functional.SliceOf(eightBallResponses).TakeRandom()
+	reply := functional.TakeRandom(eightBallResponses)
 
 	embed := types.NewEmbed().Description(reply)
 

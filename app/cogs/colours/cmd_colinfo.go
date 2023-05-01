@@ -134,7 +134,7 @@ func (c *Cog) formatColInfo(
 
 	ret := &colInfo{}
 
-	if len(history.records) > 0 {
+	if history != nil && len(history.records) > 0 {
 		buf, ext, mime, err := formatColHistory(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
 		if err != nil {
 			return nil, err

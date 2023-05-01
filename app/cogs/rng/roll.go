@@ -199,7 +199,7 @@ func formatResponse(req types.ICommandEvent, d dice, result int, comment string)
 }
 
 func formatAsker(req types.ICommandEvent) string {
-	username := req.User().String()
+	username := req.User().Username
 
 	nickname := ""
 	member := req.Interaction().Member

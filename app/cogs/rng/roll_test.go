@@ -224,16 +224,16 @@ func Test_formatAsker(t *testing.T) {
 			expect:   "nick",
 		},
 		{
-			desc:     "having no nickname should return username",
+			desc:     "having no nickname should return username without discriminator",
 			nickname: "",
 			username: "user",
-			expect:   "user#1234",
+			expect:   "user",
 		},
 		{
-			desc:     "having no member should return username",
+			desc:     "having no member should return username without discriminator",
 			nickname: NoMember,
 			username: "user",
-			expect:   "user#1234",
+			expect:   "user",
 		},
 	}
 	for _, tc := range tests {

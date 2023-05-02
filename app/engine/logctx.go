@@ -100,7 +100,7 @@ func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (strin
 	_, m := GetMap(ctx)
 	for k, v := range m {
 		if k == traceID {
-			msg = "[" + v + "]"
+			msg = "[" + v + "]" + msg
 		}
 		entry = entry.Str(string(k), v)
 	}

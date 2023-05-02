@@ -43,9 +43,11 @@ func WhoCalledMe() string {
 	if caller == nil {
 		panic("failed to get caller")
 	}
+
 	funcName := caller.Name()
 	funcName = strings.TrimSuffix(funcName, "-fm")
 	funcName = functional.Last(strings.Split(funcName, "."))
+	file = filepath.Base(file)
 
 	return fmt.Sprintf("%s() at %s:%d", funcName, file, line)
 }

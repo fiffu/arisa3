@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
@@ -36,42 +36,42 @@ func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
 
 	role := c.domain.GetColourRole(mem)
 	if role == nil {
-		engine.Errorf(ctx, err, "No colour role found, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "No colour role found, guild=%s user=%s", guildID, userID)
 		return req.Respond(ctx, types.NewResponse().
 			Content("You don't have a colour role. Use /col to get a random colour!"))
 	}
 
 	rerollCDEndTime, err := c.domain.GetRerollCooldownEndTime(mem)
 	if err != nil {
-		engine.Errorf(ctx, err, "Errored getting cooldown end time, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting cooldown end time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
 	lastMutateTime, _, err := c.domain.GetLastMutate(mem)
 	if err != nil {
-		engine.Errorf(ctx, err, "Errored getting last mutate time, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting last mutate time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
 	lastFrozenTime, err := c.domain.GetLastFrozen(mem)
 	if err != nil {
-		engine.Errorf(ctx, err, "Errored getting last frozen time, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting last frozen time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
 	history, err := c.domain.GetHistory(mem)
 	if err != nil {
-		engine.Errorf(ctx, err, "Errored getting colour history, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting colour history, guild=%s user=%s", guildID, userID)
 		return err
 	}
 	historyStr := functional.Map(
 		history.records, func(c *ColoursLogRecord) string { return c.ColourHex },
 	)
-	engine.Infof(ctx, "Colour history guild=%s user=%s: %v", guildID, userID, historyStr)
+	log.Infof(ctx, "Colour history guild=%s user=%s: %v", guildID, userID, historyStr)
 
 	info, err := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime, history)
 	if err != nil {
-		engine.Errorf(ctx, err, "Errored formatting colour info, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored formatting colour info, guild=%s user=%s", guildID, userID)
 		return err
 	}
 

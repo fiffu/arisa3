@@ -6,6 +6,7 @@ import (
 
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
 
@@ -54,7 +55,7 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 		NewRepository(c.db),
 		c.cfg,
 	)
-	engine.Infof(ctx, "IColoursDomain loaded")
+	log.Infof(ctx, "IColoursDomain loaded")
 	return nil
 }
 

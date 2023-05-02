@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
@@ -77,7 +77,7 @@ func (c *Cog) pullEmojis(ctx context.Context, req types.ICommandEvent, guildID s
 	if cached, ok := c.pokiesCache.Peek(guildID); ok {
 		return cached.emojis, nil
 	}
-	engine.Debugf(ctx, "Cache miss")
+	log.Debugf(ctx, "Cache miss")
 
 	emojis, err := req.Session().GuildEmojis(guildID)
 	c.pokiesCache.Put(&cachedEmojis{
@@ -85,7 +85,7 @@ func (c *Cog) pullEmojis(ctx context.Context, req types.ICommandEvent, guildID s
 		emojis,
 	})
 
-	engine.Infof(ctx, "Pulled %d emojis from guild id='%s', err=%v", len(emojis), guildID, err)
+	log.Infof(ctx, "Pulled %d emojis from guild id='%s', err=%v", len(emojis), guildID, err)
 	return emojis, err
 }
 

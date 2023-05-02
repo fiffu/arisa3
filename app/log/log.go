@@ -1,10 +1,11 @@
-package engine
+package log
 
 import (
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/fiffu/arisa3/lib"
@@ -24,10 +25,10 @@ type CtxKey string
 
 // Context keys
 const (
-	traceID CtxKey = "trace"
-	user    CtxKey = "user"
-	guild   CtxKey = "guild"
-	cogName CtxKey = "cog"
+	TraceID CtxKey = "trace"
+	User    CtxKey = "user"
+	Guild   CtxKey = "guild"
+	CogName CtxKey = "cog"
 )
 
 var DoNotLogCtxKeys = []CtxKey{}
@@ -107,11 +108,23 @@ func Stack(ctx context.Context, err error) {
 func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (string, *zero.Event) {
 	_, m := GetMap(ctx)
 	for k, v := range m {
-		if k == traceID {
+		if k == TraceID {
 			msg = fmt.Sprintf("[%s] %s", v, msg)
 		}
 		entry = entry.Str(string(k), v)
 	}
 	entry.Str("src", caller)
 	return msg, entry
+}
+
+func SetupLogger() {
+	output := zero.ConsoleWriter{Out: os.Stdout}
+	output.TimeFormat = "2006/01/02 15:04:05"
+	output.FormatMessage = func(i interface{}) string {
+		return fmt.Sprintf(":: %s  ", i)
+	}
+	zero.TimestampFunc = func() time.Time {
+		return time.Now().UTC()
+	}
+	zerolog.Logger = zerolog.Output(output).Level(zero.InfoLevel)
 }

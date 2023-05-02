@@ -9,7 +9,7 @@ import (
 	"github.com/fiffu/arisa3/app/cogs/colours"
 	"github.com/fiffu/arisa3/app/cogs/general"
 	"github.com/fiffu/arisa3/app/cogs/rng"
-	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 )
 
@@ -38,10 +38,10 @@ func SetupCogs(ctx context.Context, app types.IApp) error {
 			return err
 		}
 		if err := c.OnStartup(ctx, app, cfg); err != nil {
-			engine.Errorf(ctx, err, "Failed to setup cog: %s", c.Name())
+			log.Errorf(ctx, err, "Failed to setup cog: %s", c.Name())
 			return err
 		}
-		engine.Infof(ctx, "%s cog init complete ⚙️", c.Name())
+		log.Infof(ctx, "%s cog init complete ⚙️", c.Name())
 	}
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/functional"
 )
@@ -155,7 +155,7 @@ func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {
 func (d *domain) Reroll(ctx context.Context, s IDomainSession, mem IDomainMember) (*Colour, error) {
 	// Check cooldown
 	last, cooldownFinished, err := d.GetLastReroll(mem)
-	engine.Infof(ctx,
+	log.Infof(ctx,
 		"%s last roll was %s, %d mins cooldown finished? %v",
 		mem.Username(), last.Format(time.RFC3339), d.rerollCooldownMins, cooldownFinished,
 	)
@@ -166,7 +166,7 @@ func (d *domain) Reroll(ctx context.Context, s IDomainSession, mem IDomainMember
 	// Apply penalty if reroll cooldown not finished
 	if !cooldownFinished {
 		// Skip DB call if no penalty configured
-		engine.Infof(ctx, "Applying %v mins penalty on %s", d.rerollPenaltyMins, mem.Username())
+		log.Infof(ctx, "Applying %v mins penalty on %s", d.rerollPenaltyMins, mem.Username())
 		if d.rerollPenaltyMins > 0 {
 			addedPenalty := last.Add(time.Duration(d.rerollPenaltyMins) * time.Minute)
 			if err := d.repo.UpdateRerollPenalty(mem, addedPenalty); err != nil {
@@ -272,11 +272,11 @@ func (d *domain) GetColourRoleHeight(ctx context.Context, s IDomainSession, guil
 		return -1, err
 	}
 
-	engine.Debugf(ctx, "Checking height of role: %s", d.maxHeightRoleName)
+	log.Debugf(ctx, "Checking height of role: %s", d.maxHeightRoleName)
 	for i, role := range roles {
 		if role.Name() == d.maxHeightRoleName {
 			d.maxRoleHeight = i
-			engine.Debugf(ctx, "Found height of role: %s (= %d)", d.maxHeightRoleName, i)
+			log.Debugf(ctx, "Found height of role: %s (= %d)", d.maxHeightRoleName, i)
 			return i, nil
 		}
 	}

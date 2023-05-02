@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/fiffu/arisa3/app/database"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/envconfig"
 	"github.com/mitchellh/mapstructure"
@@ -56,8 +57,8 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		return bootError(ErrCogNotBootable)
 	}
 
-	ctx = Put(ctx, cogName, cog.Name())
-	Infof(ctx, "🥾 %s cog is booting", cog.Name())
+	ctx = log.Put(ctx, log.CogName, cog.Name())
+	log.Infof(ctx, "🥾 %s cog is booting", cog.Name())
 
 	// Parse config
 	cfg := cog.ConfigPointer()
@@ -69,7 +70,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		return bootError(err)
 	} else if len(replaced) > 0 {
 		for envKey, fld := range replaced {
-			Warnf(ctx, "Replaced %v with environment var %s", fld.Name, envKey)
+			log.Warnf(ctx, "Replaced %v with environment var %s", fld.Name, envKey)
 		}
 	}
 	// Assign config
@@ -80,10 +81,10 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 	// Setup repo migrations
 	if rcog, ok := c.(IRepository); ok {
 		db := app.Database()
-		Infof(ctx, "Migrations starting")
+		log.Infof(ctx, "Migrations starting")
 		if err := runMigrations(ctx, rcog, db); err != nil {
-			Errorf(ctx, err, "Migrations starting")
-			Stack(ctx, err)
+			log.Errorf(ctx, err, "Migrations starting")
+			log.Stack(ctx, err)
 			if closeErr := db.Close(); closeErr != nil {
 				return bootError(fmt.Errorf(
 					"failed to close DB connection (%v) during teardown due to "+
@@ -94,14 +95,14 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 			return bootError(err)
 		}
 	} else {
-		Infof(ctx, "Migrations skipped (no migration interface found)")
+		log.Infof(ctx, "Migrations skipped (no migration interface found)")
 	}
 
 	// Bind ready callback after boot sequence is ready
 	sess := app.BotSession()
 	sess.AddHandler(NewEventHandler(func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
 		if err := cog.ReadyCallback(s, r); err != nil {
-			Errorf(ctx, err, "Error in %s.ReadyCallback()", cog.Name())
+			log.Errorf(ctx, err, "Error in %s.ReadyCallback()", cog.Name())
 		}
 	}))
 	return nil
@@ -110,7 +111,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 func runMigrations(ctx context.Context, cog IRepository, db database.IDatabase) error {
 	dir := cog.MigrationsDir()
 	files, err := ioutil.ReadDir(dir)
-	Infof(ctx, "Migrations found (count: %d) at: %s", len(files), dir)
+	log.Infof(ctx, "Migrations found (count: %d) at: %s", len(files), dir)
 	if err != nil {
 		return err
 	}
@@ -129,7 +130,7 @@ func runMigrations(ctx context.Context, cog IRepository, db database.IDatabase) 
 			migratedCount += 1
 		}
 	}
-	Infof(ctx, "Migrations complete (total executed: %d)", migratedCount)
+	log.Infof(ctx, "Migrations complete (total executed: %d)", migratedCount)
 	return nil
 }
 

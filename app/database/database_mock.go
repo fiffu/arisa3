@@ -5,6 +5,7 @@
 package database
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -34,38 +35,38 @@ func (m *MockIDatabase) EXPECT() *MockIDatabaseMockRecorder {
 }
 
 // Begin mocks base method.
-func (m *MockIDatabase) Begin() (ITransaction, error) {
+func (m *MockIDatabase) Begin(ctx context.Context) (ITransaction, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Begin")
+	ret := m.ctrl.Call(m, "Begin", ctx)
 	ret0, _ := ret[0].(ITransaction)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Begin indicates an expected call of Begin.
-func (mr *MockIDatabaseMockRecorder) Begin() *gomock.Call {
+func (mr *MockIDatabaseMockRecorder) Begin(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockIDatabase)(nil).Begin))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockIDatabase)(nil).Begin), ctx)
 }
 
 // Close mocks base method.
-func (m *MockIDatabase) Close() error {
+func (m *MockIDatabase) Close(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close")
+	ret := m.ctrl.Call(m, "Close", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockIDatabaseMockRecorder) Close() *gomock.Call {
+func (mr *MockIDatabaseMockRecorder) Close(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockIDatabase)(nil).Close))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockIDatabase)(nil).Close), ctx)
 }
 
 // Exec mocks base method.
-func (m *MockIDatabase) Exec(query string, args ...interface{}) (IResult, error) {
+func (m *MockIDatabase) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{query}
+	varargs := []interface{}{ctx, query}
 	for _, a := range args {
 		varargs = append(varargs, a)
 	}
@@ -76,46 +77,46 @@ func (m *MockIDatabase) Exec(query string, args ...interface{}) (IResult, error)
 }
 
 // Exec indicates an expected call of Exec.
-func (mr *MockIDatabaseMockRecorder) Exec(query interface{}, args ...interface{}) *gomock.Call {
+func (mr *MockIDatabaseMockRecorder) Exec(ctx, query interface{}, args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{query}, args...)
+	varargs := append([]interface{}{ctx, query}, args...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockIDatabase)(nil).Exec), varargs...)
 }
 
 // Migrate mocks base method.
-func (m *MockIDatabase) Migrate(arg0 ISchema) (bool, error) {
+func (m *MockIDatabase) Migrate(ctx context.Context, schema ISchema) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Migrate", arg0)
+	ret := m.ctrl.Call(m, "Migrate", ctx, schema)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Migrate indicates an expected call of Migrate.
-func (mr *MockIDatabaseMockRecorder) Migrate(arg0 interface{}) *gomock.Call {
+func (mr *MockIDatabaseMockRecorder) Migrate(ctx, schema interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockIDatabase)(nil).Migrate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockIDatabase)(nil).Migrate), ctx, schema)
 }
 
 // ParseMigration mocks base method.
-func (m *MockIDatabase) ParseMigration(filepath string) (ISchema, error) {
+func (m *MockIDatabase) ParseMigration(ctx context.Context, filepath string) (ISchema, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ParseMigration", filepath)
+	ret := m.ctrl.Call(m, "ParseMigration", ctx, filepath)
 	ret0, _ := ret[0].(ISchema)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ParseMigration indicates an expected call of ParseMigration.
-func (mr *MockIDatabaseMockRecorder) ParseMigration(filepath interface{}) *gomock.Call {
+func (mr *MockIDatabaseMockRecorder) ParseMigration(ctx, filepath interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseMigration", reflect.TypeOf((*MockIDatabase)(nil).ParseMigration), filepath)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseMigration", reflect.TypeOf((*MockIDatabase)(nil).ParseMigration), ctx, filepath)
 }
 
 // Query mocks base method.
-func (m *MockIDatabase) Query(query string, args ...interface{}) (IRows, error) {
+func (m *MockIDatabase) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{query}
+	varargs := []interface{}{ctx, query}
 	for _, a := range args {
 		varargs = append(varargs, a)
 	}
@@ -126,9 +127,9 @@ func (m *MockIDatabase) Query(query string, args ...interface{}) (IRows, error) 
 }
 
 // Query indicates an expected call of Query.
-func (mr *MockIDatabaseMockRecorder) Query(query interface{}, args ...interface{}) *gomock.Call {
+func (mr *MockIDatabaseMockRecorder) Query(ctx, query interface{}, args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{query}, args...)
+	varargs := append([]interface{}{ctx, query}, args...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockIDatabase)(nil).Query), varargs...)
 }
 
@@ -156,23 +157,23 @@ func (m *MockITransaction) EXPECT() *MockITransactionMockRecorder {
 }
 
 // Commit mocks base method.
-func (m *MockITransaction) Commit() error {
+func (m *MockITransaction) Commit(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Commit")
+	ret := m.ctrl.Call(m, "Commit", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Commit indicates an expected call of Commit.
-func (mr *MockITransactionMockRecorder) Commit() *gomock.Call {
+func (mr *MockITransactionMockRecorder) Commit(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockITransaction)(nil).Commit))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockITransaction)(nil).Commit), ctx)
 }
 
 // Exec mocks base method.
-func (m *MockITransaction) Exec(query string, args ...interface{}) (IResult, error) {
+func (m *MockITransaction) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{query}
+	varargs := []interface{}{ctx, query}
 	for _, a := range args {
 		varargs = append(varargs, a)
 	}
@@ -183,16 +184,16 @@ func (m *MockITransaction) Exec(query string, args ...interface{}) (IResult, err
 }
 
 // Exec indicates an expected call of Exec.
-func (mr *MockITransactionMockRecorder) Exec(query interface{}, args ...interface{}) *gomock.Call {
+func (mr *MockITransactionMockRecorder) Exec(ctx, query interface{}, args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{query}, args...)
+	varargs := append([]interface{}{ctx, query}, args...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockITransaction)(nil).Exec), varargs...)
 }
 
 // Query mocks base method.
-func (m *MockITransaction) Query(query string, args ...interface{}) (IRows, error) {
+func (m *MockITransaction) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{query}
+	varargs := []interface{}{ctx, query}
 	for _, a := range args {
 		varargs = append(varargs, a)
 	}
@@ -203,24 +204,24 @@ func (m *MockITransaction) Query(query string, args ...interface{}) (IRows, erro
 }
 
 // Query indicates an expected call of Query.
-func (mr *MockITransactionMockRecorder) Query(query interface{}, args ...interface{}) *gomock.Call {
+func (mr *MockITransactionMockRecorder) Query(ctx, query interface{}, args ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{query}, args...)
+	varargs := append([]interface{}{ctx, query}, args...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockITransaction)(nil).Query), varargs...)
 }
 
 // Rollback mocks base method.
-func (m *MockITransaction) Rollback() error {
+func (m *MockITransaction) Rollback(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Rollback")
+	ret := m.ctrl.Call(m, "Rollback", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Rollback indicates an expected call of Rollback.
-func (mr *MockITransactionMockRecorder) Rollback() *gomock.Call {
+func (mr *MockITransactionMockRecorder) Rollback(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockITransaction)(nil).Rollback))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockITransaction)(nil).Rollback), ctx)
 }
 
 // MockIResult is a mock of IResult interface.

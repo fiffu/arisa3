@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"testing"
@@ -17,11 +18,11 @@ type mockClient struct {
 	db *sql.DB
 }
 
-func (c *mockClient) Close() error {
+func (c *mockClient) Close(ctx context.Context) error {
 	return c.db.Close()
 }
 
-func (c *mockClient) Query(query string, args ...interface{}) (IRows, error) {
+func (c *mockClient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
 	rows, err := c.db.Query(query, args...)
 	if err == sql.ErrNoRows {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
@@ -29,11 +30,11 @@ func (c *mockClient) Query(query string, args ...interface{}) (IRows, error) {
 	return rows, err
 }
 
-func (c *mockClient) Exec(query string, args ...interface{}) (IResult, error) {
+func (c *mockClient) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
 	return c.db.Exec(query, args...)
 }
 
-func (c *mockClient) Begin() (ITransaction, error) {
+func (c *mockClient) Begin(ctx context.Context) (ITransaction, error) {
 	t, err := c.db.Begin()
 	if err != nil {
 		return nil, err
@@ -41,10 +42,10 @@ func (c *mockClient) Begin() (ITransaction, error) {
 	return sqlTxWrap{t}, nil
 }
 
-func (c *mockClient) Migrate(ISchema) (executed bool, err error) {
+func (c *mockClient) Migrate(ctx context.Context, schema ISchema) (executed bool, err error) {
 	panic("not implemented")
 }
 
-func (c *mockClient) ParseMigration(filepath string) (ISchema, error) {
+func (c *mockClient) ParseMigration(ctx context.Context, filepath string) (ISchema, error) {
 	panic("not implemented")
 }

@@ -13,41 +13,41 @@ import (
 // IColoursDomain describes the colour roles domain
 type IColoursDomain interface {
 	// Get a member's last freeze time. If Never is returned, member's colour is not frozen.
-	GetLastFrozen(IDomainMember) (time.Time, error)
+	GetLastFrozen(context.Context, IDomainMember) (time.Time, error)
 	// Get a member's last mutate time.
-	GetLastMutate(IDomainMember) (time.Time, bool, error)
+	GetLastMutate(context.Context, IDomainMember) (time.Time, bool, error)
 	// Get a member's last reroll time.
-	GetLastReroll(IDomainMember) (time.Time, bool, error)
+	GetLastReroll(context.Context, IDomainMember) (time.Time, bool, error)
 
 	// Get the reroll cooldown end time for member.
-	GetRerollCooldownEndTime(IDomainMember) (time.Time, error)
+	GetRerollCooldownEndTime(context.Context, IDomainMember) (time.Time, error)
 	// Get history of colours associated with member.
-	GetHistory(IDomainMember) (*History, error)
+	GetHistory(context.Context, IDomainMember) (*History, error)
 
 	// Apply a mutation on member's colour role. If frozen, mutation is not allowed.
-	Mutate(IDomainSession, IDomainMember) (*Colour, error)
+	Mutate(context.Context, IDomainSession, IDomainMember) (*Colour, error)
 	// Reroll the colour for a member's colour role.
 	Reroll(context.Context, IDomainSession, IDomainMember) (*Colour, error)
 
 	// Freeze a member's colour role, i.e. disable mutations.
-	Freeze(IDomainMember) error
+	Freeze(context.Context, IDomainMember) error
 	// Unfreeze a member's colour role, i.e. enable mutations.
-	Unfreeze(IDomainMember) error
+	Unfreeze(context.Context, IDomainMember) error
 
 	// Returns whether member has colour role.
-	HasColourRole(IDomainMember) bool
+	HasColourRole(context.Context, IDomainMember) bool
 	// Search member's roles for one that looks like a colour role, based on name.
-	GetColourRole(IDomainMember) IDomainRole
+	GetColourRole(context.Context, IDomainMember) IDomainRole
 	// Derive a role name based on the member's properties, like username.
-	GetColourRoleName(mem IDomainMember) string
+	GetColourRoleName(context.Context, IDomainMember) string
 	// Generate a colour role name based on the member's nickname or username.
 	CreateColourRole(context.Context, IDomainSession, IDomainMember, *Colour) (IDomainRole, error)
 	// Get height that colour roles should be at, based on position of role with maxHeightRoleName
 	GetColourRoleHeight(context.Context, IDomainSession, IDomainGuild) (int, error)
 	// Set the height of a role
-	SetRoleHeight(IDomainSession, IDomainGuild, string, int) error
+	SetRoleHeight(context.Context, IDomainSession, IDomainGuild, string, int) error
 	// Create and assign a colour role to a member.
-	AssignColourRole(IDomainSession, IDomainMember, IDomainRole) error
+	AssignColourRole(context.Context, IDomainSession, IDomainMember, IDomainRole) error
 }
 
 // IDomainSession wraps methods of discordgo.Session that IColoursDomain will use.
@@ -90,11 +90,11 @@ type IDomainRole interface {
 
 // IDomainRepository describes methods that IColoursDomain uses to fetch/store data.
 type IDomainRepository interface {
-	FetchUserState(IDomainMember, Reason) (time.Time, error)
-	FetchUserHistory(IDomainMember, time.Time) ([]*ColoursLogRecord, error)
-	UpdateMutate(IDomainMember, *Colour) error
-	UpdateReroll(IDomainMember, *Colour) error
-	UpdateRerollPenalty(IDomainMember, time.Time) error
-	UpdateFreeze(IDomainMember) error
-	UpdateUnfreeze(IDomainMember) error
+	FetchUserState(context.Context, IDomainMember, Reason) (time.Time, error)
+	FetchUserHistory(context.Context, IDomainMember, time.Time) ([]*ColoursLogRecord, error)
+	UpdateMutate(context.Context, IDomainMember, *Colour) error
+	UpdateReroll(context.Context, IDomainMember, *Colour) error
+	UpdateRerollPenalty(context.Context, IDomainMember, time.Time) error
+	UpdateFreeze(context.Context, IDomainMember) error
+	UpdateUnfreeze(context.Context, IDomainMember) error
 }

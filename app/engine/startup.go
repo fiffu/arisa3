@@ -85,7 +85,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		if err := runMigrations(ctx, rcog, db); err != nil {
 			log.Errorf(ctx, err, "Migrations starting")
 			log.Stack(ctx, err)
-			if closeErr := db.Close(); closeErr != nil {
+			if closeErr := db.Close(ctx); closeErr != nil {
 				return bootError(fmt.Errorf(
 					"failed to close DB connection (%v) during teardown due to "+
 						"migration error (%v)",
@@ -119,11 +119,11 @@ func runMigrations(ctx context.Context, cog IRepository, db database.IDatabase) 
 	migratedCount := 0
 	for _, file := range files {
 		path := filepath.Join(dir, file.Name())
-		schema, err := db.ParseMigration(path)
+		schema, err := db.ParseMigration(ctx, path)
 		if err != nil {
 			return err
 		}
-		executed, err := db.Migrate(schema)
+		executed, err := db.Migrate(ctx, schema)
 		if err != nil {
 			return err
 		} else if executed {

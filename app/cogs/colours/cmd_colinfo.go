@@ -34,32 +34,32 @@ func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
 	guildID := mem.Guild().ID()
 	userID := mem.UserID()
 
-	role := c.domain.GetColourRole(mem)
+	role := c.domain.GetColourRole(ctx, mem)
 	if role == nil {
 		log.Errorf(ctx, err, "No colour role found, guild=%s user=%s", guildID, userID)
 		return req.Respond(ctx, types.NewResponse().
 			Content("You don't have a colour role. Use /col to get a random colour!"))
 	}
 
-	rerollCDEndTime, err := c.domain.GetRerollCooldownEndTime(mem)
+	rerollCDEndTime, err := c.domain.GetRerollCooldownEndTime(ctx, mem)
 	if err != nil {
 		log.Errorf(ctx, err, "Errored getting cooldown end time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
-	lastMutateTime, _, err := c.domain.GetLastMutate(mem)
+	lastMutateTime, _, err := c.domain.GetLastMutate(ctx, mem)
 	if err != nil {
 		log.Errorf(ctx, err, "Errored getting last mutate time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
-	lastFrozenTime, err := c.domain.GetLastFrozen(mem)
+	lastFrozenTime, err := c.domain.GetLastFrozen(ctx, mem)
 	if err != nil {
 		log.Errorf(ctx, err, "Errored getting last frozen time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
-	history, err := c.domain.GetHistory(mem)
+	history, err := c.domain.GetHistory(ctx, mem)
 	if err != nil {
 		log.Errorf(ctx, err, "Errored getting colour history, guild=%s user=%s", guildID, userID)
 		return err

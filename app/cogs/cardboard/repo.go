@@ -1,6 +1,7 @@
 package cardboard
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/fiffu/arisa3/app/database"
@@ -32,6 +33,7 @@ func (r *repo) GetAliases(guildID string) (map[Alias]Actual, error) {
 
 	aliases := make(map[Alias]Actual)
 	rows, err := r.db.Query(
+		context.Background(),
 		"SELECT alias, actual FROM aliases WHERE guildid=$1",
 		guildID,
 	)
@@ -53,6 +55,7 @@ func (r *repo) GetAliases(guildID string) (map[Alias]Actual, error) {
 
 func (r *repo) SetAlias(guildID string, ali Alias, act Actual) error {
 	if _, err := r.db.Exec(
+		context.Background(),
 		"INSERT INTO aliases(alias, actual, guildid) VALUES ($1, $2, $3)",
 		string(ali), string(act), guildID,
 	); err != nil {
@@ -69,6 +72,7 @@ func (r *repo) getTagsByOperation(guildID string, oper TagOperation) ([]string, 
 
 	tags := make([]string, 0)
 	rows, err := r.db.Query(
+		context.Background(),
 		fmt.Sprintf("SELECT tag FROM tag_%s WHERE guildid=$1", oper),
 		guildID,
 	)
@@ -94,6 +98,7 @@ func (r *repo) getTagsByOperation(guildID string, oper TagOperation) ([]string, 
 
 func (r *repo) setTagOperation(guildID string, tag string, oper TagOperation) error {
 	if _, err := r.db.Exec(
+		context.Background(),
 		fmt.Sprintf(`INSERT INTO tag_%s(tag, guildid) VALUES ($1, $2) ON CONFLICT DO NOTHING`, string(oper)),
 		tag, guildID,
 	); err != nil {

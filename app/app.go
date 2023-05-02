@@ -17,15 +17,15 @@ import (
 
 // IDependencyInjector is an interface for initializing injected dependencies.
 type IDependencyInjector interface {
-	NewDatabase(dsn string) (database.IDatabase, error)
+	NewDatabase(ctx context.Context, dsn string) (database.IDatabase, error)
 	Bot(token string, debugMode bool) (*discordgo.Session, error)
 }
 
 // DefaultInjector provides default methods satisfying IDependencyInjector.
 type DefaultInjector struct{}
 
-func (d DefaultInjector) NewDatabase(dsn string) (database.IDatabase, error) {
-	return database.NewDBClient(dsn)
+func (d DefaultInjector) NewDatabase(ctx context.Context, dsn string) (database.IDatabase, error) {
+	return database.NewDBClient(ctx, dsn)
 }
 
 func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, error) {
@@ -53,19 +53,19 @@ func (a *app) Shutdown(ctx context.Context) {
 		log.Errorf(ctx, err, "Error while closing session")
 		log.Stack(ctx, err)
 	}
-	if err := a.db.Close(); err != nil {
+	if err := a.db.Close(ctx); err != nil {
 		log.Errorf(ctx, err, "Error while closing DB connection")
 		log.Stack(ctx, err)
 	}
 }
 
 func Main(deps IDependencyInjector, configPath string) error {
-	app, err := newApp(deps, configPath)
+	ctx := engine.StartupContext()
+
+	app, err := newApp(ctx, deps, configPath)
 	if err != nil {
 		return err
 	}
-
-	ctx := engine.StartupContext()
 
 	log.Infof(ctx, "Initializing cogs")
 	if err = cogs.SetupCogs(ctx, app); err != nil {
@@ -87,7 +87,7 @@ func Main(deps IDependencyInjector, configPath string) error {
 	return nil
 }
 
-func newApp(deps IDependencyInjector, configPath string) (types.IApp, error) {
+func newApp(ctx context.Context, deps IDependencyInjector, configPath string) (types.IApp, error) {
 	log.SetupLogger()
 
 	cfg, err := Configure(configPath)
@@ -96,7 +96,7 @@ func newApp(deps IDependencyInjector, configPath string) (types.IApp, error) {
 	}
 	cogsCfg := getCogsConfigs(cfg)
 
-	db, err := deps.NewDatabase(cfg.DatabaseDSN)
+	db, err := deps.NewDatabase(ctx, cfg.DatabaseDSN)
 	if err != nil {
 		return nil, err
 	}

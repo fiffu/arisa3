@@ -1,7 +1,10 @@
 // package database exposes an interface for database I/O.
 package database
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 var (
 	// ErrNoRecords indicates 0 results were returned for a query.
@@ -12,37 +15,37 @@ var (
 //go:generate mockgen -source=database.go -destination=./database_mock.go -package=database
 type IDatabase interface {
 	// Close closes the database client.
-	Close() error
+	Close(ctx context.Context) error
 
 	// Query queries the database, usually a SELECT.
-	Query(query string, args ...interface{}) (IRows, error)
+	Query(ctx context.Context, query string, args ...interface{}) (IRows, error)
 
 	// Exec executes a statement on the database, usually an UPDATE/INSERT/DELETE.
-	Exec(query string, args ...interface{}) (IResult, error)
+	Exec(ctx context.Context, query string, args ...interface{}) (IResult, error)
 
 	// Begin begins a transaction.
-	Begin() (ITransaction, error)
+	Begin(ctx context.Context) (ITransaction, error)
 
 	// Migrate executes a schema for database migration.
-	Migrate(ISchema) (executed bool, err error)
+	Migrate(ctx context.Context, schema ISchema) (executed bool, err error)
 
 	// ParseMigration is a helper function for reading migrations.
-	ParseMigration(filepath string) (ISchema, error)
+	ParseMigration(ctx context.Context, filepath string) (ISchema, error)
 }
 
 // ITransaction describes an interface of a database transaction.
 type ITransaction interface {
 	// Query queries the database, usually a SELECT.
-	Query(query string, args ...interface{}) (IRows, error)
+	Query(ctx context.Context, query string, args ...interface{}) (IRows, error)
 
 	// Exec executes a statement on the database, usually an UPDATE/INSERT/DELETE.
-	Exec(query string, args ...interface{}) (IResult, error)
+	Exec(ctx context.Context, query string, args ...interface{}) (IResult, error)
 
 	// Commit commits the transaction
-	Commit() error
+	Commit(ctx context.Context) error
 
 	// Rollback rolls back the transaction
-	Rollback() error
+	Rollback(ctx context.Context) error
 }
 
 // IResult summarizes an executed SQL command.

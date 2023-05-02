@@ -32,7 +32,7 @@ func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 	if errors.Is(err, ErrRerollCooldownPending) {
 		log.Errorf(ctx, err, "Blocked reroll due to cooldown pending, guild=%s user=%s", guildID, userID)
 
-		endTime, err := c.domain.GetRerollCooldownEndTime(mem)
+		endTime, err := c.domain.GetRerollCooldownEndTime(ctx, mem)
 		if err != nil {
 			return err
 		}
@@ -68,14 +68,14 @@ func (c *Cog) setFreeze(ctx context.Context, req types.ICommandEvent, toFrozen b
 		un = "un"
 	}
 
-	role := c.domain.GetColourRole(mem)
+	role := c.domain.GetColourRole(ctx, mem)
 	if role == nil {
 		// user has no colour role
 		log.Warnf(ctx, "User has no role to %sfreeze, guild=%s user=%s", un, guildID, userID)
 		return req.Respond(ctx, types.NewResponse().Content("You don't even have a colour role..."))
 	}
 
-	if err := action(mem); err != nil {
+	if err := action(ctx, mem); err != nil {
 		log.Errorf(ctx, err, "Errored while %sfreezing colour, guild=%s user=%s", un, guildID, userID)
 		return err
 	}
@@ -99,7 +99,7 @@ func (c *Cog) mutate(ctx context.Context, msg types.IMessageEvent) {
 		return
 	}
 
-	newColour, err := c.domain.Mutate(s, member)
+	newColour, err := c.domain.Mutate(ctx, s, member)
 
 	switch {
 	case newColour == nil:

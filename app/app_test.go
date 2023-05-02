@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,7 +14,7 @@ type testDependencyInjector struct {
 	ctrl *gomock.Controller
 }
 
-func (d testDependencyInjector) NewDatabase(dsn string) (database.IDatabase, error) {
+func (d testDependencyInjector) NewDatabase(ctx context.Context, dsn string) (database.IDatabase, error) {
 	return database.NewMockIDatabase(d.ctrl), nil
 }
 
@@ -28,7 +29,7 @@ func Test_newApp(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	testDI := testDependencyInjector{ctrl}
-	app, err := newApp(testDI, configPath)
+	app, err := newApp(context.Background(), testDI, configPath)
 	assert.NotNil(t, app)
 	assert.Nil(t, app.BotSession())
 	assert.NoError(t, err)

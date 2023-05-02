@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 	"time"
@@ -47,7 +48,7 @@ func Test_FetchUserState_whenCached_returnCachedWithoutDatabaseCall(t *testing.T
 		Reroll: Never,
 		Freeze: Never,
 	} {
-		actual, err := repo.FetchUserState(mem, reason)
+		actual, err := repo.FetchUserState(context.Background(), mem, reason)
 		assert.NoError(t, err)
 		assert.Equal(t, expect, actual)
 	}
@@ -68,7 +69,7 @@ func Test_FetchUserState_whenNoTimestampInDB_returnNever(t *testing.T) {
 	} {
 		dbMock.ExpectQuery(`SELECT userid, tstamp, reason FROM colours WHERE userid = \$1`).
 			WillReturnError(sql.ErrNoRows)
-		actual, err := repo.FetchUserState(mem, reason)
+		actual, err := repo.FetchUserState(context.Background(), mem, reason)
 		assert.NoError(t, err)
 		assert.Equal(t, expect, actual)
 	}
@@ -89,12 +90,12 @@ func Test_FetchUserState_cacheReadThrough(t *testing.T) {
 			AddRow(mem.UserID(), lastReroll, "reroll"))
 
 	// First fetch triggers DB call due to cache miss
-	actual, err := repo.FetchUserState(mem, Reroll)
+	actual, err := repo.FetchUserState(context.Background(), mem, Reroll)
 	assert.NoError(t, err)
 	assert.Equal(t, lastReroll, actual)
 
 	// Second fetch should not trigger DB call
-	actual2, err2 := repo.FetchUserState(mem, Reroll)
+	actual2, err2 := repo.FetchUserState(context.Background(), mem, Reroll)
 	assert.NoError(t, err2)
 	assert.Equal(t, lastReroll, actual2)
 }
@@ -110,7 +111,7 @@ func Test_queryUserState_whenNoTimestampInDB_returnError(t *testing.T) {
 	dbMock.ExpectQuery(`SELECT userid, tstamp, reason FROM colours WHERE userid = \$1`).
 		WillReturnError(sql.ErrNoRows)
 
-	state, err := repo.queryUserState(mem.UserID())
+	state, err := repo.queryUserState(context.Background(), mem.UserID())
 
 	assert.ErrorIs(t, err, database.ErrNoRecords)
 	assert.Nil(t, state)
@@ -134,7 +135,7 @@ func Test_queryUserState_whenTimestampsInDB_returnTimestamps(t *testing.T) {
 			AddRow(mem.UserID(), lastMutate, "mutate").
 			AddRow(mem.UserID(), lastReroll, "reroll").
 			AddRow(mem.UserID(), lastFrozen, "freeze"))
-	state, err := repo.queryUserState(mem.UserID())
+	state, err := repo.queryUserState(context.Background(), mem.UserID())
 
 	assert.NoError(t, err)
 	assert.Equal(t, mem.UserID(), state.UserID)
@@ -157,7 +158,7 @@ func Test_queryUserState_whenSomeTimestampsInDB_returnNeverForLackingRecords(t *
 		WillReturnRows(sqlmock.
 			NewRows([]string{"userid", "tstamp", "reason"}).
 			AddRow(mem.UserID(), lastMutate, "mutate"))
-	state, err := repo.queryUserState(mem.UserID())
+	state, err := repo.queryUserState(context.Background(), mem.UserID())
 
 	assert.NoError(t, err)
 	assert.Equal(t, mem.UserID(), state.UserID)
@@ -176,9 +177,9 @@ func Test_UpdateFoo(t *testing.T) {
 
 	col := &Colour{1, 1, 1}
 	for reason, method := range map[Reason](func() error){
-		Mutate: func() error { return repo.UpdateMutate(mem, col) },
-		Reroll: func() error { return repo.UpdateReroll(mem, col) },
-		Freeze: func() error { return repo.UpdateFreeze(mem) },
+		Mutate: func() error { return repo.UpdateMutate(context.Background(), mem, col) },
+		Reroll: func() error { return repo.UpdateReroll(context.Background(), mem, col) },
+		Freeze: func() error { return repo.UpdateFreeze(context.Background(), mem) },
 	} {
 		dbMock.ExpectBegin()
 		dbMock.ExpectExec(`DELETE FROM colours WHERE userid = \$1 AND reason = \$2`).
@@ -209,7 +210,7 @@ func Test_UpdateUnfreeze(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 0))
 
 	repo := newRepo(db)
-	err = repo.UpdateUnfreeze(mem)
+	err = repo.UpdateUnfreeze(context.Background(), mem)
 	assert.NoError(t, err)
 
 	freezeTime, ok := repo.cachePeek(mem.UserID(), Freeze)
@@ -233,7 +234,7 @@ func Test_UpdateReroll(t *testing.T) {
 	dbMock.ExpectCommit()
 	dbMock.ExpectExec(`INSERT INTO colours_log\(.+\) VALUES \(.+\)`).
 		WillReturnResult(sqlmock.NewResult(1, 0))
-	err = repo.UpdateReroll(mem, &Colour{1, 1, 1})
+	err = repo.UpdateReroll(context.Background(), mem, &Colour{1, 1, 1})
 	assert.NoError(t, err)
 }
 
@@ -248,6 +249,6 @@ func Test_UpdateRerollPenalty(t *testing.T) {
 	dbMock.ExpectExec(`UPDATE colours SET tstamp=\$1 WHERE userid=\$2 AND reason=\$3`).
 		WillReturnResult(sqlmock.NewResult(1, 0))
 
-	err = repo.UpdateRerollPenalty(mem, time.Now())
+	err = repo.UpdateRerollPenalty(context.Background(), mem, time.Now())
 	assert.NoError(t, err)
 }

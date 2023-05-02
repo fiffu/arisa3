@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -42,13 +43,13 @@ func (r *MigrationRecord) Scan(rows IRows) error {
 }
 
 // seedMigration pulls the migrations table state, or creates if it doesn't exist.
-func (c *pgclient) seedMigration() error {
+func (c *pgclient) seedMigration(ctx context.Context) error {
 	log.Info().Msgf("Creating schema migrations table")
-	if _, err := c.Exec(createSchemaMigrations); err != nil {
+	if _, err := c.Exec(ctx, createSchemaMigrations); err != nil {
 		log.Error().Err(err).Msgf("Failed to creating seed migrations table")
 		return err
 	}
-	rows, err := c.Query("SELECT version FROM _schema_migrations;")
+	rows, err := c.Query(ctx, "SELECT version FROM _schema_migrations;")
 	if err != nil {
 		return err
 	}
@@ -66,7 +67,7 @@ func (c *pgclient) seedMigration() error {
 }
 
 // Migrate executes a migration and records it in the migrations table.
-func (c *pgclient) Migrate(schema ISchema) (bool, error) {
+func (c *pgclient) Migrate(ctx context.Context, schema ISchema) (bool, error) {
 	if _, ok := c.existingMigrations[schema.Version()]; ok {
 		return false, nil
 	}
@@ -97,7 +98,7 @@ func (c *pgclient) Migrate(schema ISchema) (bool, error) {
 }
 
 // ParseMigration implements parsing of files into sqlSchema.
-func (c *pgclient) ParseMigration(theFile string) (ISchema, error) {
+func (c *pgclient) ParseMigration(ctx context.Context, theFile string) (ISchema, error) {
 	name, err := validateFileName(theFile)
 	if err != nil {
 		return nil, err

@@ -1,11 +1,14 @@
 package lib
 
 import (
+	"fmt"
 	"math/rand"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/fiffu/arisa3/lib/functional"
 )
 
 func Atoi(s string) int {
@@ -28,6 +31,25 @@ func SplitOnce(s, delim string) (left, right string) {
 	left = s[:pivot]
 	right = s[offset:]
 	return
+}
+
+func WhoCalledMe() string {
+	skip := 2 // skip current frame to get the caller's directory
+	pc, file, line, ok := runtime.Caller(skip)
+	if !ok {
+		panic("failed to get current runtime file")
+	}
+	caller := runtime.FuncForPC(pc)
+	if caller == nil {
+		panic("failed to get caller")
+	}
+
+	funcName := caller.Name()
+	funcName = strings.TrimSuffix(funcName, "-fm")
+	funcName = functional.Last(strings.Split(funcName, "."))
+	file = filepath.Base(file)
+
+	return fmt.Sprintf("%s() at %s:%d", funcName, file, line)
 }
 
 func MustGetCallerDir() string {

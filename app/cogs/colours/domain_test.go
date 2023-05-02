@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -34,7 +35,7 @@ func newTestingMember(ctrl *gomock.Controller, hasColourRole bool) *MockIDomainM
 
 	roles := make([]IDomainRole, 0)
 	if hasColourRole {
-		roleName := (&domain{}).GetColourRoleName(mem)
+		roleName := (&domain{}).GetColourRoleName(context.Background(), mem)
 		roleColour := (&Colour{}).Random()
 		role := &colourRole{name: roleName, colour: roleColour}
 		roles = append(roles, role)
@@ -95,7 +96,7 @@ func Test_GetColourRole(t *testing.T) {
 			mem.EXPECT().Roles().AnyTimes().Return(roles)
 
 			_, _, _, d := newTestingDomain(t, newTestingConfig())
-			role := d.GetColourRole(mem)
+			role := d.GetColourRole(context.Background(), mem)
 
 			if tc.expectFound {
 				assert.NotNil(t, role)
@@ -176,28 +177,28 @@ func Test_Reroll(t *testing.T) {
 			t.Log(tc.name)
 			_, repo, d, s, mem := setup(tc.hasColourRole)
 
-			repo.EXPECT().FetchUserState(Any, Reroll).
+			repo.EXPECT().FetchUserState(Any, Any, Reroll).
 				AnyTimes().Return(tc.cooldownStartTime, nil)
 
 			var expectError error
 			switch tc.expectOutcome {
 			case Disallow:
-				repo.EXPECT().UpdateRerollPenalty(Any, Any).Return(nil)
+				repo.EXPECT().UpdateRerollPenalty(Any, Any, Any).Return(nil)
 				expectError = ErrRerollCooldownPending
 
 			case Provision:
-				repo.EXPECT().UpdateReroll(Any, Any).Return(nil)
+				repo.EXPECT().UpdateReroll(Any, Any, Any).Return(nil)
 				s.EXPECT().GuildRoleCreate(Any, Any, Any)
 				s.EXPECT().GuildRoles(Any)
 				// s.EXPECT().GuildRoleReorder(Any, Any)  // commented out; lazy to mock guild roles
 				s.EXPECT().GuildMemberRoleAdd(Any, Any, Any)
 
 			case Reuse:
-				repo.EXPECT().UpdateReroll(Any, Any).Return(nil)
+				repo.EXPECT().UpdateReroll(Any, Any, Any).Return(nil)
 				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any)
 			}
 
-			_, err := d.Reroll(s, mem)
+			_, err := d.Reroll(context.Background(), s, mem)
 
 			if expectError != nil {
 				assert.Equal(
@@ -295,9 +296,9 @@ func Test_Mutate(t *testing.T) {
 			t.Log(tc.name)
 			_, repo, d, s, mem := setup(tc.hasColourRole)
 
-			repo.EXPECT().FetchUserState(Any, Mutate).
+			repo.EXPECT().FetchUserState(Any, Any, Mutate).
 				AnyTimes().Return(tc.cooldownStartTime, nil)
-			repo.EXPECT().FetchUserState(Any, Freeze).
+			repo.EXPECT().FetchUserState(Any, Any, Freeze).
 				AnyTimes().Return(tc.frozenTime, nil)
 
 			var expectError error
@@ -309,11 +310,11 @@ func Test_Mutate(t *testing.T) {
 			case Frozen:
 				expectError = ErrMutateFrozen
 			case Allow:
-				repo.EXPECT().UpdateMutate(Any, Any).Return(nil)
+				repo.EXPECT().UpdateMutate(Any, Any, Any).Return(nil)
 				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any)
 			}
 
-			_, err := d.Mutate(s, mem)
+			_, err := d.Mutate(context.Background(), s, mem)
 
 			if expectError != nil {
 				assert.Error(t, err)
@@ -334,13 +335,14 @@ func Test_GetLastFrozen(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	repo := NewMockIDomainRepository(ctrl)
 	d := &domain{repo: repo}
+	ctx := context.Background()
 	rsn := Freeze
 	{
 		// happy case
 		var expect = time.Now()
 		var expectErr error
-		repo.EXPECT().FetchUserState(Any, rsn).Return(expect, expectErr)
-		actual, err := d.GetLastFrozen(nil)
+		repo.EXPECT().FetchUserState(Any, Any, rsn).Return(expect, expectErr)
+		actual, err := d.GetLastFrozen(ctx, nil)
 		assert.Equal(t, expect, actual)
 		assert.Equal(t, expectErr, err)
 	}
@@ -348,8 +350,8 @@ func Test_GetLastFrozen(t *testing.T) {
 		// error case
 		var expect time.Time
 		var expectErr = assert.AnError
-		repo.EXPECT().FetchUserState(Any, rsn).Return(expect, expectErr)
-		actual, err := d.GetLastFrozen(nil)
+		repo.EXPECT().FetchUserState(Any, Any, rsn).Return(expect, expectErr)
+		actual, err := d.GetLastFrozen(ctx, nil)
 		assert.Equal(t, expect, actual)
 		assert.Equal(t, expectErr, err)
 	}
@@ -359,14 +361,15 @@ func Test_GetLastMutate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	repo := NewMockIDomainRepository(ctrl)
 	d := &domain{repo: repo, rerollCooldownMins: 1}
+	ctx := context.Background()
 	rsn := Mutate
 	{
 		// happy case
 		var expect = time.Now().Add(-10 * time.Minute)
 		var expectOK = true
 		var expectErr error
-		repo.EXPECT().FetchUserState(Any, rsn).Return(expect, expectErr)
-		actual, ok, err := d.GetLastMutate(nil)
+		repo.EXPECT().FetchUserState(Any, Any, rsn).Return(expect, expectErr)
+		actual, ok, err := d.GetLastMutate(ctx, nil)
 		assert.Equal(t, expect, actual)
 		assert.Equal(t, expectOK, ok)
 		assert.Equal(t, expectErr, err)
@@ -376,8 +379,8 @@ func Test_GetLastMutate(t *testing.T) {
 		var expect time.Time
 		var expectOK = false
 		var expectErr = assert.AnError
-		repo.EXPECT().FetchUserState(Any, rsn).Return(expect, expectErr)
-		actual, ok, err := d.GetLastMutate(nil)
+		repo.EXPECT().FetchUserState(Any, Any, rsn).Return(expect, expectErr)
+		actual, ok, err := d.GetLastMutate(ctx, nil)
 		assert.Equal(t, expect, actual)
 		assert.Equal(t, expectOK, ok)
 		assert.Equal(t, expectErr, err)
@@ -388,14 +391,15 @@ func Test_GetLastReroll(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	repo := NewMockIDomainRepository(ctrl)
 	d := &domain{repo: repo, rerollCooldownMins: 1}
+	ctx := context.Background()
 	rsn := Reroll
 	{
 		// happy case
 		var expect = time.Now().Add(-10 * time.Minute)
 		var expectOK = true
 		var expectErr error
-		repo.EXPECT().FetchUserState(Any, rsn).Return(expect, expectErr)
-		actual, ok, err := d.GetLastReroll(nil)
+		repo.EXPECT().FetchUserState(Any, Any, rsn).Return(expect, expectErr)
+		actual, ok, err := d.GetLastReroll(ctx, nil)
 		assert.Equal(t, expect, actual)
 		assert.Equal(t, expectOK, ok)
 		assert.Equal(t, expectErr, err)
@@ -405,8 +409,8 @@ func Test_GetLastReroll(t *testing.T) {
 		var expect time.Time
 		var expectOK = false
 		var expectErr = assert.AnError
-		repo.EXPECT().FetchUserState(Any, rsn).Return(expect, expectErr)
-		actual, ok, err := d.GetLastReroll(nil)
+		repo.EXPECT().FetchUserState(Any, Any, rsn).Return(expect, expectErr)
+		actual, ok, err := d.GetLastReroll(ctx, nil)
 		assert.Equal(t, expect, actual)
 		assert.Equal(t, expectOK, ok)
 		assert.Equal(t, expectErr, err)
@@ -418,13 +422,14 @@ func Test_GetRerollCooldownEndTime(t *testing.T) {
 	repo := NewMockIDomainRepository(ctrl)
 	cooldownMins := 1
 	d := &domain{repo: repo, rerollCooldownMins: cooldownMins}
+	ctx := context.Background()
 	{
 		// happy case
 		var rerolledTime = time.Now().Add(-10 * time.Minute)
 		var expectEndTime = rerolledTime.Add(time.Duration(cooldownMins) * time.Minute)
 		var expectErr error
-		repo.EXPECT().FetchUserState(Any, Reroll).Return(rerolledTime, expectErr)
-		actual, err := d.GetRerollCooldownEndTime(nil)
+		repo.EXPECT().FetchUserState(Any, Any, Reroll).Return(rerolledTime, expectErr)
+		actual, err := d.GetRerollCooldownEndTime(ctx, nil)
 		assert.Equal(t, expectEndTime, actual)
 		assert.Equal(t, expectErr, err)
 	}
@@ -432,8 +437,8 @@ func Test_GetRerollCooldownEndTime(t *testing.T) {
 		// unhappy case
 		var rerolledTime time.Time
 		var expectErr = assert.AnError
-		repo.EXPECT().FetchUserState(Any, Reroll).Return(rerolledTime, expectErr)
-		actual, err := d.GetRerollCooldownEndTime(nil)
+		repo.EXPECT().FetchUserState(Any, Any, Reroll).Return(rerolledTime, expectErr)
+		actual, err := d.GetRerollCooldownEndTime(ctx, nil)
 		assert.Equal(t, rerolledTime, actual)
 		assert.Equal(t, expectErr, err)
 	}
@@ -443,8 +448,8 @@ func Test_Freeze(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	repo := NewMockIDomainRepository(ctrl)
 	d := &domain{repo: repo}
-	repo.EXPECT().UpdateFreeze(nil).Return(assert.AnError)
-	actual := d.Freeze(nil)
+	repo.EXPECT().UpdateFreeze(Any, nil).Return(assert.AnError)
+	actual := d.Freeze(context.Background(), nil)
 	assert.Error(t, actual)
 }
 
@@ -452,8 +457,8 @@ func Test_Unfreeze(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	repo := NewMockIDomainRepository(ctrl)
 	d := &domain{repo: repo}
-	repo.EXPECT().UpdateUnfreeze(nil).Return(assert.AnError)
-	actual := d.Unfreeze(nil)
+	repo.EXPECT().UpdateUnfreeze(Any, nil).Return(assert.AnError)
+	actual := d.Unfreeze(context.Background(), nil)
 	assert.Error(t, actual)
 }
 
@@ -499,7 +504,7 @@ func Test_HasColourRole(t *testing.T) {
 	for _, hasColourRole := range []bool{true, false} {
 		ctrl, _, _, d := newTestingDomain(t, newTestingConfig())
 		mem := newTestingMember(ctrl, hasColourRole)
-		actual := d.HasColourRole(mem)
+		actual := d.HasColourRole(context.Background(), mem)
 		assert.Equal(t, hasColourRole, actual)
 	}
 }
@@ -550,7 +555,7 @@ func Test_SetRoleHeight(t *testing.T) {
 
 		t.Run(desc, func(t *testing.T) {
 			s.EXPECT().GuildRoleReorder(guildID, tc.expect).Return(nil).Times(1)
-			err := d.SetRoleHeight(s, g, newRoleID, tc.height)
+			err := d.SetRoleHeight(context.Background(), s, g, newRoleID, tc.height)
 			assert.NoError(t, err)
 		})
 	}

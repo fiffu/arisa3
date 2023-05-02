@@ -15,7 +15,7 @@ type IApp interface {
 	Configs() map[string]interface{}
 	Database() database.IDatabase
 	BotSession() *discordgo.Session
-	Shutdown()
+	Shutdown(context.Context)
 }
 
 type CogConfig interface{}

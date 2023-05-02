@@ -1,6 +1,8 @@
 package cardboard
 
 import (
+	"context"
+
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
 	"github.com/fiffu/arisa3/app/types"
 )
@@ -43,7 +45,7 @@ func (c *Cog) lewdCommand() *types.Command {
 		Handler(c.smartSearch(false))
 }
 
-func (c *Cog) dumbSearch(req types.ICommandEvent) error {
+func (c *Cog) dumbSearch(ctx context.Context, req types.ICommandEvent) error {
 	queryStr, _ := req.Args().String(OptionQuery)
 	query := NewQuery(queryStr).
 		WithNoMagic().
@@ -59,11 +61,11 @@ func (c *Cog) dumbSearch(req types.ICommandEvent) error {
 		return err
 	}
 
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
 func (c *Cog) smartSearch(safe bool) types.Handler {
-	return func(req types.ICommandEvent) error {
+	return func(ctx context.Context, req types.ICommandEvent) error {
 		queryStr, _ := req.Args().String(OptionTag)
 
 		query := NewQuery(queryStr).
@@ -85,7 +87,7 @@ func (c *Cog) smartSearch(safe bool) types.Handler {
 			return err
 		}
 
-		return req.Respond(resp)
+		return req.Respond(ctx, resp)
 	}
 }
 

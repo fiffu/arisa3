@@ -1,14 +1,14 @@
 package colours
 
 import (
+	"context"
 	"errors"
 	"regexp"
 	"time"
 
-	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/functional"
-	"github.com/rs/zerolog/log"
 )
 
 // domain.go implements IColoursDomain defined by interfaces.go.
@@ -49,12 +49,12 @@ func NewColoursDomain(c types.ICog, repo IDomainRepository, cfg *Config) IColour
 	}
 }
 
-func (d *domain) GetLastFrozen(mem IDomainMember) (time.Time, error) {
-	return d.repo.FetchUserState(mem, Freeze)
+func (d *domain) GetLastFrozen(ctx context.Context, mem IDomainMember) (time.Time, error) {
+	return d.repo.FetchUserState(ctx, mem, Freeze)
 }
 
-func (d *domain) GetLastMutate(mem IDomainMember) (time.Time, bool, error) {
-	last, err := d.repo.FetchUserState(mem, Mutate)
+func (d *domain) GetLastMutate(ctx context.Context, mem IDomainMember) (time.Time, bool, error) {
+	last, err := d.repo.FetchUserState(ctx, mem, Mutate)
 	if err != nil {
 		return last, false, err
 	}
@@ -62,8 +62,8 @@ func (d *domain) GetLastMutate(mem IDomainMember) (time.Time, bool, error) {
 	return last, d.hasCooldownFinished(last, cooldownPeriod), nil
 }
 
-func (d *domain) GetLastReroll(mem IDomainMember) (time.Time, bool, error) {
-	last, err := d.repo.FetchUserState(mem, Reroll)
+func (d *domain) GetLastReroll(ctx context.Context, mem IDomainMember) (time.Time, bool, error) {
+	last, err := d.repo.FetchUserState(ctx, mem, Reroll)
 	if err != nil {
 		return last, false, err
 	}
@@ -87,8 +87,8 @@ func (d *domain) offsetTime(startTime time.Time, cooldownPeriod time.Duration) t
 	return startTime.Add(cooldownPeriod)
 }
 
-func (d *domain) GetRerollCooldownEndTime(mem IDomainMember) (time.Time, error) {
-	last, _, err := d.GetLastReroll(mem)
+func (d *domain) GetRerollCooldownEndTime(ctx context.Context, mem IDomainMember) (time.Time, error) {
+	last, _, err := d.GetLastReroll(ctx, mem)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -97,11 +97,11 @@ func (d *domain) GetRerollCooldownEndTime(mem IDomainMember) (time.Time, error) 
 	return endTime, nil
 }
 
-func (d *domain) GetHistory(mem IDomainMember) (*History, error) {
+func (d *domain) GetHistory(ctx context.Context, mem IDomainMember) (*History, error) {
 	endTime := d.now()
 	startTime := endTime.Add(-14 * 24 * time.Hour)
 
-	logs, err := d.repo.FetchUserHistory(mem, startTime)
+	logs, err := d.repo.FetchUserHistory(ctx, mem, startTime)
 	if err != nil {
 		return nil, err
 	}
@@ -113,22 +113,22 @@ func (d *domain) GetHistory(mem IDomainMember) (*History, error) {
 	return &History{cols, startTime, endTime}, err
 }
 
-func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {
+func (d *domain) Mutate(ctx context.Context, s IDomainSession, mem IDomainMember) (*Colour, error) {
 	// No role, no mutate
-	role := d.GetColourRole(mem)
+	role := d.GetColourRole(ctx, mem)
 	if role == nil {
 		return nil, nil
 	}
 
 	// Check frozen
-	if lastFrozen, err := d.GetLastFrozen(mem); err != nil {
+	if lastFrozen, err := d.GetLastFrozen(ctx, mem); err != nil {
 		return nil, err
 	} else if lastFrozen != Never {
 		return nil, ErrMutateFrozen
 	}
 
 	// Check cooldown
-	if _, isCooldownDone, err := d.GetLastMutate(mem); err != nil {
+	if _, isCooldownDone, err := d.GetLastMutate(ctx, mem); err != nil {
 		return nil, err
 	} else if !isCooldownDone {
 		return nil, ErrMutateCooldownPending
@@ -136,7 +136,7 @@ func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {
 
 	// Generate new colour, apply cooldown
 	newColour := role.Colour().Nudge()
-	if err := d.repo.UpdateMutate(mem, newColour); err != nil {
+	if err := d.repo.UpdateMutate(ctx, mem, newColour); err != nil {
 		return newColour, err
 	}
 
@@ -152,10 +152,10 @@ func (d *domain) Mutate(s IDomainSession, mem IDomainMember) (*Colour, error) {
 	return newColour, nil
 }
 
-func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
+func (d *domain) Reroll(ctx context.Context, s IDomainSession, mem IDomainMember) (*Colour, error) {
 	// Check cooldown
-	last, cooldownFinished, err := d.GetLastReroll(mem)
-	engine.CogLog(d.cog, log.Info()).Msgf(
+	last, cooldownFinished, err := d.GetLastReroll(ctx, mem)
+	log.Infof(ctx,
 		"%s last roll was %s, %d mins cooldown finished? %v",
 		mem.Username(), last.Format(time.RFC3339), d.rerollCooldownMins, cooldownFinished,
 	)
@@ -166,13 +166,10 @@ func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
 	// Apply penalty if reroll cooldown not finished
 	if !cooldownFinished {
 		// Skip DB call if no penalty configured
-		engine.CogLog(d.cog, log.Info()).Msgf(
-			"Applying %v mins penalty on %s",
-			d.rerollPenaltyMins, mem.Username(),
-		)
+		log.Infof(ctx, "Applying %v mins penalty on %s", d.rerollPenaltyMins, mem.Username())
 		if d.rerollPenaltyMins > 0 {
 			addedPenalty := last.Add(time.Duration(d.rerollPenaltyMins) * time.Minute)
-			if err := d.repo.UpdateRerollPenalty(mem, addedPenalty); err != nil {
+			if err := d.repo.UpdateRerollPenalty(ctx, mem, addedPenalty); err != nil {
 				return nil, err
 			}
 		}
@@ -181,13 +178,13 @@ func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
 
 	// Generate new colour, apply cooldown
 	newColour := (&Colour{}).Random()
-	if err := d.repo.UpdateReroll(mem, newColour); err != nil {
+	if err := d.repo.UpdateReroll(ctx, mem, newColour); err != nil {
 		return newColour, err
 	}
 
 	// Edit existing role or assign a new role
-	if d.HasColourRole(mem) {
-		role := d.GetColourRole(mem)
+	if d.HasColourRole(ctx, mem) {
+		role := d.GetColourRole(ctx, mem)
 		err = s.GuildRoleEdit(
 			mem.Guild().ID(),
 			role.ID(),
@@ -197,11 +194,11 @@ func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
 		return newColour, err
 
 	} else {
-		role, err := d.CreateColourRole(s, mem, newColour)
+		role, err := d.CreateColourRole(ctx, s, mem, newColour)
 		if err != nil {
 			return newColour, err
 		}
-		err = d.AssignColourRole(s, mem, role)
+		err = d.AssignColourRole(ctx, s, mem, role)
 		if err != nil {
 			return newColour, err
 		}
@@ -209,20 +206,20 @@ func (d *domain) Reroll(s IDomainSession, mem IDomainMember) (*Colour, error) {
 	}
 }
 
-func (d *domain) Freeze(mem IDomainMember) error {
-	return d.repo.UpdateFreeze(mem)
+func (d *domain) Freeze(ctx context.Context, mem IDomainMember) error {
+	return d.repo.UpdateFreeze(ctx, mem)
 }
 
-func (d *domain) Unfreeze(mem IDomainMember) error {
-	return d.repo.UpdateUnfreeze(mem)
+func (d *domain) Unfreeze(ctx context.Context, mem IDomainMember) error {
+	return d.repo.UpdateUnfreeze(ctx, mem)
 }
 
-func (d *domain) HasColourRole(mem IDomainMember) bool {
-	hasRole := d.GetColourRole(mem) != nil
+func (d *domain) HasColourRole(ctx context.Context, mem IDomainMember) bool {
+	hasRole := d.GetColourRole(ctx, mem) != nil
 	return hasRole
 }
 
-func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
+func (d *domain) GetColourRole(ctx context.Context, mem IDomainMember) IDomainRole {
 	for _, role := range mem.Roles() {
 		roleName := role.Name()
 		if rolePattern.MatchString(roleName) {
@@ -232,13 +229,13 @@ func (d *domain) GetColourRole(mem IDomainMember) IDomainRole {
 	return nil
 }
 
-func (d *domain) GetColourRoleName(mem IDomainMember) string {
+func (d *domain) GetColourRoleName(ctx context.Context, mem IDomainMember) string {
 	roleName := mem.Username()
 	return roleName
 }
 
-func (d *domain) CreateColourRole(s IDomainSession, mem IDomainMember, colour *Colour) (IDomainRole, error) {
-	roleName := d.GetColourRoleName(mem)
+func (d *domain) CreateColourRole(ctx context.Context, s IDomainSession, mem IDomainMember, colour *Colour) (IDomainRole, error) {
+	roleName := d.GetColourRoleName(ctx, mem)
 	guildID := mem.Guild().ID()
 
 	// Create role
@@ -249,12 +246,12 @@ func (d *domain) CreateColourRole(s IDomainSession, mem IDomainMember, colour *C
 	}
 
 	// Set height
-	height, err := d.GetColourRoleHeight(s, mem.Guild())
+	height, err := d.GetColourRoleHeight(ctx, s, mem.Guild())
 	if err != nil {
 		return nil, err
 	}
 	if height > -1 {
-		err = d.SetRoleHeight(s, mem.Guild(), id, height)
+		err = d.SetRoleHeight(ctx, s, mem.Guild(), id, height)
 		if err != nil {
 			return nil, err
 		}
@@ -262,11 +259,11 @@ func (d *domain) CreateColourRole(s IDomainSession, mem IDomainMember, colour *C
 	return NewDomainRole(id, roleName, col), nil
 }
 
-func (d *domain) AssignColourRole(s IDomainSession, mem IDomainMember, role IDomainRole) error {
+func (d *domain) AssignColourRole(ctx context.Context, s IDomainSession, mem IDomainMember, role IDomainRole) error {
 	return s.GuildMemberRoleAdd(mem.Guild().ID(), mem.UserID(), role.ID())
 }
 
-func (d *domain) GetColourRoleHeight(s IDomainSession, guild IDomainGuild) (int, error) {
+func (d *domain) GetColourRoleHeight(ctx context.Context, s IDomainSession, guild IDomainGuild) (int, error) {
 	if d.maxRoleHeight > -1 {
 		return d.maxRoleHeight, nil
 	}
@@ -275,20 +272,18 @@ func (d *domain) GetColourRoleHeight(s IDomainSession, guild IDomainGuild) (int,
 		return -1, err
 	}
 
-	engine.CogLog(d.cog, log.Debug()).Msgf("Checking height of role: %s", d.maxHeightRoleName)
+	log.Debugf(ctx, "Checking height of role: %s", d.maxHeightRoleName)
 	for i, role := range roles {
 		if role.Name() == d.maxHeightRoleName {
 			d.maxRoleHeight = i
-			engine.CogLog(d.cog, log.Info()).Msgf(
-				"Found height of role: %s (= %d)", d.maxHeightRoleName, i,
-			)
+			log.Debugf(ctx, "Found height of role: %s (= %d)", d.maxHeightRoleName, i)
 			return i, nil
 		}
 	}
 	return -1, nil
 }
 
-func (d *domain) SetRoleHeight(s IDomainSession, g IDomainGuild, newRoleID string, height int) error {
+func (d *domain) SetRoleHeight(ctx context.Context, s IDomainSession, g IDomainGuild, newRoleID string, height int) error {
 	if height <= -1 {
 		return ErrInvalidRoleHeight
 	}

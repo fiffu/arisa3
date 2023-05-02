@@ -3,8 +3,10 @@ package types
 //go:generate mockgen -source=commandevent.go -destination=./commandevent_mock.go -package=types
 
 import (
+	"context"
+
 	dgo "github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
+	"github.com/fiffu/arisa3/app/log"
 )
 
 type ICommandEvent interface {
@@ -13,7 +15,7 @@ type ICommandEvent interface {
 	User() *dgo.User
 	Command() ICommand
 	Args() IArgs
-	Respond(ICommandResponse) error
+	Respond(context.Context, ICommandResponse) error
 }
 
 // commandEvent implements ICommandEvent
@@ -39,12 +41,9 @@ func (evt *commandEvent) User() *dgo.User {
 	}
 	return user
 }
-func (evt *commandEvent) Respond(resp ICommandResponse) error {
+func (evt *commandEvent) Respond(ctx context.Context, resp ICommandResponse) error {
 	itr := evt.i.Interaction
 	data := resp.Data()
-	log.Info().
-		Str(CtxCommand, evt.Command().Name()).
-		Str(CtxInteraction, itr.ID).
-		Msgf("Interaction response >>> resp: \n| %s", resp.String())
+	log.Infof(ctx, "Interaction response >>> resp: \n| %s", resp.String())
 	return evt.s.InteractionRespond(itr, data)
 }

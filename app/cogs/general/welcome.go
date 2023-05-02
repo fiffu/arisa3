@@ -1,17 +1,15 @@
 package general
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/fiffu/arisa3/app/engine"
-	"github.com/rs/zerolog/log"
-
-	"github.com/bwmarrin/discordgo"
 	dgo "github.com/bwmarrin/discordgo"
+	"github.com/fiffu/arisa3/app/log"
 )
 
-const requirePermissions = int64(discordgo.PermissionManageRoles)
+const requirePermissions = int64(dgo.PermissionManageRoles)
 
 func (c *Cog) welcome(s *dgo.Session, r *dgo.Ready) {
 	rootURL := "https://discordapp.com/oauth2/authorize?"
@@ -22,12 +20,10 @@ func (c *Cog) welcome(s *dgo.Session, r *dgo.Ready) {
 
 	inviteURL := rootURL + joinQueryParams(clientID, scope, perms)
 
-	engine.CogLog(c, log.Info()).Msgf(
-		"*** Bot ready:  %s#%s", s.State.User.Username, s.State.User.Discriminator)
-	engine.CogLog(c, log.Info()).Msgf(
-		"*** Bot invite: %s", inviteURL)
-	engine.CogLog(c, log.Info()).Msgf(
-		"*** %s", c.cfg.MOTD)
+	ctx := context.Background()
+	log.Infof(ctx, "*** Bot ready:  %s#%s", s.State.User.Username, s.State.User.Discriminator)
+	log.Infof(ctx, "*** Bot invite: %s", inviteURL)
+	log.Infof(ctx, "*** %s", c.cfg.MOTD)
 }
 
 func joinQueryParams(qs ...string) string {

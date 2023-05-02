@@ -1,16 +1,16 @@
 package rng
 
 import (
+	"context"
 	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -38,23 +38,23 @@ func (c *Cog) pokiesCommand() *types.Command {
 		Handler(c.pokies)
 }
 
-func (c *Cog) pokies(req types.ICommandEvent) error {
-	reply, err := c.getReply(req)
+func (c *Cog) pokies(ctx context.Context, req types.ICommandEvent) error {
+	reply, err := c.getReply(ctx, req)
 	if err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(reply)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
-func (c *Cog) getReply(req types.ICommandEvent) (string, error) {
+func (c *Cog) getReply(ctx context.Context, req types.ICommandEvent) (string, error) {
 	// Query emoji palette
 	guildID := req.Interaction().GuildID
 	if guildID == "" {
 		return "You need to be in a guild for this command to work!", nil
 	}
 
-	emojis, err := c.pullEmojis(req, guildID)
+	emojis, err := c.pullEmojis(ctx, req, guildID)
 	if err != nil {
 		return "", err
 	}
@@ -72,12 +72,12 @@ func (c *Cog) getReply(req types.ICommandEvent) (string, error) {
 	return result, nil
 }
 
-func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.Emoji, error) {
+func (c *Cog) pullEmojis(ctx context.Context, req types.ICommandEvent, guildID string) ([]*discordgo.Emoji, error) {
 	// Cache lookup
 	if cached, ok := c.pokiesCache.Peek(guildID); ok {
 		return cached.emojis, nil
 	}
-	engine.CommandLog(c, req, log.Info()).Msgf("Cache miss")
+	log.Debugf(ctx, "Cache miss")
 
 	emojis, err := req.Session().GuildEmojis(guildID)
 	c.pokiesCache.Put(&cachedEmojis{
@@ -85,11 +85,7 @@ func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.
 		emojis,
 	})
 
-	engine.CogLog(c, log.Info()).Msgf(
-		"Pulled %d emojis from guild id='%s', err=%v",
-		len(emojis), guildID, err,
-	)
-
+	log.Infof(ctx, "Pulled %d emojis from guild id='%s', err=%v", len(emojis), guildID, err)
 	return emojis, err
 }
 

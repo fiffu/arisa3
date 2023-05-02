@@ -1,6 +1,7 @@
 package cardboard
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -64,71 +65,71 @@ func (c *Cog) aliasesCommand() *types.Command {
 		Handler(c.listAliases)
 }
 
-func (c *Cog) promote(req types.ICommandEvent) error {
+func (c *Cog) promote(ctx context.Context, req types.ICommandEvent) error {
 	tagName, _ := req.Args().String(OptionTag)
 
 	guildID := getGuildID(req)
 	if guildID == "" {
-		return req.Respond(respRequiresAdmin)
+		return req.Respond(ctx, respRequiresAdmin)
 	}
 
 	if err := c.domain.SetPromote(tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be promoted.", tagName))
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
-func (c *Cog) demote(req types.ICommandEvent) error {
+func (c *Cog) demote(ctx context.Context, req types.ICommandEvent) error {
 	tagName, _ := req.Args().String(OptionTag)
 
 	guildID := getGuildID(req)
 	if guildID == "" {
-		return req.Respond(respRequiresAdmin)
+		return req.Respond(ctx, respRequiresAdmin)
 	}
 
 	if err := c.domain.SetDemote(tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be demoted.", tagName))
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
-func (c *Cog) omit(req types.ICommandEvent) error {
+func (c *Cog) omit(ctx context.Context, req types.ICommandEvent) error {
 	tagName, _ := req.Args().String(OptionTag)
 
 	guildID := getGuildID(req)
 	if guildID == "" {
-		return req.Respond(respRequiresAdmin)
+		return req.Respond(ctx, respRequiresAdmin)
 	}
 
 	if err := c.domain.SetOmit(tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be omitted.", tagName))
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
-func (c *Cog) alias(req types.ICommandEvent) error {
+func (c *Cog) alias(ctx context.Context, req types.ICommandEvent) error {
 	actual, _ := req.Args().String(OptionTag)
 	alias, _ := req.Args().String(OptionAlias)
 
 	guildID := getGuildID(req)
 	if guildID == "" {
-		return req.Respond(respRequiresAdmin)
+		return req.Respond(ctx, respRequiresAdmin)
 	}
 
 	if err := c.domain.SetAlias(guildID, Alias(alias), Actual(actual)); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("`%s` will be aliased as `%s`.", actual, alias))
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
-func (c *Cog) listAliases(req types.ICommandEvent) error {
+func (c *Cog) listAliases(ctx context.Context, req types.ICommandEvent) error {
 	guildID := getGuildID(req)
 	if guildID == "" {
-		return req.Respond(respRequiresAdmin)
+		return req.Respond(ctx, respRequiresAdmin)
 	}
 
 	aliasMap, err := c.domain.GetAliases(guildID)
@@ -149,5 +150,5 @@ func (c *Cog) listAliases(req types.ICommandEvent) error {
 		message := fmt.Sprintf("```\n" + strings.Join(list, "\n") + "```")
 		resp.Content(message)
 	}
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }

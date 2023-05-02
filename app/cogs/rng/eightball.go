@@ -1,6 +1,7 @@
 package rng
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/fiffu/arisa3/app/engine"
@@ -52,7 +53,7 @@ func (c *Cog) eightBallCommand() *types.Command {
 		Handler(c.eightBall)
 }
 
-func (c *Cog) eightBall(req types.ICommandEvent) error {
+func (c *Cog) eightBall(ctx context.Context, req types.ICommandEvent) error {
 	asker := formatAsker(req)
 	question, _ := req.Args().String(EightBallQuestion)
 	reply := functional.TakeRandom(eightBallResponses)
@@ -64,5 +65,5 @@ func (c *Cog) eightBall(req types.ICommandEvent) error {
 	embed.Description(title + "\n\n" + msg)
 
 	resp := types.NewResponse().Embeds(embed)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }

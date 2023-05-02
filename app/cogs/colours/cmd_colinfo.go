@@ -2,6 +2,7 @@ package colours
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/color"
 	"image/png"
@@ -9,77 +10,68 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
-	"github.com/rs/zerolog/log"
 )
 
 func (c *Cog) colInfoCommand() *types.Command {
 	return types.NewCommand("colinfo").ForChat().
 		Desc("Tells you about your colour").
-		Handler(func(req types.ICommandEvent) error {
-			return c.colInfo(req)
-		})
+		Handler(c.colInfo)
 }
 
-func (c *Cog) colInfo(req types.ICommandEvent) error {
-	mem, resp, err := c.fetchMember(req)
+func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
+	mem, resp, err := c.fetchMember(ctx, req)
 	if err != nil {
 		return err
 	}
 	if resp != nil {
-		return req.Respond(resp)
+		return req.Respond(ctx, resp)
 	}
 
 	guildID := mem.Guild().ID()
 	userID := mem.UserID()
 
-	role := c.domain.GetColourRole(mem)
+	role := c.domain.GetColourRole(ctx, mem)
 	if role == nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("No colour role found, guild=%s user=%s", guildID, userID)
-		return req.Respond(types.NewResponse().
+		log.Errorf(ctx, err, "No colour role found, guild=%s user=%s", guildID, userID)
+		return req.Respond(ctx, types.NewResponse().
 			Content("You don't have a colour role. Use /col to get a random colour!"))
 	}
 
-	rerollCDEndTime, err := c.domain.GetRerollCooldownEndTime(mem)
+	rerollCDEndTime, err := c.domain.GetRerollCooldownEndTime(ctx, mem)
 	if err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored getting cooldown end time, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting cooldown end time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
-	lastMutateTime, _, err := c.domain.GetLastMutate(mem)
+	lastMutateTime, _, err := c.domain.GetLastMutate(ctx, mem)
 	if err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored getting last mutate time, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting last mutate time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
-	lastFrozenTime, err := c.domain.GetLastFrozen(mem)
+	lastFrozenTime, err := c.domain.GetLastFrozen(ctx, mem)
 	if err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored getting last frozen time, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting last frozen time, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
-	history, err := c.domain.GetHistory(mem)
+	history, err := c.domain.GetHistory(ctx, mem)
 	if err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored getting last frozen time, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored getting colour history, guild=%s user=%s", guildID, userID)
 		return err
 	}
-	engine.CommandLog(c, req, log.Info()).
-		Msgf("Colour history guild=%s user=%s: %v", guildID, userID, functional.Map(
-			history.records, func(c *ColoursLogRecord) string { return c.ColourHex },
-		))
+	historyStr := functional.Map(
+		history.records, func(c *ColoursLogRecord) string { return c.ColourHex },
+	)
+	log.Infof(ctx, "Colour history guild=%s user=%s: %v", guildID, userID, historyStr)
 
 	info, err := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime, history)
 	if err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored formatting colour info, guild=%s user=%s", guildID, userID)
+		log.Errorf(ctx, err, "Errored formatting colour info, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
@@ -91,7 +83,7 @@ func (c *Cog) colInfo(req types.ICommandEvent) error {
 		embed.Image("attachment://" + img.filename)
 	}
 
-	return req.Respond(reply.Embeds(embed))
+	return req.Respond(ctx, reply.Embeds(embed))
 }
 
 type colInfo struct {

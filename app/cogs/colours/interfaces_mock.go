@@ -5,6 +5,7 @@
 package colours
 
 import (
+	context "context"
 	reflect "reflect"
 	time "time"
 
@@ -35,125 +36,125 @@ func (m *MockIColoursDomain) EXPECT() *MockIColoursDomainMockRecorder {
 }
 
 // AssignColourRole mocks base method.
-func (m *MockIColoursDomain) AssignColourRole(arg0 IDomainSession, arg1 IDomainMember, arg2 IDomainRole) error {
+func (m *MockIColoursDomain) AssignColourRole(arg0 context.Context, arg1 IDomainSession, arg2 IDomainMember, arg3 IDomainRole) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AssignColourRole", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "AssignColourRole", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AssignColourRole indicates an expected call of AssignColourRole.
-func (mr *MockIColoursDomainMockRecorder) AssignColourRole(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) AssignColourRole(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AssignColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).AssignColourRole), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AssignColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).AssignColourRole), arg0, arg1, arg2, arg3)
 }
 
 // CreateColourRole mocks base method.
-func (m *MockIColoursDomain) CreateColourRole(arg0 IDomainSession, arg1 IDomainMember, arg2 *Colour) (IDomainRole, error) {
+func (m *MockIColoursDomain) CreateColourRole(arg0 context.Context, arg1 IDomainSession, arg2 IDomainMember, arg3 *Colour) (IDomainRole, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateColourRole", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateColourRole", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(IDomainRole)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateColourRole indicates an expected call of CreateColourRole.
-func (mr *MockIColoursDomainMockRecorder) CreateColourRole(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) CreateColourRole(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).CreateColourRole), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).CreateColourRole), arg0, arg1, arg2, arg3)
 }
 
 // Freeze mocks base method.
-func (m *MockIColoursDomain) Freeze(arg0 IDomainMember) error {
+func (m *MockIColoursDomain) Freeze(arg0 context.Context, arg1 IDomainMember) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Freeze", arg0)
+	ret := m.ctrl.Call(m, "Freeze", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Freeze indicates an expected call of Freeze.
-func (mr *MockIColoursDomainMockRecorder) Freeze(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) Freeze(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Freeze", reflect.TypeOf((*MockIColoursDomain)(nil).Freeze), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Freeze", reflect.TypeOf((*MockIColoursDomain)(nil).Freeze), arg0, arg1)
 }
 
 // GetColourRole mocks base method.
-func (m *MockIColoursDomain) GetColourRole(arg0 IDomainMember) IDomainRole {
+func (m *MockIColoursDomain) GetColourRole(arg0 context.Context, arg1 IDomainMember) IDomainRole {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetColourRole", arg0)
+	ret := m.ctrl.Call(m, "GetColourRole", arg0, arg1)
 	ret0, _ := ret[0].(IDomainRole)
 	return ret0
 }
 
 // GetColourRole indicates an expected call of GetColourRole.
-func (mr *MockIColoursDomainMockRecorder) GetColourRole(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetColourRole(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).GetColourRole), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).GetColourRole), arg0, arg1)
 }
 
 // GetColourRoleHeight mocks base method.
-func (m *MockIColoursDomain) GetColourRoleHeight(arg0 IDomainSession, arg1 IDomainGuild) (int, error) {
+func (m *MockIColoursDomain) GetColourRoleHeight(arg0 context.Context, arg1 IDomainSession, arg2 IDomainGuild) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetColourRoleHeight", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetColourRoleHeight", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetColourRoleHeight indicates an expected call of GetColourRoleHeight.
-func (mr *MockIColoursDomainMockRecorder) GetColourRoleHeight(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetColourRoleHeight(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetColourRoleHeight", reflect.TypeOf((*MockIColoursDomain)(nil).GetColourRoleHeight), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetColourRoleHeight", reflect.TypeOf((*MockIColoursDomain)(nil).GetColourRoleHeight), arg0, arg1, arg2)
 }
 
 // GetColourRoleName mocks base method.
-func (m *MockIColoursDomain) GetColourRoleName(mem IDomainMember) string {
+func (m *MockIColoursDomain) GetColourRoleName(arg0 context.Context, arg1 IDomainMember) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetColourRoleName", mem)
+	ret := m.ctrl.Call(m, "GetColourRoleName", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // GetColourRoleName indicates an expected call of GetColourRoleName.
-func (mr *MockIColoursDomainMockRecorder) GetColourRoleName(mem interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetColourRoleName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetColourRoleName", reflect.TypeOf((*MockIColoursDomain)(nil).GetColourRoleName), mem)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetColourRoleName", reflect.TypeOf((*MockIColoursDomain)(nil).GetColourRoleName), arg0, arg1)
 }
 
 // GetHistory mocks base method.
-func (m *MockIColoursDomain) GetHistory(arg0 IDomainMember) (*History, error) {
+func (m *MockIColoursDomain) GetHistory(arg0 context.Context, arg1 IDomainMember) (*History, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHistory", arg0)
+	ret := m.ctrl.Call(m, "GetHistory", arg0, arg1)
 	ret0, _ := ret[0].(*History)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetHistory indicates an expected call of GetHistory.
-func (mr *MockIColoursDomainMockRecorder) GetHistory(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetHistory(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistory", reflect.TypeOf((*MockIColoursDomain)(nil).GetHistory), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistory", reflect.TypeOf((*MockIColoursDomain)(nil).GetHistory), arg0, arg1)
 }
 
 // GetLastFrozen mocks base method.
-func (m *MockIColoursDomain) GetLastFrozen(arg0 IDomainMember) (time.Time, error) {
+func (m *MockIColoursDomain) GetLastFrozen(arg0 context.Context, arg1 IDomainMember) (time.Time, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLastFrozen", arg0)
+	ret := m.ctrl.Call(m, "GetLastFrozen", arg0, arg1)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetLastFrozen indicates an expected call of GetLastFrozen.
-func (mr *MockIColoursDomainMockRecorder) GetLastFrozen(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetLastFrozen(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastFrozen", reflect.TypeOf((*MockIColoursDomain)(nil).GetLastFrozen), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastFrozen", reflect.TypeOf((*MockIColoursDomain)(nil).GetLastFrozen), arg0, arg1)
 }
 
 // GetLastMutate mocks base method.
-func (m *MockIColoursDomain) GetLastMutate(arg0 IDomainMember) (time.Time, bool, error) {
+func (m *MockIColoursDomain) GetLastMutate(arg0 context.Context, arg1 IDomainMember) (time.Time, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLastMutate", arg0)
+	ret := m.ctrl.Call(m, "GetLastMutate", arg0, arg1)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -161,15 +162,15 @@ func (m *MockIColoursDomain) GetLastMutate(arg0 IDomainMember) (time.Time, bool,
 }
 
 // GetLastMutate indicates an expected call of GetLastMutate.
-func (mr *MockIColoursDomainMockRecorder) GetLastMutate(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetLastMutate(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastMutate", reflect.TypeOf((*MockIColoursDomain)(nil).GetLastMutate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastMutate", reflect.TypeOf((*MockIColoursDomain)(nil).GetLastMutate), arg0, arg1)
 }
 
 // GetLastReroll mocks base method.
-func (m *MockIColoursDomain) GetLastReroll(arg0 IDomainMember) (time.Time, bool, error) {
+func (m *MockIColoursDomain) GetLastReroll(arg0 context.Context, arg1 IDomainMember) (time.Time, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLastReroll", arg0)
+	ret := m.ctrl.Call(m, "GetLastReroll", arg0, arg1)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -177,96 +178,96 @@ func (m *MockIColoursDomain) GetLastReroll(arg0 IDomainMember) (time.Time, bool,
 }
 
 // GetLastReroll indicates an expected call of GetLastReroll.
-func (mr *MockIColoursDomainMockRecorder) GetLastReroll(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetLastReroll(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastReroll", reflect.TypeOf((*MockIColoursDomain)(nil).GetLastReroll), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastReroll", reflect.TypeOf((*MockIColoursDomain)(nil).GetLastReroll), arg0, arg1)
 }
 
 // GetRerollCooldownEndTime mocks base method.
-func (m *MockIColoursDomain) GetRerollCooldownEndTime(arg0 IDomainMember) (time.Time, error) {
+func (m *MockIColoursDomain) GetRerollCooldownEndTime(arg0 context.Context, arg1 IDomainMember) (time.Time, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRerollCooldownEndTime", arg0)
+	ret := m.ctrl.Call(m, "GetRerollCooldownEndTime", arg0, arg1)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRerollCooldownEndTime indicates an expected call of GetRerollCooldownEndTime.
-func (mr *MockIColoursDomainMockRecorder) GetRerollCooldownEndTime(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) GetRerollCooldownEndTime(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRerollCooldownEndTime", reflect.TypeOf((*MockIColoursDomain)(nil).GetRerollCooldownEndTime), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRerollCooldownEndTime", reflect.TypeOf((*MockIColoursDomain)(nil).GetRerollCooldownEndTime), arg0, arg1)
 }
 
 // HasColourRole mocks base method.
-func (m *MockIColoursDomain) HasColourRole(arg0 IDomainMember) bool {
+func (m *MockIColoursDomain) HasColourRole(arg0 context.Context, arg1 IDomainMember) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasColourRole", arg0)
+	ret := m.ctrl.Call(m, "HasColourRole", arg0, arg1)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // HasColourRole indicates an expected call of HasColourRole.
-func (mr *MockIColoursDomainMockRecorder) HasColourRole(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) HasColourRole(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).HasColourRole), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasColourRole", reflect.TypeOf((*MockIColoursDomain)(nil).HasColourRole), arg0, arg1)
 }
 
 // Mutate mocks base method.
-func (m *MockIColoursDomain) Mutate(arg0 IDomainSession, arg1 IDomainMember) (*Colour, error) {
+func (m *MockIColoursDomain) Mutate(arg0 context.Context, arg1 IDomainSession, arg2 IDomainMember) (*Colour, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Mutate", arg0, arg1)
+	ret := m.ctrl.Call(m, "Mutate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*Colour)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Mutate indicates an expected call of Mutate.
-func (mr *MockIColoursDomainMockRecorder) Mutate(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) Mutate(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mutate", reflect.TypeOf((*MockIColoursDomain)(nil).Mutate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mutate", reflect.TypeOf((*MockIColoursDomain)(nil).Mutate), arg0, arg1, arg2)
 }
 
 // Reroll mocks base method.
-func (m *MockIColoursDomain) Reroll(arg0 IDomainSession, arg1 IDomainMember) (*Colour, error) {
+func (m *MockIColoursDomain) Reroll(arg0 context.Context, arg1 IDomainSession, arg2 IDomainMember) (*Colour, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Reroll", arg0, arg1)
+	ret := m.ctrl.Call(m, "Reroll", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*Colour)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Reroll indicates an expected call of Reroll.
-func (mr *MockIColoursDomainMockRecorder) Reroll(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) Reroll(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reroll", reflect.TypeOf((*MockIColoursDomain)(nil).Reroll), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reroll", reflect.TypeOf((*MockIColoursDomain)(nil).Reroll), arg0, arg1, arg2)
 }
 
 // SetRoleHeight mocks base method.
-func (m *MockIColoursDomain) SetRoleHeight(arg0 IDomainSession, arg1 IDomainGuild, arg2 string, arg3 int) error {
+func (m *MockIColoursDomain) SetRoleHeight(arg0 context.Context, arg1 IDomainSession, arg2 IDomainGuild, arg3 string, arg4 int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetRoleHeight", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "SetRoleHeight", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetRoleHeight indicates an expected call of SetRoleHeight.
-func (mr *MockIColoursDomainMockRecorder) SetRoleHeight(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) SetRoleHeight(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRoleHeight", reflect.TypeOf((*MockIColoursDomain)(nil).SetRoleHeight), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRoleHeight", reflect.TypeOf((*MockIColoursDomain)(nil).SetRoleHeight), arg0, arg1, arg2, arg3, arg4)
 }
 
 // Unfreeze mocks base method.
-func (m *MockIColoursDomain) Unfreeze(arg0 IDomainMember) error {
+func (m *MockIColoursDomain) Unfreeze(arg0 context.Context, arg1 IDomainMember) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Unfreeze", arg0)
+	ret := m.ctrl.Call(m, "Unfreeze", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Unfreeze indicates an expected call of Unfreeze.
-func (mr *MockIColoursDomainMockRecorder) Unfreeze(arg0 interface{}) *gomock.Call {
+func (mr *MockIColoursDomainMockRecorder) Unfreeze(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unfreeze", reflect.TypeOf((*MockIColoursDomain)(nil).Unfreeze), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unfreeze", reflect.TypeOf((*MockIColoursDomain)(nil).Unfreeze), arg0, arg1)
 }
 
 // MockIDomainSession is a mock of IDomainSession interface.
@@ -641,101 +642,101 @@ func (m *MockIDomainRepository) EXPECT() *MockIDomainRepositoryMockRecorder {
 }
 
 // FetchUserHistory mocks base method.
-func (m *MockIDomainRepository) FetchUserHistory(arg0 IDomainMember, arg1 time.Time) ([]*ColoursLogRecord, error) {
+func (m *MockIDomainRepository) FetchUserHistory(arg0 context.Context, arg1 IDomainMember, arg2 time.Time) ([]*ColoursLogRecord, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchUserHistory", arg0, arg1)
+	ret := m.ctrl.Call(m, "FetchUserHistory", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*ColoursLogRecord)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchUserHistory indicates an expected call of FetchUserHistory.
-func (mr *MockIDomainRepositoryMockRecorder) FetchUserHistory(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIDomainRepositoryMockRecorder) FetchUserHistory(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchUserHistory", reflect.TypeOf((*MockIDomainRepository)(nil).FetchUserHistory), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchUserHistory", reflect.TypeOf((*MockIDomainRepository)(nil).FetchUserHistory), arg0, arg1, arg2)
 }
 
 // FetchUserState mocks base method.
-func (m *MockIDomainRepository) FetchUserState(arg0 IDomainMember, arg1 Reason) (time.Time, error) {
+func (m *MockIDomainRepository) FetchUserState(arg0 context.Context, arg1 IDomainMember, arg2 Reason) (time.Time, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchUserState", arg0, arg1)
+	ret := m.ctrl.Call(m, "FetchUserState", arg0, arg1, arg2)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchUserState indicates an expected call of FetchUserState.
-func (mr *MockIDomainRepositoryMockRecorder) FetchUserState(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIDomainRepositoryMockRecorder) FetchUserState(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchUserState", reflect.TypeOf((*MockIDomainRepository)(nil).FetchUserState), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchUserState", reflect.TypeOf((*MockIDomainRepository)(nil).FetchUserState), arg0, arg1, arg2)
 }
 
 // UpdateFreeze mocks base method.
-func (m *MockIDomainRepository) UpdateFreeze(arg0 IDomainMember) error {
+func (m *MockIDomainRepository) UpdateFreeze(arg0 context.Context, arg1 IDomainMember) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateFreeze", arg0)
+	ret := m.ctrl.Call(m, "UpdateFreeze", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateFreeze indicates an expected call of UpdateFreeze.
-func (mr *MockIDomainRepositoryMockRecorder) UpdateFreeze(arg0 interface{}) *gomock.Call {
+func (mr *MockIDomainRepositoryMockRecorder) UpdateFreeze(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFreeze", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateFreeze), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFreeze", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateFreeze), arg0, arg1)
 }
 
 // UpdateMutate mocks base method.
-func (m *MockIDomainRepository) UpdateMutate(arg0 IDomainMember, arg1 *Colour) error {
+func (m *MockIDomainRepository) UpdateMutate(arg0 context.Context, arg1 IDomainMember, arg2 *Colour) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateMutate", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateMutate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateMutate indicates an expected call of UpdateMutate.
-func (mr *MockIDomainRepositoryMockRecorder) UpdateMutate(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIDomainRepositoryMockRecorder) UpdateMutate(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMutate", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateMutate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMutate", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateMutate), arg0, arg1, arg2)
 }
 
 // UpdateReroll mocks base method.
-func (m *MockIDomainRepository) UpdateReroll(arg0 IDomainMember, arg1 *Colour) error {
+func (m *MockIDomainRepository) UpdateReroll(arg0 context.Context, arg1 IDomainMember, arg2 *Colour) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateReroll", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateReroll", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateReroll indicates an expected call of UpdateReroll.
-func (mr *MockIDomainRepositoryMockRecorder) UpdateReroll(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIDomainRepositoryMockRecorder) UpdateReroll(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateReroll", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateReroll), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateReroll", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateReroll), arg0, arg1, arg2)
 }
 
 // UpdateRerollPenalty mocks base method.
-func (m *MockIDomainRepository) UpdateRerollPenalty(arg0 IDomainMember, arg1 time.Time) error {
+func (m *MockIDomainRepository) UpdateRerollPenalty(arg0 context.Context, arg1 IDomainMember, arg2 time.Time) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateRerollPenalty", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateRerollPenalty", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateRerollPenalty indicates an expected call of UpdateRerollPenalty.
-func (mr *MockIDomainRepositoryMockRecorder) UpdateRerollPenalty(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIDomainRepositoryMockRecorder) UpdateRerollPenalty(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRerollPenalty", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateRerollPenalty), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRerollPenalty", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateRerollPenalty), arg0, arg1, arg2)
 }
 
 // UpdateUnfreeze mocks base method.
-func (m *MockIDomainRepository) UpdateUnfreeze(arg0 IDomainMember) error {
+func (m *MockIDomainRepository) UpdateUnfreeze(arg0 context.Context, arg1 IDomainMember) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUnfreeze", arg0)
+	ret := m.ctrl.Call(m, "UpdateUnfreeze", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateUnfreeze indicates an expected call of UpdateUnfreeze.
-func (mr *MockIDomainRepositoryMockRecorder) UpdateUnfreeze(arg0 interface{}) *gomock.Call {
+func (mr *MockIDomainRepositoryMockRecorder) UpdateUnfreeze(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUnfreeze", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateUnfreeze), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUnfreeze", reflect.TypeOf((*MockIDomainRepository)(nil).UpdateUnfreeze), arg0, arg1)
 }

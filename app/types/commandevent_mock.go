@@ -5,6 +5,7 @@
 package types
 
 import (
+	context "context"
 	reflect "reflect"
 
 	discordgo "github.com/bwmarrin/discordgo"
@@ -77,17 +78,17 @@ func (mr *MockICommandEventMockRecorder) Interaction() *gomock.Call {
 }
 
 // Respond mocks base method.
-func (m *MockICommandEvent) Respond(arg0 ICommandResponse) error {
+func (m *MockICommandEvent) Respond(arg0 context.Context, arg1 ICommandResponse) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Respond", arg0)
+	ret := m.ctrl.Call(m, "Respond", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Respond indicates an expected call of Respond.
-func (mr *MockICommandEventMockRecorder) Respond(arg0 interface{}) *gomock.Call {
+func (mr *MockICommandEventMockRecorder) Respond(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Respond", reflect.TypeOf((*MockICommandEvent)(nil).Respond), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Respond", reflect.TypeOf((*MockICommandEvent)(nil).Respond), arg0, arg1)
 }
 
 // Session mocks base method.

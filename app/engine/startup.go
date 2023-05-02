@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/fiffu/arisa3/app/database"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/envconfig"
 	"github.com/mitchellh/mapstructure"
 
 	dgo "github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
 )
 
 // Errors
@@ -57,9 +57,8 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		return bootError(ErrCogNotBootable)
 	}
 
-	registryLog(log.Info()).Msgf(
-		"🥾 %s cog is booting", cog.Name(),
-	)
+	ctx = log.Put(ctx, log.CogName, cog.Name())
+	log.Infof(ctx, "🥾 %s cog is booting", cog.Name())
 
 	// Parse config
 	cfg := cog.ConfigPointer()
@@ -71,11 +70,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		return bootError(err)
 	} else if len(replaced) > 0 {
 		for envKey, fld := range replaced {
-			registryLog(log.Warn()).Msgf(
-				"Replaced %v with environment var %s",
-				fld.Name,
-				envKey,
-			)
+			log.Warnf(ctx, "Replaced %v with environment var %s", fld.Name, envKey)
 		}
 	}
 	// Assign config
@@ -86,14 +81,11 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 	// Setup repo migrations
 	if rcog, ok := c.(IRepository); ok {
 		db := app.Database()
-		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-			"Migrations starting",
-		)
-		if err := runMigrations(rcog, db); err != nil {
-			registryLog(log.Error()).Err(err).Str(types.CtxCog, cog.Name()).Msgf(
-				"Migrations failed",
-			)
-			if closeErr := db.Close(); closeErr != nil {
+		log.Infof(ctx, "Migrations starting")
+		if err := runMigrations(ctx, rcog, db); err != nil {
+			log.Errorf(ctx, err, "Migrations starting")
+			log.Stack(ctx, err)
+			if closeErr := db.Close(ctx); closeErr != nil {
 				return bootError(fmt.Errorf(
 					"failed to close DB connection (%v) during teardown due to "+
 						"migration error (%v)",
@@ -103,30 +95,23 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 			return bootError(err)
 		}
 	} else {
-		registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-			"Migrations skipped (no migration interface found)",
-		)
+		log.Infof(ctx, "Migrations skipped (no migration interface found)")
 	}
 
 	// Bind ready callback after boot sequence is ready
 	sess := app.BotSession()
-	sess.AddHandler(func(s *dgo.Session, r *dgo.Ready) {
+	sess.AddHandler(NewEventHandler(func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
 		if err := cog.ReadyCallback(s, r); err != nil {
-			log.Error().
-				Str(types.CtxEngine, "ReadyCallback").
-				Str(types.CtxCog, cog.Name()).
-				Err(err).Msg("error in ReadyCallback")
+			log.Errorf(ctx, err, "Error in %s.ReadyCallback()", cog.Name())
 		}
-	})
+	}))
 	return nil
 }
 
-func runMigrations(cog IRepository, db database.IDatabase) error {
+func runMigrations(ctx context.Context, cog IRepository, db database.IDatabase) error {
 	dir := cog.MigrationsDir()
 	files, err := ioutil.ReadDir(dir)
-	registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-		"Migrations found (count: %d) at: %s", len(files), dir,
-	)
+	log.Infof(ctx, "Migrations found (count: %d) at: %s", len(files), dir)
 	if err != nil {
 		return err
 	}
@@ -134,20 +119,18 @@ func runMigrations(cog IRepository, db database.IDatabase) error {
 	migratedCount := 0
 	for _, file := range files {
 		path := filepath.Join(dir, file.Name())
-		schema, err := db.ParseMigration(path)
+		schema, err := db.ParseMigration(ctx, path)
 		if err != nil {
 			return err
 		}
-		executed, err := db.Migrate(schema)
+		executed, err := db.Migrate(ctx, schema)
 		if err != nil {
 			return err
 		} else if executed {
 			migratedCount += 1
 		}
 	}
-	registryLog(log.Info()).Str(types.CtxCog, cog.Name()).Msgf(
-		"Migrations complete (total executed: %d)", migratedCount,
-	)
+	log.Infof(ctx, "Migrations complete (total executed: %d)", migratedCount)
 	return nil
 }
 

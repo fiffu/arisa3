@@ -6,9 +6,9 @@ import (
 
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
-	"github.com/rs/zerolog/log"
 
 	dgo "github.com/bwmarrin/discordgo"
 )
@@ -55,7 +55,7 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 		NewRepository(c.db),
 		c.cfg,
 	)
-	engine.CogLog(c, log.Info()).Msgf("IColoursDomain loaded")
+	log.Infof(ctx, "IColoursDomain loaded")
 	return nil
 }
 
@@ -91,18 +91,18 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 }
 
 func (c *Cog) registerEvents(sess *dgo.Session) {
-	sess.AddHandler(func(s *dgo.Session, m *dgo.MessageCreate) {
+	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, s *dgo.Session, m *dgo.MessageCreate) {
 		evt := types.NewMessageEvent(s, m)
-		c.onMessage(evt)
-	})
+		c.onMessage(ctx, evt)
+	}))
 }
 
-func (c *Cog) onMessage(evt types.IMessageEvent) {
+func (c *Cog) onMessage(ctx context.Context, evt types.IMessageEvent) {
 	if evt.IsFromSelf() {
 		// Ignore bot's own messages
 		return
 	}
-	c.mutate(evt)
+	c.mutate(ctx, evt)
 }
 
 func (c *Cog) colCommand() *types.Command {
@@ -114,15 +114,15 @@ func (c *Cog) colCommand() *types.Command {
 func (c *Cog) freezeCommand() *types.Command {
 	return types.NewCommand("freeze").ForChat().
 		Desc("Stops your colour from mutating").
-		Handler(func(req types.ICommandEvent) error {
-			return c.setFreeze(req, true)
+		Handler(func(ctx context.Context, req types.ICommandEvent) error {
+			return c.setFreeze(ctx, req, true)
 		})
 }
 
 func (c *Cog) unfreezeCommand() *types.Command {
 	return types.NewCommand("unfreeze").ForChat().
 		Desc("Makes your colour start mutating").
-		Handler(func(req types.ICommandEvent) error {
-			return c.setFreeze(req, false)
+		Handler(func(ctx context.Context, req types.ICommandEvent) error {
+			return c.setFreeze(ctx, req, false)
 		})
 }

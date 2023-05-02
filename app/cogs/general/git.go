@@ -1,6 +1,7 @@
 package general
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/fiffu/arisa3/app/types"
@@ -13,7 +14,7 @@ func (c *Cog) gitCommand() *types.Command {
 		Handler(c.git)
 }
 
-func (c *Cog) git(req types.ICommandEvent) error {
+func (c *Cog) git(ctx context.Context, req types.ICommandEvent) error {
 	var (
 		repoName  = c.cfg.RepoName
 		webURL    = c.cfg.RepoWebURL
@@ -29,5 +30,5 @@ func (c *Cog) git(req types.ICommandEvent) error {
 		Description(issues + "\n\n" + contribs)
 
 	resp := types.NewResponse().Embeds(embed)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }

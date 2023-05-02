@@ -38,7 +38,7 @@ func SetupCogs(ctx context.Context, app types.IApp) error {
 			return err
 		}
 		if err := c.OnStartup(ctx, app, cfg); err != nil {
-			engine.Errorf(ctx, err, "Failure to setup cog: %s", c.Name())
+			engine.Errorf(ctx, err, "Failed to setup cog: %s", c.Name())
 			return err
 		}
 		engine.Infof(ctx, "%s cog init complete ⚙️", c.Name())

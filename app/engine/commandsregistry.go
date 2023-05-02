@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/functional"
@@ -18,12 +19,13 @@ var (
 )
 
 type CommandsRegistry struct {
-	cmds map[string]types.ICommand
+	cmds  map[string]types.ICommand
+	clock func() time.Time
 }
 
 func NewCommandRegistry() *CommandsRegistry {
 	cmds := make(map[string]types.ICommand)
-	return &CommandsRegistry{cmds}
+	return &CommandsRegistry{cmds, time.Now}
 }
 
 // Register creates an ApplicationCommand with the given ICommands.
@@ -49,7 +51,12 @@ func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 
 // onInteractionCreate logs errors from registryHandler.
 func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
-	if ctx, err := r.registryHandler(s, i); err != nil {
+	startTime := r.clock()
+
+	ctx, err := r.registryHandler(s, i)
+	if err != nil {
+		Errorf(ctx, err, "Error handling interaction")
+
 		if err := s.InteractionRespond(
 			i.Interaction,
 			types.NewResponse().Content("Hmm, seems like something went wrong. Try again later?").Data(),
@@ -57,10 +64,16 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 			Errorf(ctx, err, "Error sending response, maybe interaction already acknowledged?")
 		}
 	}
+
+	endTime := r.clock()
+	elapsed := endTime.Sub(startTime)
+
+	Infof(ctx, "Interaction served in %d microsecs", elapsed.Microseconds())
 }
 
 // registryHandler routes the InteractionCreate event to the appropriate command's handler.
 func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (ctx context.Context, err error) {
+
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
 		return

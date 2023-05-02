@@ -26,9 +26,6 @@ const (
 	user    CtxKey = "user"
 	guild   CtxKey = "guild"
 	cogName CtxKey = "cog"
-
-	traceStartTime CtxKey = "traceStart"
-	traceEndTime   CtxKey = "traceEnd"
 )
 
 var DoNotLogCtxKeys = []CtxKey{}

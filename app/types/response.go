@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/bwmarrin/discordgo"
 	dgo "github.com/bwmarrin/discordgo"
 )
 
@@ -49,7 +48,7 @@ func (r *Response) Embeds(embeds ...IEmbed) *Response {
 }
 
 func (r *Response) File(name, contentType string, reader io.Reader) *Response {
-	r.data.Data.Files = append(r.data.Data.Files, &discordgo.File{
+	r.data.Data.Files = append(r.data.Data.Files, &dgo.File{
 		Name:        name,
 		ContentType: contentType,
 		Reader:      reader,

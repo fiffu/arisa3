@@ -7,11 +7,10 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/rs/zerolog/log"
 
-	"github.com/bwmarrin/discordgo"
 	dgo "github.com/bwmarrin/discordgo"
 )
 
-const requirePermissions = int64(discordgo.PermissionManageRoles)
+const requirePermissions = int64(dgo.PermissionManageRoles)
 
 func (c *Cog) welcome(s *dgo.Session, r *dgo.Ready) {
 	rootURL := "https://discordapp.com/oauth2/authorize?"

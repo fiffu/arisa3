@@ -1,6 +1,7 @@
 package commandfilters
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/fiffu/arisa3/app/types"
@@ -60,11 +61,11 @@ func (mw *Middleware) CommandDecorator() CommandDecorator {
 		// next is the subsequent handler to be called after this handler
 		next := cmd.HandlerFunc()
 		// assertionHandler calls next() only if Exec() returns true
-		assertionHandler := func(ev types.ICommandEvent) error {
+		assertionHandler := func(ctx context.Context, ev types.ICommandEvent) error {
 			if !mw.Exec(ev) {
 				return ev.Respond(mw.assertionFailureResponse)
 			}
-			return next(ev)
+			return next(ctx, ev)
 		}
 		// Overwrite command's handler with the assertionHandler
 		cmd.Handler(assertionHandler)

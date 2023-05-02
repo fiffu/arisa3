@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"math/rand"
 	"path/filepath"
 	"runtime"
@@ -28,6 +29,21 @@ func SplitOnce(s, delim string) (left, right string) {
 	left = s[:pivot]
 	right = s[offset:]
 	return
+}
+
+func WhoCalledMe() string {
+	skip := 2 // skip current frame to get the caller's directory
+	pc, file, line, ok := runtime.Caller(skip)
+	if !ok {
+		panic("failed to get current runtime file")
+	}
+	caller := runtime.FuncForPC(pc)
+	if caller == nil {
+		panic("failed to get caller")
+	}
+	funcName := strings.TrimSuffix(caller.Name(), "-fm")
+
+	return fmt.Sprintf("%s() at %s:%d", funcName, file, line)
 }
 
 func MustGetCallerDir() string {

@@ -1,9 +1,9 @@
 package engine
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"runtime/debug"
 
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/functional"
@@ -50,20 +50,18 @@ func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 
 // onInteractionCreate logs errors from registryHandler.
 func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
-	if err := r.registryHandler(s, i); err != nil {
-		registryLog(log.Error()).Err(err).Msgf("Error handling interaction")
-		err = s.InteractionRespond(
+	if ctx, err := r.registryHandler(s, i); err != nil {
+		if err := s.InteractionRespond(
 			i.Interaction,
 			types.NewResponse().Content("Hmm, seems like something went wrong. Try again later?").Data(),
-		)
-		if err != nil {
-			registryLog(log.Error()).Err(err).Msgf("Error sending response, maybe interaction already acknowledged?")
+		); err != nil {
+			Errorf(ctx, err, "Error sending response, maybe interaction already acknowledged?")
 		}
 	}
 }
 
 // registryHandler routes the InteractionCreate event to the appropriate command's handler.
-func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (err error) {
+func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (ctx context.Context, err error) {
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
 		return
@@ -76,54 +74,58 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 
 	// Code before this line executes for all commands; be careful to avoid excess logging.
 
-	// Logging
+	// Setup context for handler
+	ctx = context.Background()
+	ctx = Put(ctx, RequestID, i.ID)
+
 	who := i.User
 	if who == nil && i.Member != nil {
 		who = i.Member.User
 	}
+	ctx = Put(ctx, User, fmt.Sprintf("%s#%s:%s", who.Username, who.Discriminator, who.ID))
+
 	opts := make(map[string]interface{})
 	for _, o := range i.ApplicationCommandData().Options {
 		opts[o.Name] = o.Value
 	}
-	registryLog(log.Info()).
-		Str(types.CtxCommand, i.ApplicationCommandData().Name).
-		Str(types.CtxInteraction, i.ID).
-		Msgf(
-			"Interaction incoming <<< user=%s options=%+v",
-			who, opts,
-		)
+	Infof(
+		Put(ctx, FromEngine, "registry"),
+		"Interaction incoming <<< user=%s options=%+v",
+		who, opts,
+	)
 
 	// Invoke handler
 	handler := cmd.HandlerFunc()
 	if handler == nil {
-		return r.fallbackHandler(s, i, cmd)
+		return ctx, r.fallbackHandler(s, i, cmd)
 	}
 	args := parseArgs(cmd, i.ApplicationCommandData().Options)
-	return r.runHandler(s, i, cmd, handler, args)
+	err = r.mustRunHandler(ctx, s, i, cmd, handler, args)
+	if err != nil {
+		Errorf(ctx, err, "Handler errored")
+	}
+	return ctx, err
 }
 
-// runHandler executes a command's handler, trapping and logging any panics/errors.
-func (r *CommandsRegistry) runHandler(
+// mustRunHandler executes a command's handler, trapping and logging any panics/errors.
+func (r *CommandsRegistry) mustRunHandler(
+	ctx context.Context,
 	s *dgo.Session, i *dgo.InteractionCreate,
 	cmd types.ICommand, handler types.Handler, args types.IArgs) (err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
 			err = errPanic
-			fmt.Printf("%+v:\n%s\n", r, string(debug.Stack()))
+			Stack(ctx, err)
 		}
 	}()
-	registryLog(log.Debug()).Str(types.CtxCommand, cmd.Name()).Msgf("Handler executing")
-	err = handler(types.NewCommandEvent(s, i, cmd, args))
-	if err == nil {
-		registryLog(log.Debug()).Msgf("Handler completed")
-	} else {
-		registryLog(log.Error()).Err(err).Msgf("Handler errored")
-	}
+
+	Debugf(ctx, "Handler executing")
+	err = handler(ctx, types.NewCommandEvent(s, i, cmd, args))
 	return
 }
 
-// fallbackHandler is invoked in lieu of runHandler if a command has no associated handler.
+// fallbackHandler is invoked in lieu of mustRunHandler if a command has no associated handler.
 func (r *CommandsRegistry) fallbackHandler(s *dgo.Session, i *dgo.InteractionCreate, cmd types.ICommand) error {
 	registryLog(log.Error()).Str(types.CtxCommand, cmd.Name()).Msgf("Missing interaction handler")
 	return fmt.Errorf("%w: %s", errNoHandler, cmd.Name())

@@ -1,6 +1,7 @@
 package rng
 
 import (
+	"context"
 	"math/rand"
 	"strings"
 	"time"
@@ -38,7 +39,7 @@ func (c *Cog) pokiesCommand() *types.Command {
 		Handler(c.pokies)
 }
 
-func (c *Cog) pokies(req types.ICommandEvent) error {
+func (c *Cog) pokies(ctx context.Context, req types.ICommandEvent) error {
 	reply, err := c.getReply(req)
 	if err != nil {
 		return err

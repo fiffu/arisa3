@@ -1,6 +1,7 @@
 package rng
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"regexp"
@@ -51,7 +52,7 @@ func (c *Cog) rollCommand() *types.Command {
 		Handler(c.roll)
 }
 
-func (c *Cog) roll(req types.ICommandEvent) error {
+func (c *Cog) roll(ctx context.Context, req types.ICommandEvent) error {
 	var input string
 	if value, ok := req.Args().String(RollExpression); ok {
 		input = value

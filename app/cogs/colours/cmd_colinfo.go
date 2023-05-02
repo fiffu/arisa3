@@ -2,6 +2,7 @@ package colours
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/color"
 	"image/png"
@@ -19,12 +20,10 @@ import (
 func (c *Cog) colInfoCommand() *types.Command {
 	return types.NewCommand("colinfo").ForChat().
 		Desc("Tells you about your colour").
-		Handler(func(req types.ICommandEvent) error {
-			return c.colInfo(req)
-		})
+		Handler(c.colInfo)
 }
 
-func (c *Cog) colInfo(req types.ICommandEvent) error {
+func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
 	mem, resp, err := c.fetchMember(req)
 	if err != nil {
 		return err

@@ -11,8 +11,6 @@ import (
 	"github.com/fiffu/arisa3/app/cogs/rng"
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -40,15 +38,10 @@ func SetupCogs(ctx context.Context, app types.IApp) error {
 			return err
 		}
 		if err := c.OnStartup(ctx, app, cfg); err != nil {
-			engine.StartupLog(log.Error()).
-				Str(types.CtxCog, c.Name()).
-				Err(err).
-				Msg("Failure to setup cog")
+			engine.Errorf(ctx, err, "Failure to setup cog: %s", c.Name())
 			return err
 		}
-		engine.StartupLog(log.Info()).
-			Str(types.CtxCog, c.Name()).
-			Msgf("%s cog init complete ⚙️", c.Name())
+		engine.Infof(ctx, "%s cog init complete ⚙️", c.Name())
 	}
 	return nil
 }

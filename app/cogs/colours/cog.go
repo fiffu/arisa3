@@ -8,7 +8,6 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
-	"github.com/rs/zerolog/log"
 
 	dgo "github.com/bwmarrin/discordgo"
 )
@@ -55,7 +54,7 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 		NewRepository(c.db),
 		c.cfg,
 	)
-	engine.CogLog(c, log.Info()).Msgf("IColoursDomain loaded")
+	engine.Infof(engine.Put(ctx, engine.FromCog, c.Name()), "IColoursDomain loaded")
 	return nil
 }
 
@@ -114,7 +113,7 @@ func (c *Cog) colCommand() *types.Command {
 func (c *Cog) freezeCommand() *types.Command {
 	return types.NewCommand("freeze").ForChat().
 		Desc("Stops your colour from mutating").
-		Handler(func(req types.ICommandEvent) error {
+		Handler(func(ctx context.Context, req types.ICommandEvent) error {
 			return c.setFreeze(req, true)
 		})
 }
@@ -122,7 +121,7 @@ func (c *Cog) freezeCommand() *types.Command {
 func (c *Cog) unfreezeCommand() *types.Command {
 	return types.NewCommand("unfreeze").ForChat().
 		Desc("Makes your colour start mutating").
-		Handler(func(req types.ICommandEvent) error {
+		Handler(func(ctx context.Context, req types.ICommandEvent) error {
 			return c.setFreeze(req, false)
 		})
 }

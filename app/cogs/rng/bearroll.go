@@ -1,6 +1,8 @@
 package rng
 
 import (
+	"context"
+
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
@@ -21,7 +23,7 @@ func (c *Cog) bearRollCommand() *types.Command {
 		Handler(c.bearRoll)
 }
 
-func (c *Cog) bearRoll(req types.ICommandEvent) error {
+func (c *Cog) bearRoll(ctx context.Context, req types.ICommandEvent) error {
 	bear := functional.SliceOf(bears).TakeRandom()
 	resp := types.NewResponse().Content(bear)
 	return req.Respond(resp)

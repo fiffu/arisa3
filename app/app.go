@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -49,12 +50,14 @@ type app struct {
 func (a *app) Configs() map[string]interface{} { return a.cogsConfigs }
 func (a *app) Database() database.IDatabase    { return a.db }
 func (a *app) BotSession() *discordgo.Session  { return a.sess }
-func (a *app) Shutdown() {
+func (a *app) Shutdown(ctx context.Context) {
 	if err := a.sess.Close(); err != nil {
-		engine.AppLog(log.Error()).Err(err).Msg("Error while closing session")
+		engine.Errorf(ctx, err, "Error while closing session")
+		engine.Stack(ctx, err)
 	}
 	if err := a.db.Close(); err != nil {
-		engine.AppLog(log.Error()).Err(err).Msg("Error while closing DB connection")
+		engine.Errorf(ctx, err, "Error while closing DB connection")
+		engine.Stack(ctx, err)
 	}
 }
 
@@ -65,23 +68,24 @@ func Main(deps IDependencyInjector, configPath string) error {
 	}
 
 	ctx := engine.StartupContext()
+	ctx = engine.Put(ctx, engine.FromEngine, "main")
 
-	engine.AppLog(log.Info()).Msg("Initializing cogs")
+	engine.Infof(ctx, "Initializing cogs")
 	if err = cogs.SetupCogs(ctx, app); err != nil {
 		return err
 	}
 
-	engine.AppLog(log.Info()).Msg("Opening gateway session")
+	engine.Infof(ctx, "Opening gateway session")
 	if err := app.BotSession().Open(); err != nil {
-		engine.AppLog(log.Error()).Err(err).Msg("Failed to open session")
+		engine.Errorf(ctx, err, "Failed to open session")
 		return err
 	}
 
-	engine.AppLog(log.Info()).Msg("Gateway session established")
-	defer app.Shutdown()
+	engine.Infof(ctx, "Gateway session established")
+	defer app.Shutdown(ctx)
 
-	engine.AppLog(log.Info()).Msg("Press Ctrl+C to exit")
-	waitUntilInterrupt()
+	engine.Infof(ctx, "Press Ctrl+C to exit")
+	waitUntilInterrupt(ctx)
 
 	return nil
 }
@@ -132,9 +136,9 @@ func getCogsConfigs(cfg *Config) map[string]interface{} {
 	return out
 }
 
-func waitUntilInterrupt() {
+func waitUntilInterrupt(ctx context.Context) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
-	engine.AppLog(log.Info()).Msg("Interrupted! Shutting down...")
+	engine.Infof(ctx, "Interrupted! Shutting down...")
 }

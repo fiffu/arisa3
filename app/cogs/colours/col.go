@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (c *Cog) col(req types.ICommandEvent) error {
+func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 	from := req.Interaction().Member
 	if from == nil {
 		return req.Respond(

@@ -1,6 +1,7 @@
 package cardboard
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -64,7 +65,7 @@ func (c *Cog) aliasesCommand() *types.Command {
 		Handler(c.listAliases)
 }
 
-func (c *Cog) promote(req types.ICommandEvent) error {
+func (c *Cog) promote(ctx context.Context, req types.ICommandEvent) error {
 	tagName, _ := req.Args().String(OptionTag)
 
 	guildID := getGuildID(req)
@@ -79,7 +80,7 @@ func (c *Cog) promote(req types.ICommandEvent) error {
 	return req.Respond(resp)
 }
 
-func (c *Cog) demote(req types.ICommandEvent) error {
+func (c *Cog) demote(ctx context.Context, req types.ICommandEvent) error {
 	tagName, _ := req.Args().String(OptionTag)
 
 	guildID := getGuildID(req)
@@ -94,7 +95,7 @@ func (c *Cog) demote(req types.ICommandEvent) error {
 	return req.Respond(resp)
 }
 
-func (c *Cog) omit(req types.ICommandEvent) error {
+func (c *Cog) omit(ctx context.Context, req types.ICommandEvent) error {
 	tagName, _ := req.Args().String(OptionTag)
 
 	guildID := getGuildID(req)
@@ -109,7 +110,7 @@ func (c *Cog) omit(req types.ICommandEvent) error {
 	return req.Respond(resp)
 }
 
-func (c *Cog) alias(req types.ICommandEvent) error {
+func (c *Cog) alias(ctx context.Context, req types.ICommandEvent) error {
 	actual, _ := req.Args().String(OptionTag)
 	alias, _ := req.Args().String(OptionAlias)
 
@@ -125,7 +126,7 @@ func (c *Cog) alias(req types.ICommandEvent) error {
 	return req.Respond(resp)
 }
 
-func (c *Cog) listAliases(req types.ICommandEvent) error {
+func (c *Cog) listAliases(ctx context.Context, req types.ICommandEvent) error {
 	guildID := getGuildID(req)
 	if guildID == "" {
 		return req.Respond(respRequiresAdmin)

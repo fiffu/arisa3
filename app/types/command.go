@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -28,7 +29,7 @@ type ICommand interface {
 	FindOption(string) (IOption, bool)
 }
 
-type Handler func(ICommandEvent) error
+type Handler func(context.Context, ICommandEvent) error
 
 type Command struct {
 	name    string

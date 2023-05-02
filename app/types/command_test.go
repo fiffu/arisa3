@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -72,11 +73,11 @@ func Test_Data(t *testing.T) {
 func Test_Handler(t *testing.T) {
 	expectErr := errors.New(time.Now().Format(time.RFC3339Nano))
 
-	fn := func(evt ICommandEvent) error { return expectErr }
+	fn := func(context.Context, ICommandEvent) error { return expectErr }
 	hdlr := Handler(fn)
 	cmd := NewCommand("test").Handler(hdlr)
 
-	actualErr := cmd.HandlerFunc()(nil)
+	actualErr := cmd.HandlerFunc()(nil, nil)
 	assert.Error(t, actualErr)
 	assert.Equal(t, actualErr.Error(), expectErr.Error())
 }

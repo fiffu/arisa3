@@ -73,11 +73,13 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 
 // registryHandler routes the InteractionCreate event to the appropriate command's handler.
 func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (ctx context.Context, err error) {
+	ctx = context.Background()
 
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
 		return
 	}
+
 	commandName := i.ApplicationCommandData().Name
 	cmd, ok := r.cmds[commandName]
 	if !ok {
@@ -87,7 +89,6 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	// Code before this line executes for all commands; be careful to avoid excess logging.
 
 	// Setup context for handler
-	ctx = context.Background()
 	ctx = Put(ctx, traceID, i.ID)
 
 	who := i.User

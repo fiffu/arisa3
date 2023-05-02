@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -68,8 +69,10 @@ type ISchema interface {
 	Queries() []string
 }
 
-var whitespace = regexp.MustCompile(`\s`)
+var whitespace = regexp.MustCompile(`\s+`)
 
 func NormalizeSQL(sql string) string {
-	return whitespace.ReplaceAllString(sql, " ")
+	sql = whitespace.ReplaceAllString(sql, " ")
+	sql = strings.TrimSpace(sql)
+	return sql
 }

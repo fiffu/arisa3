@@ -46,7 +46,7 @@ func (c *pgclient) Close(ctx context.Context) error {
 }
 
 func (c *pgclient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	log.Info().Msgf("Query: %s", query)
+	log.Info().Msgf("Query: %s", NormalizeSQL(query))
 	if len(args) > 0 {
 		log.Info().Msgf(" Args: %v", args)
 	}
@@ -58,7 +58,7 @@ func (c *pgclient) Query(ctx context.Context, query string, args ...interface{})
 }
 
 func (c *pgclient) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	log.Info().Msgf(" Exec: %s", query)
+	log.Info().Msgf(" Exec: %s", NormalizeSQL(query))
 	if len(args) > 0 {
 		log.Info().Msgf(" Args: %v", args)
 	}

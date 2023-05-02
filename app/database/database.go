@@ -4,6 +4,7 @@ package database
 import (
 	"context"
 	"errors"
+	"regexp"
 )
 
 var (
@@ -65,4 +66,10 @@ type ISchema interface {
 	Version() string
 	Source() string
 	Queries() []string
+}
+
+var whitespace = regexp.MustCompile(`\s`)
+
+func NormalizeSQL(sql string) string {
+	return whitespace.ReplaceAllString(sql, " ")
 }

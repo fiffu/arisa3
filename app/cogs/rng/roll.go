@@ -60,9 +60,7 @@ func (c *Cog) roll(ctx context.Context, req types.ICommandEvent) error {
 	d, comment := parse(input)
 
 	if d.sides > 999_999 || d.count > 999_999 {
-		return req.Respond(
-			types.NewResponse().Content("That's just way too much work " + utils.BIRB),
-		)
+		return req.Respond(ctx, types.NewResponse().Content("That's just way too much work "+utils.BIRB))
 	}
 
 	// if expression couldn't be parsed, treat it as a comment
@@ -71,7 +69,7 @@ func (c *Cog) roll(ctx context.Context, req types.ICommandEvent) error {
 	}
 	result := toss(d)
 	resp := formatResponse(req, d, result, comment)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
 func parse(input string) (dice, string) {

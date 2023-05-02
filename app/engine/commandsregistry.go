@@ -68,7 +68,7 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 	endTime := r.clock()
 	elapsed := endTime.Sub(startTime)
 
-	Infof(ctx, "Interaction served in %d microsecs", elapsed.Microseconds())
+	Infof(ctx, "Interaction served in %d millisecs", elapsed.Milliseconds())
 }
 
 // registryHandler routes the InteractionCreate event to the appropriate command's handler.
@@ -89,7 +89,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	// Code before this line executes for all commands; be careful to avoid excess logging.
 
 	// Setup context for handler
-	ctx = Put(ctx, traceID, i.ID)
+	ctx = Put(ctx, traceID, Hash(i.ID)[:10])
 
 	who := i.User
 	if who == nil && i.Member != nil {

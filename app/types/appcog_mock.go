@@ -79,15 +79,15 @@ func (mr *MockIAppMockRecorder) Database() *gomock.Call {
 }
 
 // Shutdown mocks base method.
-func (m *MockIApp) Shutdown() {
+func (m *MockIApp) Shutdown(arg0 context.Context) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Shutdown")
+	m.ctrl.Call(m, "Shutdown", arg0)
 }
 
 // Shutdown indicates an expected call of Shutdown.
-func (mr *MockIAppMockRecorder) Shutdown() *gomock.Call {
+func (mr *MockIAppMockRecorder) Shutdown(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shutdown", reflect.TypeOf((*MockIApp)(nil).Shutdown))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shutdown", reflect.TypeOf((*MockIApp)(nil).Shutdown), arg0)
 }
 
 // MockCogConfig is a mock of CogConfig interface.

@@ -61,7 +61,7 @@ func (c *Cog) dumbSearch(ctx context.Context, req types.ICommandEvent) error {
 		return err
 	}
 
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
 func (c *Cog) smartSearch(safe bool) types.Handler {
@@ -87,7 +87,7 @@ func (c *Cog) smartSearch(safe bool) types.Handler {
 			return err
 		}
 
-		return req.Respond(resp)
+		return req.Respond(ctx, resp)
 	}
 }
 

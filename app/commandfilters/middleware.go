@@ -63,7 +63,7 @@ func (mw *Middleware) CommandDecorator() CommandDecorator {
 		// assertionHandler calls next() only if Exec() returns true
 		assertionHandler := func(ctx context.Context, ev types.ICommandEvent) error {
 			if !mw.Exec(ev) {
-				return ev.Respond(mw.assertionFailureResponse)
+				return ev.Respond(ctx, mw.assertionFailureResponse)
 			}
 			return next(ctx, ev)
 		}

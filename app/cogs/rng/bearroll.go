@@ -26,5 +26,5 @@ func (c *Cog) bearRollCommand() *types.Command {
 func (c *Cog) bearRoll(ctx context.Context, req types.ICommandEvent) error {
 	bear := functional.SliceOf(bears).TakeRandom()
 	resp := types.NewResponse().Content(bear)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }

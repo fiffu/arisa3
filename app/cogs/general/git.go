@@ -30,5 +30,5 @@ func (c *Cog) git(ctx context.Context, req types.ICommandEvent) error {
 		Description(issues + "\n\n" + contribs)
 
 	resp := types.NewResponse().Embeds(embed)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }

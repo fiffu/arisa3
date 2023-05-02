@@ -2,6 +2,8 @@ package engine
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -29,6 +31,12 @@ const (
 )
 
 var DoNotLogCtxKeys = []CtxKey{}
+
+func Hash(s string) string {
+	hasher := sha1.New()
+	hasher.Write([]byte(s))
+	return base64.StdEncoding.EncodeToString(hasher.Sum(nil))
+}
 
 func Put(parent context.Context, key CtxKey, value any) context.Context {
 	ctx, m := GetMap(parent)
@@ -100,7 +108,7 @@ func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (strin
 	_, m := GetMap(ctx)
 	for k, v := range m {
 		if k == traceID {
-			msg = "[" + v + "]" + msg
+			msg = fmt.Sprintf("[%s] %s", v, msg)
 		}
 		entry = entry.Str(string(k), v)
 	}

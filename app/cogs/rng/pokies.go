@@ -44,7 +44,7 @@ func (c *Cog) pokies(ctx context.Context, req types.ICommandEvent) error {
 		return err
 	}
 	resp := types.NewResponse().Content(reply)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }
 
 func (c *Cog) getReply(ctx context.Context, req types.ICommandEvent) (string, error) {

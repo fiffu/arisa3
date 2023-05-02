@@ -65,5 +65,5 @@ func (c *Cog) eightBall(ctx context.Context, req types.ICommandEvent) error {
 	embed.Description(title + "\n\n" + msg)
 
 	resp := types.NewResponse().Embeds(embed)
-	return req.Respond(resp)
+	return req.Respond(ctx, resp)
 }

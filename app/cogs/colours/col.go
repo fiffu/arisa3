@@ -14,9 +14,7 @@ import (
 func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 	from := req.Interaction().Member
 	if from == nil {
-		return req.Respond(
-			types.NewResponse().Content("You need to be in a guild to use this command."),
-		)
+		return req.Respond(ctx, types.NewResponse().Content("You need to be in a guild to use this command."))
 	}
 
 	s := NewDomainSession(req.Session())
@@ -40,18 +38,14 @@ func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 		}
 		delta := utils.FormatDuration(time.Until(endTime))
 		msg := fmt.Sprintf("You cannot reroll a new colour yet! Cooldown remaining: %s", delta)
-		return req.Respond(
-			types.NewResponse().Content(msg),
-		)
+		return req.Respond(ctx, types.NewResponse().Content(msg))
 	} else if err != nil {
 		return err
 	}
 	engine.Infof(ctx, "Generated colour: #%s", newColour.ToHexcode())
 
 	embed := newEmbed(newColour)
-	return req.Respond(
-		types.NewResponse().Embeds(embed),
-	)
+	return req.Respond(ctx, types.NewResponse().Embeds(embed))
 }
 
 // setFreeze will freeze or unfreeze a member's colour role.
@@ -61,7 +55,7 @@ func (c *Cog) setFreeze(ctx context.Context, req types.ICommandEvent, toFrozen b
 		return err
 	}
 	if resp != nil {
-		return req.Respond(resp)
+		return req.Respond(ctx, resp)
 	}
 
 	guildID := mem.Guild().ID()
@@ -78,7 +72,7 @@ func (c *Cog) setFreeze(ctx context.Context, req types.ICommandEvent, toFrozen b
 	if role == nil {
 		// user has no colour role
 		engine.Warnf(ctx, "User has no role to %sfreeze, guild=%s user=%s", un, guildID, userID)
-		return req.Respond(types.NewResponse().Content("You don't even have a colour role..."))
+		return req.Respond(ctx, types.NewResponse().Content("You don't even have a colour role..."))
 	}
 
 	if err := action(mem); err != nil {
@@ -87,7 +81,7 @@ func (c *Cog) setFreeze(ctx context.Context, req types.ICommandEvent, toFrozen b
 	}
 
 	emb := newEmbed(role.Colour()).Descriptionf("Your colour has been %sfrozen.", un)
-	return req.Respond(types.NewResponse().Embeds(emb))
+	return req.Respond(ctx, types.NewResponse().Embeds(emb))
 }
 
 func (c *Cog) mutate(ctx context.Context, msg types.IMessageEvent) {

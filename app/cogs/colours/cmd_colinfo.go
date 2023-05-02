@@ -28,7 +28,7 @@ func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
 		return err
 	}
 	if resp != nil {
-		return req.Respond(resp)
+		return req.Respond(ctx, resp)
 	}
 
 	guildID := mem.Guild().ID()
@@ -37,7 +37,7 @@ func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
 	role := c.domain.GetColourRole(mem)
 	if role == nil {
 		engine.Errorf(ctx, err, "No colour role found, guild=%s user=%s", guildID, userID)
-		return req.Respond(types.NewResponse().
+		return req.Respond(ctx, types.NewResponse().
 			Content("You don't have a colour role. Use /col to get a random colour!"))
 	}
 
@@ -83,7 +83,7 @@ func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
 		embed.Image("attachment://" + img.filename)
 	}
 
-	return req.Respond(reply.Embeds(embed))
+	return req.Respond(ctx, reply.Embeds(embed))
 }
 
 type colInfo struct {

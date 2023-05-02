@@ -9,7 +9,6 @@ import (
 	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
-	"github.com/rs/zerolog/log"
 )
 
 func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
@@ -26,16 +25,14 @@ func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 	mem, err := s.GuildMember(guildID, userID)
 	if err != nil {
 		// failed to get member
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
+		engine.Errorf(ctx, err, "Errored while retrieving member, guild=%s user=%s", guildID, userID)
 		return err
 	}
 
 	// reroll here
 	newColour, err := c.domain.Reroll(ctx, s, mem)
 	if errors.Is(err, ErrRerollCooldownPending) {
-		engine.CommandLog(c, req, log.Info()).Err(err).
-			Msgf("Blocked reroll due to cooldown pending, guild=%s user=%s", guildID, userID)
+		engine.Errorf(ctx, err, "Blocked reroll due to cooldown pending, guild=%s user=%s", guildID, userID)
 
 		endTime, err := c.domain.GetRerollCooldownEndTime(mem)
 		if err != nil {
@@ -49,7 +46,7 @@ func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 	} else if err != nil {
 		return err
 	}
-	engine.CommandLog(c, req, log.Info()).Msgf("Generated colour: #%s", newColour.ToHexcode())
+	engine.Infof(ctx, "Generated colour: #%s", newColour.ToHexcode())
 
 	embed := newEmbed(newColour)
 	return req.Respond(
@@ -58,8 +55,8 @@ func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 }
 
 // setFreeze will freeze or unfreeze a member's colour role.
-func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
-	mem, resp, err := c.fetchMember(req)
+func (c *Cog) setFreeze(ctx context.Context, req types.ICommandEvent, toFrozen bool) error {
+	mem, resp, err := c.fetchMember(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -80,14 +77,12 @@ func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
 	role := c.domain.GetColourRole(mem)
 	if role == nil {
 		// user has no colour role
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("User has no role to %sfreeze, guild=%s user=%s", un, guildID, userID)
+		engine.Warnf(ctx, "User has no role to %sfreeze, guild=%s user=%s", un, guildID, userID)
 		return req.Respond(types.NewResponse().Content("You don't even have a colour role..."))
 	}
 
 	if err := action(mem); err != nil {
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored while %sfreezing colour, guild=%s user=%s", un, guildID, userID)
+		engine.Errorf(ctx, err, "Errored while %sfreezing colour, guild=%s user=%s", un, guildID, userID)
 		return err
 	}
 
@@ -95,7 +90,7 @@ func (c *Cog) setFreeze(req types.ICommandEvent, toFrozen bool) error {
 	return req.Respond(types.NewResponse().Embeds(emb))
 }
 
-func (c *Cog) mutate(msg types.IMessageEvent) {
+func (c *Cog) mutate(ctx context.Context, msg types.IMessageEvent) {
 	guildID := msg.GuildID()
 	if guildID == "" {
 		// Not a message from a guild, ignore
@@ -106,8 +101,7 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 	s := NewDomainSession(msg.Event().Session())
 	member, err := s.GuildMember(guildID, userID)
 	if err != nil {
-		engine.EventLog(c, msg.Event(), log.Error()).Err(err).
-			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
+		engine.Errorf(ctx, err, "Errored while retrieving member, guild=%s user=%s", guildID, userID)
 		return
 	}
 
@@ -119,20 +113,17 @@ func (c *Cog) mutate(msg types.IMessageEvent) {
 		return
 
 	case err == nil:
-		engine.EventLog(c, msg.Event(), log.Info()).
-			Msgf("Mutated colour: #%s, guild=%s user=%s", newColour.ToHexcode(), guildID, userID)
+		engine.Infof(ctx, "Mutated colour: #%s, guild=%s user=%s", newColour.ToHexcode(), guildID, userID)
 
 	case errors.Is(err, ErrMutateCooldownPending):
-		engine.EventLog(c, msg.Event(), log.Info()).
-			Msgf("Skipped mutate due to cooldown pending, guild=%s user=%s", guildID, userID)
+		engine.Infof(ctx, "Skipped mutate due to cooldown pending, guild=%s user=%s", guildID, userID)
 
 	default:
-		engine.EventLog(c, msg.Event(), log.Error()).Err(err).
-			Msgf("Errored while mutating member, guild=%s user=%s", guildID, userID)
+		engine.Errorf(ctx, err, "Errored while mutating member, guild=%s user=%s", guildID, userID)
 	}
 }
 
-func (c *Cog) fetchMember(req types.ICommandEvent) (IDomainMember, types.ICommandResponse, error) {
+func (c *Cog) fetchMember(ctx context.Context, req types.ICommandEvent) (IDomainMember, types.ICommandResponse, error) {
 	from := req.Interaction().Member
 	if from == nil {
 		resp := types.NewResponse().Content("You need to be in a guild to use this command.")
@@ -145,8 +136,7 @@ func (c *Cog) fetchMember(req types.ICommandEvent) (IDomainMember, types.IComman
 	mem, err := s.GuildMember(guildID, userID)
 	if err != nil {
 		// failed to get member
-		engine.CommandLog(c, req, log.Error()).Err(err).
-			Msgf("Errored while retrieving member, guild=%s user=%s", guildID, userID)
+		engine.Errorf(ctx, err, "Errored while retrieving member, guild=%s user=%s", guildID, userID)
 		return nil, nil, err
 	}
 

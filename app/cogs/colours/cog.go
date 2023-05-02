@@ -101,7 +101,7 @@ func (c *Cog) onMessage(ctx context.Context, evt types.IMessageEvent) {
 		// Ignore bot's own messages
 		return
 	}
-	c.mutate(evt)
+	c.mutate(ctx, evt)
 }
 
 func (c *Cog) colCommand() *types.Command {
@@ -114,7 +114,7 @@ func (c *Cog) freezeCommand() *types.Command {
 	return types.NewCommand("freeze").ForChat().
 		Desc("Stops your colour from mutating").
 		Handler(func(ctx context.Context, req types.ICommandEvent) error {
-			return c.setFreeze(req, true)
+			return c.setFreeze(ctx, req, true)
 		})
 }
 
@@ -122,6 +122,6 @@ func (c *Cog) unfreezeCommand() *types.Command {
 	return types.NewCommand("unfreeze").ForChat().
 		Desc("Makes your colour start mutating").
 		Handler(func(ctx context.Context, req types.ICommandEvent) error {
-			return c.setFreeze(req, false)
+			return c.setFreeze(ctx, req, false)
 		})
 }

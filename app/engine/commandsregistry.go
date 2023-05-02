@@ -75,13 +75,17 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 
 	// Setup context for handler
 	ctx = context.Background()
-	ctx = Put(ctx, TraceID, i.ID)
+	ctx = Put(ctx, traceID, i.ID)
 
 	who := i.User
 	if who == nil && i.Member != nil {
 		who = i.Member.User
 	}
-	ctx = Put(ctx, User, fmt.Sprintf("%s#%s:%s", who.Username, who.Discriminator, who.ID))
+	ctx = Put(ctx, user, fmt.Sprintf("%s#%s:%s", who.Username, who.Discriminator, who.ID))
+
+	if i.GuildID != "" {
+		ctx = Put(ctx, guild, i.GuildID)
+	}
 
 	opts := make(map[string]interface{})
 	for _, o := range i.ApplicationCommandData().Options {

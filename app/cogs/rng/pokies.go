@@ -11,7 +11,6 @@ import (
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -78,7 +77,7 @@ func (c *Cog) pullEmojis(ctx context.Context, req types.ICommandEvent, guildID s
 	if cached, ok := c.pokiesCache.Peek(guildID); ok {
 		return cached.emojis, nil
 	}
-	engine.CommandLog(c, req, log.Info()).Msgf("Cache miss")
+	engine.Debugf(ctx, "Cache miss")
 
 	emojis, err := req.Session().GuildEmojis(guildID)
 	c.pokiesCache.Put(&cachedEmojis{

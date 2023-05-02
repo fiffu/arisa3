@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
 
 	zero "github.com/rs/zerolog"
@@ -23,10 +22,16 @@ type CtxKey string
 
 // Context keys
 const (
-	TraceID CtxKey = "trace"
-	User    CtxKey = "user"
-	cogName CtxKey = "cog" // This should only be used by the 'engine' package during dependency injection
+	traceID CtxKey = "trace"
+	user    CtxKey = "user"
+	guild   CtxKey = "guild"
+	cogName CtxKey = "cog"
+
+	traceStartTime CtxKey = "traceStart"
+	traceEndTime   CtxKey = "traceEnd"
 )
+
+var DoNotLogCtxKeys = []CtxKey{}
 
 func Put(parent context.Context, key CtxKey, value any) context.Context {
 	ctx, m := GetMap(parent)
@@ -97,19 +102,11 @@ func Stack(ctx context.Context, err error) {
 func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (string, *zero.Event) {
 	_, m := GetMap(ctx)
 	for k, v := range m {
-		if k == TraceID {
+		if k == traceID {
 			msg = "[" + v + "]"
 		}
 		entry = entry.Str(string(k), v)
 	}
 	entry.Str("src", caller)
 	return msg, entry
-}
-
-func CommandLog(cog types.ICog, evt types.ICommandEvent, e *zero.Event) *zero.Event {
-	return e.Str(types.CtxCog, cog.Name()).Str(types.CtxCommand, evt.Command().Name())
-}
-
-func EventLog(cog types.ICog, evt types.IEvent, e *zero.Event) *zero.Event {
-	return e.Str(types.CtxCog, cog.Name()).Str(types.CtxEvent, evt.Name())
 }

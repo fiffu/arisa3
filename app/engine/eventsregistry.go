@@ -14,7 +14,7 @@ func NewEventHandler[E any](callable func(context.Context, *dgo.Session, E)) eve
 	return func(s *dgo.Session, evt E) {
 		evtID := fmt.Sprintf("%T@%d", evt, time.Now().UTC().Unix())
 		ctx := context.Background()
-		ctx = Put(ctx, TraceID, evtID)
+		ctx = Put(ctx, traceID, evtID)
 
 		callable(ctx, s, evt)
 	}

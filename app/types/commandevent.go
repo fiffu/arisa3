@@ -6,7 +6,7 @@ import (
 	"context"
 
 	dgo "github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
+	"github.com/fiffu/arisa3/app/log"
 )
 
 type ICommandEvent interface {
@@ -44,9 +44,6 @@ func (evt *commandEvent) User() *dgo.User {
 func (evt *commandEvent) Respond(ctx context.Context, resp ICommandResponse) error {
 	itr := evt.i.Interaction
 	data := resp.Data()
-	log.Info().
-		Str(CtxCommand, evt.Command().Name()).
-		Str(CtxInteraction, itr.ID).
-		Msgf("Interaction response >>> resp: \n| %s", resp.String())
+	log.Infof(ctx, "Interaction response >>> resp: \n| %s", resp.String())
 	return evt.s.InteractionRespond(itr, data)
 }

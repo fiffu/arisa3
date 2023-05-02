@@ -1,23 +1,12 @@
 package engine
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func Test_CtxPut_CtxGet(t *testing.T) {
-	ctx := context.Background()
-
-	ctx = Put(ctx, FromEngine, errors.New("abc"))
-	ctx = Put(ctx, FromCog, errors.New("def"))
-
-	assert.Equal(t, "abc", Get(ctx, FromEngine))
-	assert.Equal(t, "def", Get(ctx, FromCog))
-}
 
 type stringable struct{ x string }
 

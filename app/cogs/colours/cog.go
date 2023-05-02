@@ -54,7 +54,7 @@ func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 		NewRepository(c.db),
 		c.cfg,
 	)
-	engine.Infof(engine.Put(ctx, engine.FromCog, c.Name()), "IColoursDomain loaded")
+	engine.Infof(ctx, "IColoursDomain loaded")
 	return nil
 }
 
@@ -90,13 +90,13 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 }
 
 func (c *Cog) registerEvents(sess *dgo.Session) {
-	sess.AddHandler(func(s *dgo.Session, m *dgo.MessageCreate) {
+	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, s *dgo.Session, m *dgo.MessageCreate) {
 		evt := types.NewMessageEvent(s, m)
-		c.onMessage(evt)
-	})
+		c.onMessage(ctx, evt)
+	}))
 }
 
-func (c *Cog) onMessage(evt types.IMessageEvent) {
+func (c *Cog) onMessage(ctx context.Context, evt types.IMessageEvent) {
 	if evt.IsFromSelf() {
 		// Ignore bot's own messages
 		return

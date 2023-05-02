@@ -23,11 +23,9 @@ type CtxKey string
 
 // Context keys
 const (
-	FromCog     CtxKey = "cog"     // for logs in cog code
-	FromCommand CtxKey = "command" // for logs in command handlers
-	FromEngine  CtxKey = "engine"  // for logs in engine code
-	RequestID   CtxKey = "reqID"
-	User        CtxKey = "user"
+	TraceID CtxKey = "trace"
+	User    CtxKey = "user"
+	cogName CtxKey = "cog" // This should only be used by the 'engine' package during dependency injection
 )
 
 func Put(parent context.Context, key CtxKey, value any) context.Context {
@@ -99,23 +97,13 @@ func Stack(ctx context.Context, err error) {
 func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (string, *zero.Event) {
 	_, m := GetMap(ctx)
 	for k, v := range m {
-		if k == RequestID {
+		if k == TraceID {
 			msg = "[" + v + "]"
 		}
 		entry = entry.Str(string(k), v)
 	}
 	entry.Str("src", caller)
 	return msg, entry
-}
-
-// AppLog contextextualizes on log messages from the cog command registry.
-func registryLog(e *zero.Event) *zero.Event {
-	return e.Str(types.CtxEngine, types.CtxRegistry)
-}
-
-// AppLog contextextualizes on log messages from individual logs.
-func CogLog(cog types.ICog, e *zero.Event) *zero.Event {
-	return e.Str(types.CtxCog, cog.Name())
 }
 
 func CommandLog(cog types.ICog, evt types.ICommandEvent, e *zero.Event) *zero.Event {

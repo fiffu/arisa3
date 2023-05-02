@@ -6,6 +6,7 @@ package colours
 //go:generate mockgen -source=interfaces.go -destination=./interfaces_mock.go -package=colours
 
 import (
+	"context"
 	"time"
 )
 
@@ -26,7 +27,7 @@ type IColoursDomain interface {
 	// Apply a mutation on member's colour role. If frozen, mutation is not allowed.
 	Mutate(IDomainSession, IDomainMember) (*Colour, error)
 	// Reroll the colour for a member's colour role.
-	Reroll(IDomainSession, IDomainMember) (*Colour, error)
+	Reroll(context.Context, IDomainSession, IDomainMember) (*Colour, error)
 
 	// Freeze a member's colour role, i.e. disable mutations.
 	Freeze(IDomainMember) error
@@ -40,9 +41,9 @@ type IColoursDomain interface {
 	// Derive a role name based on the member's properties, like username.
 	GetColourRoleName(mem IDomainMember) string
 	// Generate a colour role name based on the member's nickname or username.
-	CreateColourRole(IDomainSession, IDomainMember, *Colour) (IDomainRole, error)
+	CreateColourRole(context.Context, IDomainSession, IDomainMember, *Colour) (IDomainRole, error)
 	// Get height that colour roles should be at, based on position of role with maxHeightRoleName
-	GetColourRoleHeight(IDomainSession, IDomainGuild) (int, error)
+	GetColourRoleHeight(context.Context, IDomainSession, IDomainGuild) (int, error)
 	// Set the height of a role
 	SetRoleHeight(IDomainSession, IDomainGuild, string, int) error
 	// Create and assign a colour role to a member.

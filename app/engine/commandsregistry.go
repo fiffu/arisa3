@@ -9,7 +9,6 @@ import (
 	"github.com/fiffu/arisa3/lib/functional"
 
 	dgo "github.com/bwmarrin/discordgo"
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -32,7 +31,7 @@ func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) erro
 	for _, cmd := range cmds {
 		appID := s.State.User.ID
 		data := cmd.Data()
-		registryLog(log.Info()).Msgf("Binding command /%s", cmd.Name())
+		Infof(context.Background(), "Binding command /%s", cmd.Name())
 		if _, err := s.ApplicationCommandCreate(appID, "", data); err != nil {
 			return err
 		}
@@ -76,7 +75,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 
 	// Setup context for handler
 	ctx = context.Background()
-	ctx = Put(ctx, RequestID, i.ID)
+	ctx = Put(ctx, TraceID, i.ID)
 
 	who := i.User
 	if who == nil && i.Member != nil {
@@ -88,18 +87,14 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	for _, o := range i.ApplicationCommandData().Options {
 		opts[o.Name] = o.Value
 	}
-	Infof(
-		Put(ctx, FromEngine, "registry"),
-		"Interaction incoming <<< user=%s options=%+v",
-		who, opts,
-	)
+	Infof(ctx, "Interaction incoming <<< user=%s options=%+v", who, opts)
 
 	// Invoke handler
 	handler := cmd.HandlerFunc()
 	if handler == nil {
-		return ctx, r.fallbackHandler(s, i, cmd)
+		return ctx, r.fallbackHandler(ctx, s, i, cmd)
 	}
-	args := parseArgs(cmd, i.ApplicationCommandData().Options)
+	args := parseArgs(ctx, cmd, i.ApplicationCommandData().Options)
 	err = r.mustRunHandler(ctx, s, i, cmd, handler, args)
 	if err != nil {
 		Errorf(ctx, err, "Handler errored")
@@ -126,21 +121,19 @@ func (r *CommandsRegistry) mustRunHandler(
 }
 
 // fallbackHandler is invoked in lieu of mustRunHandler if a command has no associated handler.
-func (r *CommandsRegistry) fallbackHandler(s *dgo.Session, i *dgo.InteractionCreate, cmd types.ICommand) error {
-	registryLog(log.Error()).Str(types.CtxCommand, cmd.Name()).Msgf("Missing interaction handler")
+func (r *CommandsRegistry) fallbackHandler(ctx context.Context, s *dgo.Session, i *dgo.InteractionCreate, cmd types.ICommand) error {
+	Warnf(ctx, "No interaction handler registered for command: %s")
 	return fmt.Errorf("%w: %s", errNoHandler, cmd.Name())
 }
 
 // parseArgs wraps user-supplied options in the InteractionCreate payload inside IArgs.
-func parseArgs(cmd types.ICommand, args []*dgo.ApplicationCommandInteractionDataOption) types.IArgs {
+func parseArgs(ctx context.Context, cmd types.ICommand, args []*dgo.ApplicationCommandInteractionDataOption) types.IArgs {
 	mapping := make(map[types.IOption]*dgo.ApplicationCommandInteractionDataOption)
 	for _, arg := range args {
 		if opt, ok := cmd.FindOption(arg.Name); ok {
 			mapping[opt] = arg
 		}
 	}
-	registryLog(log.Info()).
-		Str(types.CtxCommand, cmd.Name()).
-		Msgf("Parsed options: %+v", functional.Deref(args))
+	Infof(ctx, "Parsed options for command %s: %v", cmd.Name(), functional.Deref(args))
 	return types.NewArgs(cmd, mapping)
 }

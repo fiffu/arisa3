@@ -68,7 +68,6 @@ func Main(deps IDependencyInjector, configPath string) error {
 	}
 
 	ctx := engine.StartupContext()
-	ctx = engine.Put(ctx, engine.FromEngine, "main")
 
 	engine.Infof(ctx, "Initializing cogs")
 	if err = cogs.SetupCogs(ctx, app); err != nil {

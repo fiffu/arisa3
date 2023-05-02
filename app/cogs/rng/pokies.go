@@ -40,7 +40,7 @@ func (c *Cog) pokiesCommand() *types.Command {
 }
 
 func (c *Cog) pokies(ctx context.Context, req types.ICommandEvent) error {
-	reply, err := c.getReply(req)
+	reply, err := c.getReply(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -48,14 +48,14 @@ func (c *Cog) pokies(ctx context.Context, req types.ICommandEvent) error {
 	return req.Respond(resp)
 }
 
-func (c *Cog) getReply(req types.ICommandEvent) (string, error) {
+func (c *Cog) getReply(ctx context.Context, req types.ICommandEvent) (string, error) {
 	// Query emoji palette
 	guildID := req.Interaction().GuildID
 	if guildID == "" {
 		return "You need to be in a guild for this command to work!", nil
 	}
 
-	emojis, err := c.pullEmojis(req, guildID)
+	emojis, err := c.pullEmojis(ctx, req, guildID)
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +73,7 @@ func (c *Cog) getReply(req types.ICommandEvent) (string, error) {
 	return result, nil
 }
 
-func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.Emoji, error) {
+func (c *Cog) pullEmojis(ctx context.Context, req types.ICommandEvent, guildID string) ([]*discordgo.Emoji, error) {
 	// Cache lookup
 	if cached, ok := c.pokiesCache.Peek(guildID); ok {
 		return cached.emojis, nil
@@ -86,11 +86,7 @@ func (c *Cog) pullEmojis(req types.ICommandEvent, guildID string) ([]*discordgo.
 		emojis,
 	})
 
-	engine.CogLog(c, log.Info()).Msgf(
-		"Pulled %d emojis from guild id='%s', err=%v",
-		len(emojis), guildID, err,
-	)
-
+	engine.Infof(ctx, "Pulled %d emojis from guild id='%s', err=%v", len(emojis), guildID, err)
 	return emojis, err
 }
 

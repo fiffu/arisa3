@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -197,7 +198,7 @@ func Test_Reroll(t *testing.T) {
 				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any)
 			}
 
-			_, err := d.Reroll(s, mem)
+			_, err := d.Reroll(context.Background(), s, mem)
 
 			if expectError != nil {
 				assert.Equal(

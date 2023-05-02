@@ -52,8 +52,6 @@ func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 
 // onInteractionCreate logs errors from registryHandler.
 func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
-	startTime := r.clock()
-
 	ctx, err := r.registryHandler(s, i)
 	if err != nil {
 		log.Errorf(ctx, err, "Error handling interaction")
@@ -65,16 +63,12 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 			log.Errorf(ctx, err, "Error sending response, maybe interaction already acknowledged?")
 		}
 	}
-
-	endTime := r.clock()
-	elapsed := endTime.Sub(startTime)
-
-	log.Infof(ctx, "Interaction served in %d millisecs", elapsed.Milliseconds())
 }
 
 // registryHandler routes the InteractionCreate event to the appropriate command's handler.
 func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (ctx context.Context, err error) {
 	ctx = context.Background()
+	startTime := r.clock()
 
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
@@ -118,6 +112,11 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	if err != nil {
 		log.Errorf(ctx, err, "Handler errored")
 	}
+
+	endTime := r.clock()
+	elapsed := endTime.Sub(startTime)
+	log.Infof(ctx, "Interaction served in %d millisecs", elapsed.Milliseconds())
+
 	return ctx, err
 }
 

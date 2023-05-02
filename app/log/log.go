@@ -110,8 +110,9 @@ func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (strin
 	for k, v := range m {
 		if k == TraceID {
 			msg = fmt.Sprintf("[%s] %s", v, msg)
+		} else {
+			entry = entry.Str(string(k), v)
 		}
-		entry = entry.Str(string(k), v)
 	}
 	entry.Str("src", caller)
 	return msg, entry

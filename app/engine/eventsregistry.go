@@ -8,9 +8,7 @@ import (
 	dgo "github.com/bwmarrin/discordgo"
 )
 
-type eventHandler[E any] func(*dgo.Session, E)
-
-func NewEventHandler[E any](callable func(context.Context, *dgo.Session, E)) eventHandler[E] {
+func NewEventHandler[E any](callable func(context.Context, *dgo.Session, E)) func(*dgo.Session, E) {
 	return func(s *dgo.Session, evt E) {
 		evtID := fmt.Sprintf("%T@%d", evt, time.Now().UTC().Unix())
 		ctx := context.Background()

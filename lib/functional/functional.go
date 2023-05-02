@@ -26,6 +26,13 @@ func Shuffle[T any](input []T) []T {
 	return elems
 }
 
+// Pop returns the last element from the input slice.
+// The taken element is not removed from the input slice.
+// If the slice is empty, this will panic.
+func Last[T any](input []T) T {
+	return input[len(input)-1]
+}
+
 // Take returns a slice containing the first n elements of the input slice.
 // The returned elements are not removed from the input slice.
 func Take[T any](input []T, n int) []T {

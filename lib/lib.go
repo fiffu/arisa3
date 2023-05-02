@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/fiffu/arisa3/lib/functional"
 )
 
 func Atoi(s string) int {
@@ -41,9 +43,11 @@ func WhoCalledMe() string {
 	if caller == nil {
 		panic("failed to get caller")
 	}
-	funcName := strings.TrimSuffix(caller.Name(), "-fm")
+	funcName := caller.Name()
+	funcName = strings.TrimSuffix(funcName, "-fm")
+	funcName = functional.Last(strings.Split(funcName, "."))
 
-	return fmt.Sprintf("%s() at %s:%d", funcName, file, line)
+	return fmt.Sprintf("%s:%d in %s()", file, line, funcName)
 }
 
 func MustGetCallerDir() string {

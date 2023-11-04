@@ -71,7 +71,7 @@ func (c *client) GetPosts(tags []string) ([]*Post, error) {
 	defer cancel()
 
 	var result []*Post
-	builder := c.requestPosts().
+	builder := c.postsResource().
 		Param("tags", spaceJoin(tags)).
 		Param("limit", fmt.Sprint(MaxPosts)).
 		ToJSON(&result)

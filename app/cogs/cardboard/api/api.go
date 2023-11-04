@@ -141,10 +141,15 @@ func (c *client) baseRequest() *requests.Builder {
 	return b
 }
 
-func (c *client) requestPosts() *requests.Builder {
+func (c *client) postsResource() *requests.Builder {
 	return c.baseRequest().Path("posts.json")
 }
 
-func (c *client) requestTags() *requests.Builder {
+func (c *client) tagsResource() *requests.Builder {
 	return c.baseRequest().Path("tags.json")
+}
+
+// Not a REST endpoint.
+func (c *client) autocompleteEndpoint() *requests.Builder {
+	return c.baseRequest().Path("autocomplete")
 }

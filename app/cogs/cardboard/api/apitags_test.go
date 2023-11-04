@@ -117,3 +117,48 @@ func Test_GetTagsMatching(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expect, actual)
 }
+
+func Test_AutocompleteTag(t *testing.T) {
+	client := newClient("username", "apikey", 0)
+
+	expect := []*TagSuggestion{
+		{
+			Name:      "naidong_(artist)",
+			PostCount: 383,
+		},
+		{
+			Name:      "tingyun_(honkai:_star_rail)",
+			PostCount: 376,
+		},
+	}
+	expectURL := "https://danbooru.donmai.us/autocomplete?" +
+		url.QueryEscape("search[query]") + "=ting" +
+		"&" + url.QueryEscape("search[type]") + "=tag_query" +
+		"&version=1" +
+		"&limit=10"
+
+	stubResponse := `<ul>
+		<li class="ui-menu-item" data-autocomplete-type="tag-word" data-autocomplete-value="naidong_(artist)">
+			<div class="ui-menu-item-wrapper" tabindex="-1">
+				<a class="tag-type-1" @click.prevent="" href="/posts?tags=naidong_%28artist%29">
+					<span class="autocomplete-antecedent"><span>yin</span><span>-</span><b>ting</b><span> </span><span>tian</span></span>
+					<span class="autocomplete-arrow">→</span> naidong (artist)
+				</a>
+				<span class="post-count">383</span>
+			</div>
+		</li>
+		<li class="ui-menu-item" data-autocomplete-type="tag-word" data-autocomplete-value="tingyun_(honkai:_star_rail)">
+			<div class="ui-menu-item-wrapper" tabindex="-1">
+				<a class="tag-type-4" @click.prevent="" href="/posts?tags=tingyun_%28honkai%3A_star_rail%29">
+					<b>ting</b><span>yun</span><span> (</span><span>honkai</span><span>: </span><span>star</span><span> </span><span>rail</span><span>)</span>
+				</a>
+				<span class="post-count">376</span>
+			</div>
+		</li>
+	</ul>`
+	client.fetch = lib.StubHTMLFetcher(t, expectURL, http.StatusOK, stubResponse)
+
+	actual, err := client.AutocompleteTag("ting")
+	assert.NoError(t, err)
+	assert.Equal(t, expect, actual)
+}

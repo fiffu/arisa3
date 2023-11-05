@@ -49,7 +49,7 @@ func WhoCalledMe() string {
 	funcName = functional.Last(strings.Split(funcName, "."))
 	file = filepath.Base(file)
 
-	return fmt.Sprintf("%s() at %s:%d", funcName, file, line)
+	return fmt.Sprintf("%s:%d in %s()", file, line, funcName)
 }
 
 func MustGetCallerDir() string {

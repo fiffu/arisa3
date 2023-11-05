@@ -17,8 +17,10 @@ type Tag struct {
 }
 
 type TagSuggestion struct {
-	Name      string
-	PostCount int
+	Name       string // actual, normalized name of tag
+	Antecedent string // populated if the suggestion matched on this tag's alias
+	PostCount  int
+	Link       string // URL to posts with this tag
 }
 
 // AutocompleteTag implements api.IClient.
@@ -74,6 +76,16 @@ func parseAutocompleteElem(ctx context.Context, s *goquery.Selection) (*TagSugge
 			return nil, fmt.Errorf("failed to parse attr 'span.post-count', err: %w", err)
 		} else {
 			suggest.PostCount = postCount
+		}
+	}
+
+	if ante := s.Find("span.autocomplete-antecedent").First(); ante != nil {
+		suggest.Antecedent = ante.Text()
+	}
+
+	if a := s.Find("a"); a != nil {
+		if href, ok := a.Attr("href"); ok {
+			suggest.Link = apiHostHTTPS + href
 		}
 	}
 

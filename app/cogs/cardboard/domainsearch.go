@@ -16,7 +16,7 @@ func (d *domain) boringSearch(ctx context.Context, q IQueryPosts) ([]*api.Post, 
 	return posts, err
 }
 
-func (d *domain) magicSearch(ctx context.Context, q IQueryPosts, tryGuessTerm bool) ([]*api.Post, error) {
+func (d *domain) magicSearch(ctx context.Context, q IQueryPosts, trySuggestion bool) ([]*api.Post, error) {
 	log.Infof(ctx, "magicSearch for %+v", q)
 
 	// Resolve any alias matches on the term
@@ -57,26 +57,26 @@ func (d *domain) magicSearch(ctx context.Context, q IQueryPosts, tryGuessTerm bo
 		log.Infof(ctx, "magicSearch returning with %d posts", len(posts))
 		return posts, nil
 
-	// If we still have a chance to guess, do it
-	case tryGuessTerm:
-		log.Infof(ctx, "magicSearch attempting to guess another tag from query: %+v", q)
-		guess, err := d.guessTag(ctx, q)
+	// If we still have a chance to make a suggestion, do it
+	case trySuggestion:
+		log.Infof(ctx, "magicSearch attempting to suggest another tag from query: %+v", q)
+		suggest, err := d.guessTag(ctx, q)
 		if err != nil {
 			// Log the error then give up
-			log.Errorf(ctx, err, "Errored while best-guessing query")
+			log.Errorf(ctx, err, "Errored while fetching suggestion")
 			return posts, nil
 		}
-		if guess == q.Term() {
-			// Our best guess exactly matched the query, give up
+		if suggest.Name == q.Term() {
+			// Our suggestion exactly matched the query, give up
 			return posts, nil
 		} else {
-			// Retry with guess
-			log.Infof(ctx, "magicSearch retrying with guess=%s", guess)
-			q.SetTerm(guess)
+			// Retry with suggestion
+			log.Infof(ctx, "magicSearch retrying with suggestion=%+v", suggest)
+			q.SetTerm(suggest.Name)
 			return d.magicSearch(ctx, q, false)
 		}
 
-	// No more guessing, give up
+	// No more suggestions, give up
 	default:
 		return posts, nil
 	}
@@ -137,18 +137,19 @@ func (d *domain) findAlias(q IQueryPosts) (string, error) {
 	return term, nil
 }
 
-func (d *domain) guessTag(ctx context.Context, q IQueryPosts) (string, error) {
+func (d *domain) guessTag(ctx context.Context, q IQueryPosts) (*api.TagSuggestion, error) {
 	term := q.Term()
 
-	matches, err := d.client.GetTagsMatching(ctx, term+api.WildcardCharacter)
+	matches, err := d.client.AutocompleteTag(ctx, term)
 	if err != nil {
-		return term, err
+		return nil, err
 	}
 
 	if len(matches) == 0 {
-		return term, nil
+		return nil, nil
 	}
+	match := matches[0]
 
-	matches = api.TagsSorter{Data: matches, Compare: api.ByTagLength}.Sorted()
-	return matches[0].Name, nil
+	log.Infof(ctx, "Suggesting %#v from term: %s", match, term)
+	return match, nil
 }

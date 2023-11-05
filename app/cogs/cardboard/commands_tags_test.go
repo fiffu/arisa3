@@ -9,7 +9,7 @@ import (
 
 func Test_formatSuggestion(t *testing.T) {
 	testCases := map[string]*api.TagSuggestion{
-		"[`naidong_(artist)`](https://danbooru.donmai.us/posts?tags=naidong_%28artist%29) (383) ← _alias from yin-ting tian_": {
+		"[`naidong_(artist)`](https://danbooru.donmai.us/posts?tags=naidong_%28artist%29) (383) ← _alias from 'yin-ting tian'_": {
 			Name:       "naidong_(artist)",
 			Antecedent: "yin-ting tian",
 			PostCount:  383,

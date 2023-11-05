@@ -47,7 +47,7 @@ func (c *Cog) tagAutocompleteSuggest(ctx context.Context, req types.ICommandEven
 func formatSuggestion(suggest *api.TagSuggestion) string {
 	var ante string
 	if suggest.Antecedent != "" {
-		ante = fmt.Sprintf(" ← _alias from %s_", suggest.Antecedent)
+		ante = fmt.Sprintf(" ← _alias from '%s'_", suggest.Antecedent)
 	}
 	return fmt.Sprintf("[`%s`](%s) (%d)%s", suggest.Name, suggest.Link, suggest.PostCount, ante)
 }

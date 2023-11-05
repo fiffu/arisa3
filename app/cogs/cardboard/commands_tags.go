@@ -33,7 +33,7 @@ func (c *Cog) tagAutocompleteSuggest(ctx context.Context, req types.ICommandEven
 		lines := functional.Map(suggestedTags, func(tag *api.TagSuggestion) string {
 			return fmt.Sprintf("%s (%d posts)", tag.Name, tag.PostCount)
 		})
-		strings.Join(lines, "\n")
+		desc = strings.Join(lines, "\n")
 	} else {
 		desc = fmt.Sprintf("There's no tags that match '%s'", desc)
 	}

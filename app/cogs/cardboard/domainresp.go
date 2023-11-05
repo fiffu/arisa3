@@ -1,13 +1,14 @@
 package cardboard
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
-	"github.com/rs/zerolog/log"
 )
 
 const embedColour = 0xa4815e
@@ -20,13 +21,13 @@ func (d *domain) formatZeroResults(q IQueryPosts) types.IEmbed {
 		))
 }
 
-func (d *domain) formatResult(query IQueryPosts, posts []*api.Post) (types.IEmbed, error) {
+func (d *domain) formatResult(ctx context.Context, query IQueryPosts, posts []*api.Post) (types.IEmbed, error) {
 	if len(posts) == 0 {
 		return d.formatZeroResults(query), nil
 	}
 	post := posts[0]
 
-	log.Info().Msgf("Generating embed for post md5=%s", post.MD5)
+	log.Infof(ctx, "Generating embed for post md5=%s", post.MD5)
 
 	term := query.Term()
 	artistTags := splitTags(post.ArtistTags)
@@ -36,10 +37,11 @@ func (d *domain) formatResult(query IQueryPosts, posts []*api.Post) (types.IEmbe
 	tagsToFetch = append(tagsToFetch, artistTags...)
 	tagsToFetch = append(tagsToFetch, copyrightTags...)
 
-	tagData, err := d.client.GetTags(tagsToFetch)
+	tagData, err := d.client.GetTags(ctx, tagsToFetch)
 	if err != nil {
 		tagData = make(map[string]*api.Tag)
-		log.Warn().Msgf("ignored error fetching tag data for post md5=%s, err=%s", post.MD5, err)
+
+		log.Infof(ctx, "ignored error fetching tag data for post md5=%s, err=%s", post.MD5, err)
 	}
 
 	title := embedTitle(post)

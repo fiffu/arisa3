@@ -3,6 +3,8 @@ package cardboard
 //go:generate mockgen -source=interfaces.go -destination=./interfaces_mock.go -package=cardboard
 
 import (
+	"context"
+
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
 	"github.com/fiffu/arisa3/app/types"
 )
@@ -20,15 +22,15 @@ const (
 )
 
 type IDomain interface {
-	TagsSearch(s string) ([]*api.TagSuggestion, error)
-	PostsSearch(IQueryPosts) ([]*api.Post, error)
-	PostsResult(IQueryPosts, []*api.Post) (types.IEmbed, error)
+	TagsSearch(ctx context.Context, query string) ([]*api.TagSuggestion, error)
+	PostsSearch(context.Context, IQueryPosts) ([]*api.Post, error)
+	PostsResult(context.Context, IQueryPosts, []*api.Post) (types.IEmbed, error)
 
-	SetPromote(guildID, tagName string) error
-	SetDemote(guildID, tagName string) error
-	SetOmit(guildID, tagName string) error
-	SetAlias(guildID string, alias Alias, actual Actual) error
-	GetAliases(guildID string) (map[Alias]Actual, error)
+	SetPromote(ctx context.Context, guildID, tagName string) error
+	SetDemote(ctx context.Context, guildID, tagName string) error
+	SetOmit(ctx context.Context, guildID, tagName string) error
+	SetAlias(ctx context.Context, guildID string, alias Alias, actual Actual) error
+	GetAliases(ctx context.Context, guildID string) (map[Alias]Actual, error)
 }
 
 // IQueryPosts is the interface of a query for posts, interpreted within the domain (not the API)

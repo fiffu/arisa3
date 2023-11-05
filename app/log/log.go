@@ -25,10 +25,11 @@ type CtxKey string
 
 // Context keys
 const (
-	TraceID CtxKey = "trace"
-	User    CtxKey = "user"
-	Guild   CtxKey = "guild"
-	CogName CtxKey = "cog"
+	TraceID    CtxKey = "trace"
+	TraceSubID CtxKey = "trace-subspan"
+	User       CtxKey = "user"
+	Guild      CtxKey = "guild"
+	CogName    CtxKey = "cog"
 )
 
 var DoNotLogCtxKeys = []CtxKey{}
@@ -107,14 +108,25 @@ func Stack(ctx context.Context, err error) {
 
 func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (string, *zero.Event) {
 	_, m := GetMap(ctx)
+	var traceID, subTraceID string
+	if value, ok := m[TraceID]; ok {
+		traceID = fmt.Sprintf("[%s] ", value)
+	}
+	if value, ok := m[TraceSubID]; ok {
+		subTraceID = fmt.Sprintf("[%s] ", value)
+	}
 	for k, v := range m {
-		if k == TraceID {
-			msg = fmt.Sprintf("[%s] %s", v, msg)
-		} else {
+		switch k {
+		case TraceID:
+			traceID = v
+		case TraceSubID:
+			subTraceID = v
+		default:
 			entry = entry.Str(string(k), v)
 		}
 	}
 	entry.Str("src", caller)
+	msg = traceID + subTraceID + msg
 	return msg, entry
 }
 

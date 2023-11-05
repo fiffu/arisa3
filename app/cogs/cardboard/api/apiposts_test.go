@@ -31,7 +31,7 @@ func Test_GetPosts_Error(t *testing.T) {
 		return assert.AnError
 	}
 
-	posts, err := client.GetPosts([]string{""})
+	posts, err := client.GetPosts(context.Background(), []string{""})
 	assert.Nil(t, posts)
 	assert.Error(t, err)
 }
@@ -59,7 +59,7 @@ func Test_GetPosts(t *testing.T) {
 	]`
 	client.fetch = lib.StubJSONFetcher(t, expectURL, http.StatusOK, stubJSON)
 
-	actual, err := client.GetPosts([]string{"capybara", "original"})
+	actual, err := client.GetPosts(context.Background(), []string{"capybara", "original"})
 
 	assert.NoError(t, err)
 	assert.Equal(t, expect, actual)

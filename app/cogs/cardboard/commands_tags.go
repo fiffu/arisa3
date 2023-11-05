@@ -23,7 +23,7 @@ func (c *Cog) tagSuggestCommand() *types.Command {
 func (c *Cog) tagAutocompleteSuggest(ctx context.Context, req types.ICommandEvent) error {
 	queryStr, _ := req.Args().String(OptionQuery)
 
-	suggestedTags, err := c.domain.TagsSearch(queryStr)
+	suggestedTags, err := c.domain.TagsSearch(ctx, queryStr)
 	if err != nil {
 		return err
 	}

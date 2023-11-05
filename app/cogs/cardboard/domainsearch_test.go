@@ -1,6 +1,7 @@
 package cardboard
 
 import (
+	"context"
 	"testing"
 
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
@@ -16,9 +17,12 @@ func Test_magicSearch_tryGuessTermIsFalse(t *testing.T) {
 
 	q := NewQuery("foo")
 	stubPosts := []*api.Post{{File: "https://foo.jpg", FileExt: "jpg"}}
-	mockClient.EXPECT().GetPosts([]string{"foo"}).Return(stubPosts, nil).Times(1)
+	mockClient.EXPECT().
+		GetPosts(gomock.Any(), []string{"foo"}).
+		Return(stubPosts, nil).
+		Times(1)
 
-	actualPosts, err := d.magicSearch(q, false)
+	actualPosts, err := d.magicSearch(context.Background(), q, false)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, stubPosts, actualPosts)
 }
@@ -33,11 +37,11 @@ func Test_magicSearch_tryGuessTermWithRetry(t *testing.T) {
 	noPosts := []*api.Post{}
 	stubPosts := []*api.Post{{File: "https://food.jpg", FileExt: "jpg"}}
 	stubTags := []*api.Tag{{Name: "footlocker"}, {Name: "food"}}
-	mockClient.EXPECT().GetPosts([]string{"foo"}).Return(noPosts, nil).Times(1)
-	mockClient.EXPECT().GetPosts([]string{"food"}).Return(stubPosts, nil).Times(1)
-	mockClient.EXPECT().GetTagsMatching("foo*").Return(stubTags, nil)
+	mockClient.EXPECT().GetPosts(gomock.Any(), []string{"foo"}).Return(noPosts, nil).Times(1)
+	mockClient.EXPECT().GetPosts(gomock.Any(), []string{"food"}).Return(stubPosts, nil).Times(1)
+	mockClient.EXPECT().GetTagsMatching(gomock.Any(), "foo*").Return(stubTags, nil)
 
-	actualPosts, err := d.magicSearch(q, true)
+	actualPosts, err := d.magicSearch(context.Background(), q, true)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, stubPosts, actualPosts)
 }
@@ -51,10 +55,10 @@ func Test_magicSearch_tryGuessTermNoRetry(t *testing.T) {
 	q := NewQuery("foo")
 	noPosts := []*api.Post{}
 	stubTags := []*api.Tag{{Name: "foo"}, {Name: "foot"}}
-	mockClient.EXPECT().GetPosts([]string{"foo"}).Return(noPosts, nil).Times(1)
-	mockClient.EXPECT().GetTagsMatching("foo*").Return(stubTags, nil)
+	mockClient.EXPECT().GetPosts(gomock.Any(), []string{"foo"}).Return(noPosts, nil).Times(1)
+	mockClient.EXPECT().GetTagsMatching(gomock.Any(), "foo*").Return(stubTags, nil)
 
-	actualPosts, err := d.magicSearch(q, true)
+	actualPosts, err := d.magicSearch(context.Background(), q, true)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, noPosts, actualPosts)
 }
@@ -104,12 +108,13 @@ func Test_guessTag(t *testing.T) {
 			for _, tagName := range tc.stubResponse {
 				stubbed = append(stubbed, &api.Tag{Name: tagName})
 			}
-			mockClient.EXPECT().GetTagsMatching(tc.term+api.WildcardCharacter).
+			mockClient.EXPECT().
+				GetTagsMatching(gomock.Any(), tc.term+api.WildcardCharacter).
 				Return(stubbed, tc.stubError).
 				Times(1)
 
 			q := NewQuery(tc.term)
-			actual, err := d.guessTag(q)
+			actual, err := d.guessTag(context.Background(), q)
 
 			if tc.expectError != nil {
 				assert.Error(t, err)

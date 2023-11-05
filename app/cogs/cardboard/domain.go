@@ -1,6 +1,8 @@
 package cardboard
 
 import (
+	"context"
+
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/types"
@@ -19,20 +21,20 @@ func NewDomain(db database.IDatabase, cfg *Config) *domain {
 	}
 }
 
-func (d *domain) TagsSearch(query string) ([]*api.TagSuggestion, error) {
-	return d.client.AutocompleteTag(query)
+func (d *domain) TagsSearch(ctx context.Context, query string) ([]*api.TagSuggestion, error) {
+	return d.client.AutocompleteTag(ctx, query)
 }
 
-func (d *domain) PostsSearch(q IQueryPosts) ([]*api.Post, error) {
+func (d *domain) PostsSearch(ctx context.Context, q IQueryPosts) ([]*api.Post, error) {
 	if q.MagicMode() {
-		return d.magicSearch(q, true)
+		return d.magicSearch(ctx, q, true)
 	}
-	return d.boringSearch(q)
+	return d.boringSearch(ctx, q)
 }
 
-func (d *domain) PostsResult(query IQueryPosts, posts []*api.Post) (types.IEmbed, error) {
+func (d *domain) PostsResult(ctx context.Context, query IQueryPosts, posts []*api.Post) (types.IEmbed, error) {
 	if len(posts) > 0 {
-		return d.formatResult(query, posts)
+		return d.formatResult(ctx, query, posts)
 	} else {
 		return d.formatZeroResults(query), nil
 	}
@@ -40,8 +42,22 @@ func (d *domain) PostsResult(query IQueryPosts, posts []*api.Post) (types.IEmbed
 
 // Remaining methods proxy to the repo
 
-func (d *domain) SetPromote(gid, tagName string) error            { return d.repo.SetPromote(gid, tagName) }
-func (d *domain) SetDemote(gid, tagName string) error             { return d.repo.SetDemote(gid, tagName) }
-func (d *domain) SetOmit(gid, tagName string) error               { return d.repo.SetOmit(gid, tagName) }
-func (d *domain) SetAlias(gid string, al Alias, ac Actual) error  { return d.repo.SetAlias(gid, al, ac) }
-func (d *domain) GetAliases(gid string) (map[Alias]Actual, error) { return d.repo.GetAliases(gid) }
+func (d *domain) SetPromote(ctx context.Context, gid, tagName string) error {
+	return d.repo.SetPromote(gid, tagName)
+}
+
+func (d *domain) SetDemote(ctx context.Context, gid, tagName string) error {
+	return d.repo.SetDemote(gid, tagName)
+}
+
+func (d *domain) SetOmit(ctx context.Context, gid, tagName string) error {
+	return d.repo.SetOmit(gid, tagName)
+}
+
+func (d *domain) SetAlias(ctx context.Context, gid string, al Alias, ac Actual) error {
+	return d.repo.SetAlias(gid, al, ac)
+}
+
+func (d *domain) GetAliases(ctx context.Context, gid string) (map[Alias]Actual, error) {
+	return d.repo.GetAliases(gid)
+}

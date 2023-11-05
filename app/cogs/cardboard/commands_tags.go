@@ -30,9 +30,7 @@ func (c *Cog) tagAutocompleteSuggest(ctx context.Context, req types.ICommandEven
 
 	var desc string
 	if len(suggestedTags) > 0 {
-		lines := functional.Map(suggestedTags, func(tag *api.TagSuggestion) string {
-			return fmt.Sprintf("%s (%d posts)", tag.Name, tag.PostCount)
-		})
+		lines := functional.Map(suggestedTags, formatSuggestion)
 		desc = strings.Join(lines, "\n")
 	} else {
 		desc = fmt.Sprintf("There's no tags that match '%s'", desc)
@@ -44,4 +42,12 @@ func (c *Cog) tagAutocompleteSuggest(ctx context.Context, req types.ICommandEven
 		Description(desc)
 	resp := types.NewResponse().Embeds(emb)
 	return req.Respond(ctx, resp)
+}
+
+func formatSuggestion(suggest *api.TagSuggestion) string {
+	var ante string
+	if suggest.Antecedent != "" {
+		ante = fmt.Sprintf("%s → ", suggest.Antecedent)
+	}
+	return fmt.Sprintf("%s[`%s`](%s) (%d)", ante, suggest.Name, suggest.Link, suggest.PostCount)
 }

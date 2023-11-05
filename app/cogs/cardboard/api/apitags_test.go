@@ -124,12 +124,15 @@ func Test_AutocompleteTag(t *testing.T) {
 
 	expect := []*TagSuggestion{
 		{
-			Name:      "naidong_(artist)",
-			PostCount: 383,
+			Name:       "naidong_(artist)",
+			Antecedent: "yin-ting tian",
+			PostCount:  383,
+			Link:       "https://danbooru.donmai.us/posts?tags=naidong_%28artist%29",
 		},
 		{
 			Name:      "tingyun_(honkai:_star_rail)",
 			PostCount: 376,
+			Link:      "https://danbooru.donmai.us/posts?tags=tingyun_%28honkai%3A_star_rail%29",
 		},
 	}
 	expectURL := "https://danbooru.donmai.us/autocomplete?" +

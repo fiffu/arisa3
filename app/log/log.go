@@ -109,18 +109,12 @@ func Stack(ctx context.Context, err error) {
 func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (string, *zero.Event) {
 	_, m := GetMap(ctx)
 	var traceID, subTraceID string
-	if value, ok := m[TraceID]; ok {
-		traceID = fmt.Sprintf("[%s] ", value)
-	}
-	if value, ok := m[TraceSubID]; ok {
-		subTraceID = fmt.Sprintf("[%s] ", value)
-	}
 	for k, v := range m {
 		switch k {
 		case TraceID:
-			traceID = v
+			traceID = fmt.Sprintf("[%s] ", v)
 		case TraceSubID:
-			subTraceID = v
+			subTraceID = fmt.Sprintf("[%s] ", v)
 		default:
 			entry = entry.Str(string(k), v)
 		}

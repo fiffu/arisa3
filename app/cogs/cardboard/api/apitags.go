@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -19,7 +18,7 @@ type Tag struct {
 type TagSuggestion struct {
 	Name       string // actual, normalized name of tag
 	Antecedent string // populated if the suggestion matched on this tag's alias
-	PostCount  int
+	PostCount  string // could be "13k" and so on
 	Link       string // URL to posts with this tag
 }
 
@@ -71,12 +70,7 @@ func parseAutocompleteElem(ctx context.Context, s *goquery.Selection) (*TagSugge
 	suggest.Name = tagName
 
 	if span := s.Find("span.post-count").First(); span != nil {
-		rawPostCount := span.Text()
-		if postCount, err := strconv.Atoi(rawPostCount); err != nil {
-			return nil, fmt.Errorf("failed to parse attr 'span.post-count', err: %w", err)
-		} else {
-			suggest.PostCount = postCount
-		}
+		suggest.PostCount = span.Text()
 	}
 
 	if ante := s.Find("span.autocomplete-antecedent").First(); ante != nil {

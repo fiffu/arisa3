@@ -49,5 +49,5 @@ func formatSuggestion(suggest *api.TagSuggestion) string {
 	if suggest.Antecedent != "" {
 		ante = fmt.Sprintf(" ← _alias from '%s'_", suggest.Antecedent)
 	}
-	return fmt.Sprintf("[`%s`](%s) (%d)%s", suggest.Name, suggest.Link, suggest.PostCount, ante)
+	return fmt.Sprintf("[`%s`](%s) (%s)%s", suggest.Name, suggest.Link, suggest.PostCount, ante)
 }

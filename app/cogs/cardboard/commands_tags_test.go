@@ -12,12 +12,12 @@ func Test_formatSuggestion(t *testing.T) {
 		"[`naidong_(artist)`](https://danbooru.donmai.us/posts?tags=naidong_%28artist%29) (383) ← _alias from 'yin-ting tian'_": {
 			Name:       "naidong_(artist)",
 			Antecedent: "yin-ting tian",
-			PostCount:  383,
+			PostCount:  "383",
 			Link:       "https://danbooru.donmai.us/posts?tags=naidong_%28artist%29",
 		},
-		"[`tingyun_(honkai:_star_rail)`](https://danbooru.donmai.us/posts?tags=tingyun_%28honkai%3A_star_rail%29) (376)": {
+		"[`tingyun_(honkai:_star_rail)`](https://danbooru.donmai.us/posts?tags=tingyun_%28honkai%3A_star_rail%29) (1.1k)": {
 			Name:      "tingyun_(honkai:_star_rail)",
-			PostCount: 376,
+			PostCount: "1.1k",
 			Link:      "https://danbooru.donmai.us/posts?tags=tingyun_%28honkai%3A_star_rail%29",
 		},
 	}

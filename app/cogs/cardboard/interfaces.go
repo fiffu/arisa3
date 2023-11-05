@@ -20,6 +20,7 @@ const (
 )
 
 type IDomain interface {
+	TagsSearch(s string) ([]*api.TagSuggestion, error)
 	PostsSearch(IQueryPosts) ([]*api.Post, error)
 	PostsResult(IQueryPosts, []*api.Post) (types.IEmbed, error)
 

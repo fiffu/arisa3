@@ -41,6 +41,9 @@ tooling: ALWAYS  ## Install development tooling
 	gotestsum --version
 	@echo
 
+	go install github.com/golang/mock/mockgen@v1.6.0
+	mockgen -version
+
 	@echo [make tooling] Done ✓
 
 

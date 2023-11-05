@@ -19,6 +19,10 @@ func NewDomain(db database.IDatabase, cfg *Config) *domain {
 	}
 }
 
+func (d *domain) TagsSearch(query string) ([]*api.TagSuggestion, error) {
+	return d.client.AutocompleteTag(query)
+}
+
 func (d *domain) PostsSearch(q IQueryPosts) ([]*api.Post, error) {
 	if q.MagicMode() {
 		return d.magicSearch(q, true)

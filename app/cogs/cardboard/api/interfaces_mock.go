@@ -33,6 +33,21 @@ func (m *MockIClient) EXPECT() *MockIClientMockRecorder {
 	return m.recorder
 }
 
+// AutocompleteTag mocks base method.
+func (m *MockIClient) AutocompleteTag(query string) ([]*TagSuggestion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AutocompleteTag", query)
+	ret0, _ := ret[0].([]*TagSuggestion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutocompleteTag indicates an expected call of AutocompleteTag.
+func (mr *MockIClientMockRecorder) AutocompleteTag(query interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutocompleteTag", reflect.TypeOf((*MockIClient)(nil).AutocompleteTag), query)
+}
+
 // FaviconURL mocks base method.
 func (m *MockIClient) FaviconURL() string {
 	m.ctrl.T.Helper()

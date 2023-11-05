@@ -82,6 +82,9 @@ func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
 		c.cuteCommand(),
 		c.lewdCommand(),
 
+		// commands to lookup tags
+		c.tagSuggestCommand(),
+
 		// commands to set tag ops
 		adminOnly(c.promoteCommand()),
 		adminOnly(c.demoteCommand()),

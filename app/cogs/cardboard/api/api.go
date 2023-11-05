@@ -82,6 +82,8 @@ func defaultFetcher(ctx context.Context, builder *requests.Builder) error {
 		logRequest(req, startTime)
 		res, err := http.DefaultTransport.RoundTrip(req)
 		logResponse(req, res, startTime, err)
+
+		log.Pop(ctx, log.TraceSubID)
 		return res, err
 	}
 	return builder.Transport(interceptor).Fetch(ctx)

@@ -46,6 +46,13 @@ func Put(parent context.Context, key CtxKey, value any) context.Context {
 	return ctx
 }
 
+func Pop(parent context.Context, key CtxKey) (context.Context, any) {
+	ctx, m := GetMap(parent)
+	value := m[key]
+	delete(m, key)
+	return ctx, value
+}
+
 func Get(ctx context.Context, key CtxKey) string {
 	_, m := GetMap(ctx)
 	return m[key]

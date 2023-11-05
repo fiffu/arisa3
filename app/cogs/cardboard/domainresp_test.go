@@ -1,6 +1,7 @@
 package cardboard
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -40,9 +41,9 @@ func Test_formatResult(t *testing.T) {
 	db := database.NewMockIDatabase(ctrl)
 	client := api.NewMockIClient(ctrl)
 	client.EXPECT().
-		GetTags(gomock.Any()).
+		GetTags(gomock.Any(), gomock.Any()).
 		AnyTimes().
-		DoAndReturn(func(_ []string) (map[string]*api.Tag, error) {
+		DoAndReturn(func(_ context.Context, _ []string) (map[string]*api.Tag, error) {
 			return map[string]*api.Tag{
 				"general":   {ID: 0, Name: "general", PostCount: 999},
 				"artist":    {ID: 1, Name: "artist", PostCount: 999},
@@ -60,7 +61,7 @@ func Test_formatResult(t *testing.T) {
 	testPost := newTestPost()
 	posts := []*api.Post{testPost}
 
-	embed, err := d.formatResult(query, posts)
+	embed, err := d.formatResult(context.Background(), query, posts)
 	assert.NoError(t, err)
 	assert.Equal(t, embed.Data().Color, embedColour)
 	assert.Contains(t, embed.Data().Title, testPost.CharacterTags)
@@ -76,9 +77,9 @@ func Test_formatResult_shouldOnlyGetTagsForTermArtistCopyright(t *testing.T) {
 	db := database.NewMockIDatabase(ctrl)
 	client := api.NewMockIClient(ctrl)
 	client.EXPECT().
-		GetTags([]string{"testing", "artist", "copyright"}).
+		GetTags(gomock.Any(), []string{"testing", "artist", "copyright"}).
 		AnyTimes().
-		DoAndReturn(func(_ []string) (map[string]*api.Tag, error) {
+		DoAndReturn(func(_ context.Context, _ []string) (map[string]*api.Tag, error) {
 			return map[string]*api.Tag{
 				"general":   {ID: 0, Name: "general", PostCount: 999},
 				"artist":    {ID: 1, Name: "artist", PostCount: 999},
@@ -96,7 +97,7 @@ func Test_formatResult_shouldOnlyGetTagsForTermArtistCopyright(t *testing.T) {
 	testPost := newTestPost()
 	posts := []*api.Post{testPost}
 
-	embed, err := d.formatResult(query, posts)
+	embed, err := d.formatResult(context.Background(), query, posts)
 	assert.NoError(t, err)
 	assert.Contains(t, embed.Data().Fields[0].Value, testPost.ArtistTags)
 	assert.Contains(t, embed.Data().Fields[0].Value, "999")
@@ -109,9 +110,9 @@ func Test_formatResult_shouldNotFailIfGetTagsErrors(t *testing.T) {
 	db := database.NewMockIDatabase(ctrl)
 	client := api.NewMockIClient(ctrl)
 	client.EXPECT().
-		GetTags([]string{"testing", "artist", "copyright"}).
+		GetTags(gomock.Any(), []string{"testing", "artist", "copyright"}).
 		AnyTimes().
-		DoAndReturn(func(_ []string) (map[string]*api.Tag, error) {
+		DoAndReturn(func(_ context.Context, _ []string) (map[string]*api.Tag, error) {
 			return nil, assert.AnError
 		})
 
@@ -124,7 +125,7 @@ func Test_formatResult_shouldNotFailIfGetTagsErrors(t *testing.T) {
 	testPost := newTestPost()
 	posts := []*api.Post{testPost}
 
-	embed, err := d.formatResult(query, posts)
+	embed, err := d.formatResult(context.Background(), query, posts)
 	assert.NoError(t, err)
 	assert.Contains(t, embed.Data().Fields[0].Value, testPost.ArtistTags)
 	assert.NotContains(t, embed.Data().Fields[0].Value, "999")

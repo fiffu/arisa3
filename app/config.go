@@ -1,9 +1,11 @@
 package app
 
 import (
+	"context"
+
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/lib/envconfig"
 	validator "github.com/go-playground/validator/v10"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -15,6 +17,8 @@ type Config struct {
 }
 
 func Configure(path string) (*Config, error) {
+	ctx := context.Background()
+
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -31,7 +35,7 @@ func Configure(path string) (*Config, error) {
 		return nil, err
 	} else if len(replaced) > 0 {
 		for envKey, fld := range replaced {
-			log.Warn().Msgf(
+			log.Infof(ctx,
 				"Replaced %v with environment var %s",
 				fld.Name,
 				envKey,

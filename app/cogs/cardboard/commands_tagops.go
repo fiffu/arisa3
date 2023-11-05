@@ -73,7 +73,7 @@ func (c *Cog) promote(ctx context.Context, req types.ICommandEvent) error {
 		return req.Respond(ctx, respRequiresAdmin)
 	}
 
-	if err := c.domain.SetPromote(tagName, guildID); err != nil {
+	if err := c.domain.SetPromote(ctx, tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be promoted.", tagName))
@@ -88,7 +88,7 @@ func (c *Cog) demote(ctx context.Context, req types.ICommandEvent) error {
 		return req.Respond(ctx, respRequiresAdmin)
 	}
 
-	if err := c.domain.SetDemote(tagName, guildID); err != nil {
+	if err := c.domain.SetDemote(ctx, tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be demoted.", tagName))
@@ -103,7 +103,7 @@ func (c *Cog) omit(ctx context.Context, req types.ICommandEvent) error {
 		return req.Respond(ctx, respRequiresAdmin)
 	}
 
-	if err := c.domain.SetOmit(tagName, guildID); err != nil {
+	if err := c.domain.SetOmit(ctx, tagName, guildID); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("Marked `%s` to be omitted.", tagName))
@@ -119,7 +119,7 @@ func (c *Cog) alias(ctx context.Context, req types.ICommandEvent) error {
 		return req.Respond(ctx, respRequiresAdmin)
 	}
 
-	if err := c.domain.SetAlias(guildID, Alias(alias), Actual(actual)); err != nil {
+	if err := c.domain.SetAlias(ctx, guildID, Alias(alias), Actual(actual)); err != nil {
 		return err
 	}
 	resp := types.NewResponse().Content(fmt.Sprintf("`%s` will be aliased as `%s`.", actual, alias))
@@ -132,7 +132,7 @@ func (c *Cog) listAliases(ctx context.Context, req types.ICommandEvent) error {
 		return req.Respond(ctx, respRequiresAdmin)
 	}
 
-	aliasMap, err := c.domain.GetAliases(guildID)
+	aliasMap, err := c.domain.GetAliases(ctx, guildID)
 	if err != nil {
 		return err
 	}

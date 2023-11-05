@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/lib"
-	"github.com/rs/zerolog/log"
 )
 
 // pgmigrations.go implements migrations for pgclient
@@ -44,9 +44,9 @@ func (r *MigrationRecord) Scan(rows IRows) error {
 
 // seedMigration pulls the migrations table state, or creates if it doesn't exist.
 func (c *pgclient) seedMigration(ctx context.Context) error {
-	log.Info().Msgf("Creating schema migrations table")
+	log.Infof(ctx, "Creating schema migrations table")
 	if _, err := c.Exec(ctx, createSchemaMigrations); err != nil {
-		log.Error().Err(err).Msgf("Failed to creating seed migrations table")
+		log.Errorf(ctx, err, "Failed to creating seed migrations table")
 		return err
 	}
 	rows, err := c.Query(ctx, "SELECT version FROM _schema_migrations;")
@@ -57,12 +57,12 @@ func (c *pgclient) seedMigration(ctx context.Context) error {
 	for rows.Next() {
 		rec := &MigrationRecord{}
 		if err := rec.Scan(rows); err != nil {
-			log.Error().Msgf("Failed parsing migration record: %v", rows)
+			log.Errorf(ctx, err, "Failed parsing migration record: %v", rows)
 			return err
 		}
 		c.existingMigrations[rec.Version] = true
 	}
-	log.Info().Msgf("Loaded schema migrations (noted %d migration records)", len(c.existingMigrations))
+	log.Infof(ctx, "Loaded schema migrations (noted %d migration records)", len(c.existingMigrations))
 	return nil
 }
 
@@ -71,7 +71,7 @@ func (c *pgclient) Migrate(ctx context.Context, schema ISchema) (bool, error) {
 	if _, ok := c.existingMigrations[schema.Version()]; ok {
 		return false, nil
 	}
-	log.Info().Msgf("Executing migration %s (%s)", schema.Version(), schema.Source())
+	log.Infof(ctx, "Executing migration %s (%s)", schema.Version(), schema.Source())
 	txn, err := c.pool.Begin()
 	if err != nil {
 		return false, err

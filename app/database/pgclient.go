@@ -8,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/fiffu/arisa3/app/log"
 	_ "github.com/lib/pq"
-	"github.com/rs/zerolog/log"
 )
 
 // pgclient implements IData for database/sql + lib/pq.
@@ -20,7 +20,7 @@ type pgclient struct {
 
 func NewDBClient(ctx context.Context, dsn string) (IDatabase, error) {
 	pool, err := sql.Open("postgres", dsn)
-	log.Info().Msgf("Database connection opened")
+	log.Infof(ctx, "Database connection opened")
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func NewDBClient(ctx context.Context, dsn string) (IDatabase, error) {
 		existingMigrations: make(map[string]bool),
 	}
 	if err := c.seedMigration(ctx); err != nil {
-		log.Error().Msgf("Seed migrations failed")
+		log.Errorf(ctx, err, "Seed migrations failed")
 		defer c.Close(ctx)
 		return nil, err
 	}
@@ -38,17 +38,17 @@ func NewDBClient(ctx context.Context, dsn string) (IDatabase, error) {
 
 func (c *pgclient) Close(ctx context.Context) error {
 	if err := c.pool.Close(); err != nil {
-		log.Error().Err(err).Msgf("Failed to close database connection")
+		log.Errorf(ctx, err, "Failed to close database connection")
 		return err
 	}
-	log.Info().Msgf("Database connection closed")
+	log.Infof(ctx, "Database connection closed")
 	return nil
 }
 
 func (c *pgclient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	log.Info().Msgf("Query: %s", NormalizeSQL(query))
+	log.Infof(ctx, "Query: %s", NormalizeSQL(query))
 	if len(args) > 0 {
-		log.Info().Msgf(" Args: %v", args)
+		log.Infof(ctx, " Args: %v", args)
 	}
 	rows, err := c.pool.Query(query, args...)
 	if err == sql.ErrNoRows {
@@ -58,9 +58,9 @@ func (c *pgclient) Query(ctx context.Context, query string, args ...interface{})
 }
 
 func (c *pgclient) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	log.Info().Msgf(" Exec: %s", NormalizeSQL(query))
+	log.Infof(ctx, " Exec: %s", NormalizeSQL(query))
 	if len(args) > 0 {
-		log.Info().Msgf(" Args: %v", args)
+		log.Infof(ctx, " Args: %v", args)
 	}
 	affected, err := c.pool.Exec(query, args...)
 	return affected, err
@@ -80,7 +80,7 @@ type sqlTxWrap struct {
 }
 
 func (t sqlTxWrap) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	log.Info().Msgf("Query: %s", query)
+	log.Infof(ctx, "Query: %s", query)
 	rows, err := t.Tx.Query(query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
@@ -89,7 +89,7 @@ func (t sqlTxWrap) Query(ctx context.Context, query string, args ...interface{})
 }
 
 func (t sqlTxWrap) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	log.Info().Msgf("Exec: %s", query)
+	log.Infof(ctx, "Exec: %s", query)
 	return t.Tx.Exec(query, args...)
 }
 

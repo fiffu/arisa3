@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"testing"
@@ -37,7 +38,7 @@ func Test_GetTags(t *testing.T) {
 	]`
 	client.fetch = lib.StubJSONFetcher(t, expectURL, http.StatusOK, stubJSON)
 
-	actual, err := client.GetTags([]string{"capybara"})
+	actual, err := client.GetTags(context.Background(), []string{"capybara"})
 	assert.NoError(t, err)
 	assert.Equal(t, expect, actual)
 }
@@ -50,7 +51,7 @@ func Test_GetTags_Error(t *testing.T) {
 		"=capybara"
 	client.fetch = lib.StubTransportError(t, expectURL, assert.AnError)
 
-	actual, err := client.GetTags([]string{"capybara"})
+	actual, err := client.GetTags(context.Background(), []string{"capybara"})
 	assert.Error(t, err)
 	assert.Nil(t, actual)
 }
@@ -64,7 +65,7 @@ func Test_GetTags_multipleTags(t *testing.T) {
 		url.QueryEscape("capybara,asdfqwe")
 	client.fetch = lib.StubTransportError(t, expectURL, assert.AnError)
 
-	actual, err := client.GetTags([]string{"capybara", "asdfqwe"})
+	actual, err := client.GetTags(context.Background(), []string{"capybara", "asdfqwe"})
 	assert.Error(t, err)
 	assert.Nil(t, actual)
 }
@@ -82,7 +83,7 @@ func Test_indexTagsByName(t *testing.T) {
 			PostCount: 333,
 		},
 	}
-	actual := indexTagsByName(tags)
+	actual := indexTagsByName(context.Background(), tags)
 	assert.Equal(t, expect, actual)
 }
 
@@ -113,7 +114,7 @@ func Test_GetTagsMatching(t *testing.T) {
 	]`
 	client.fetch = lib.StubJSONFetcher(t, expectURL, http.StatusOK, stubJSON)
 
-	actual, err := client.GetTagsMatching("capy*")
+	actual, err := client.GetTagsMatching(context.Background(), "capy*")
 	assert.NoError(t, err)
 	assert.Equal(t, expect, actual)
 }
@@ -158,7 +159,7 @@ func Test_AutocompleteTag(t *testing.T) {
 	</ul>`
 	client.fetch = lib.StubHTMLFetcher(t, expectURL, http.StatusOK, stubResponse)
 
-	actual, err := client.AutocompleteTag("ting")
+	actual, err := client.AutocompleteTag(context.Background(), "ting")
 	assert.NoError(t, err)
 	assert.Equal(t, expect, actual)
 }

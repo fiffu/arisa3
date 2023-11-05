@@ -51,12 +51,12 @@ func (c *Cog) dumbSearch(ctx context.Context, req types.ICommandEvent) error {
 		WithNoMagic().
 		WithGuildID(getGuildID(req))
 
-	posts, err := c.domain.PostsSearch(query)
+	posts, err := c.domain.PostsSearch(ctx, query)
 	if err != nil {
 		return err
 	}
 
-	resp, err := c.buildResponse(query, posts)
+	resp, err := c.buildResponse(ctx, query, posts)
 	if err != nil {
 		return err
 	}
@@ -77,12 +77,12 @@ func (c *Cog) smartSearch(safe bool) types.Handler {
 			query.WithUnsafe()
 		}
 
-		posts, err := c.domain.PostsSearch(query)
+		posts, err := c.domain.PostsSearch(ctx, query)
 		if err != nil {
 			return err
 		}
 
-		resp, err := c.buildResponse(query, posts)
+		resp, err := c.buildResponse(ctx, query, posts)
 		if err != nil {
 			return err
 		}
@@ -91,8 +91,8 @@ func (c *Cog) smartSearch(safe bool) types.Handler {
 	}
 }
 
-func (c *Cog) buildResponse(query IQueryPosts, posts []*api.Post) (types.ICommandResponse, error) {
-	emb, err := c.domain.PostsResult(query, posts)
+func (c *Cog) buildResponse(ctx context.Context, query IQueryPosts, posts []*api.Post) (types.ICommandResponse, error) {
+	emb, err := c.domain.PostsResult(ctx, query, posts)
 	if err != nil {
 		return nil, err
 	}

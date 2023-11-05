@@ -5,6 +5,7 @@
 package api
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -34,18 +35,18 @@ func (m *MockIClient) EXPECT() *MockIClientMockRecorder {
 }
 
 // AutocompleteTag mocks base method.
-func (m *MockIClient) AutocompleteTag(query string) ([]*TagSuggestion, error) {
+func (m *MockIClient) AutocompleteTag(ctx context.Context, query string) ([]*TagSuggestion, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AutocompleteTag", query)
+	ret := m.ctrl.Call(m, "AutocompleteTag", ctx, query)
 	ret0, _ := ret[0].([]*TagSuggestion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AutocompleteTag indicates an expected call of AutocompleteTag.
-func (mr *MockIClientMockRecorder) AutocompleteTag(query interface{}) *gomock.Call {
+func (mr *MockIClientMockRecorder) AutocompleteTag(ctx, query interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutocompleteTag", reflect.TypeOf((*MockIClient)(nil).AutocompleteTag), query)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutocompleteTag", reflect.TypeOf((*MockIClient)(nil).AutocompleteTag), ctx, query)
 }
 
 // FaviconURL mocks base method.
@@ -63,48 +64,48 @@ func (mr *MockIClientMockRecorder) FaviconURL() *gomock.Call {
 }
 
 // GetPosts mocks base method.
-func (m *MockIClient) GetPosts(tags []string) ([]*Post, error) {
+func (m *MockIClient) GetPosts(ctx context.Context, tags []string) ([]*Post, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPosts", tags)
+	ret := m.ctrl.Call(m, "GetPosts", ctx, tags)
 	ret0, _ := ret[0].([]*Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPosts indicates an expected call of GetPosts.
-func (mr *MockIClientMockRecorder) GetPosts(tags interface{}) *gomock.Call {
+func (mr *MockIClientMockRecorder) GetPosts(ctx, tags interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPosts", reflect.TypeOf((*MockIClient)(nil).GetPosts), tags)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPosts", reflect.TypeOf((*MockIClient)(nil).GetPosts), ctx, tags)
 }
 
 // GetTags mocks base method.
-func (m *MockIClient) GetTags(tags []string) (map[string]*Tag, error) {
+func (m *MockIClient) GetTags(ctx context.Context, tags []string) (map[string]*Tag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTags", tags)
+	ret := m.ctrl.Call(m, "GetTags", ctx, tags)
 	ret0, _ := ret[0].(map[string]*Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTags indicates an expected call of GetTags.
-func (mr *MockIClientMockRecorder) GetTags(tags interface{}) *gomock.Call {
+func (mr *MockIClientMockRecorder) GetTags(ctx, tags interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTags", reflect.TypeOf((*MockIClient)(nil).GetTags), tags)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTags", reflect.TypeOf((*MockIClient)(nil).GetTags), ctx, tags)
 }
 
 // GetTagsMatching mocks base method.
-func (m *MockIClient) GetTagsMatching(pattern string) ([]*Tag, error) {
+func (m *MockIClient) GetTagsMatching(ctx context.Context, pattern string) ([]*Tag, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTagsMatching", pattern)
+	ret := m.ctrl.Call(m, "GetTagsMatching", ctx, pattern)
 	ret0, _ := ret[0].([]*Tag)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTagsMatching indicates an expected call of GetTagsMatching.
-func (mr *MockIClientMockRecorder) GetTagsMatching(pattern interface{}) *gomock.Call {
+func (mr *MockIClientMockRecorder) GetTagsMatching(ctx, pattern interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsMatching", reflect.TypeOf((*MockIClient)(nil).GetTagsMatching), pattern)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsMatching", reflect.TypeOf((*MockIClient)(nil).GetTagsMatching), ctx, pattern)
 }
 
 // UseAuth mocks base method.

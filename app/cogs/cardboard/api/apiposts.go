@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -66,8 +67,8 @@ func (p *Post) repairURL(url string) string {
 }
 
 // GetPosts lists posts matching the given query.
-func (c *client) GetPosts(tags []string) ([]*Post, error) {
-	ctx, cancel := c.httpContext()
+func (c *client) GetPosts(ctx context.Context, tags []string) ([]*Post, error) {
+	ctx, cancel := c.httpContext(ctx)
 	defer cancel()
 
 	var result []*Post

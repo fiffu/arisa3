@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/rs/zerolog/log"
+	"github.com/fiffu/arisa3/app/log"
 )
 
 type Tag struct {
@@ -24,8 +24,8 @@ type TagSuggestion struct {
 // AutocompleteTag implements api.IClient.
 // Note: This is not part of the Danbooru API proper.
 // It is undocumented, and returns a HTML response.
-func (c *client) AutocompleteTag(query string) ([]*TagSuggestion, error) {
-	ctx, cancel := c.httpContext()
+func (c *client) AutocompleteTag(ctx context.Context, query string) ([]*TagSuggestion, error) {
+	ctx, cancel := c.httpContext(ctx)
 	defer cancel()
 
 	buf := new(strings.Builder)
@@ -51,8 +51,7 @@ func (c *client) AutocompleteTag(query string) ([]*TagSuggestion, error) {
 		Each(func(idx int, s *goquery.Selection) {
 			suggestion, err := parseAutocompleteElem(ctx, s)
 			if err != nil {
-				log.Ctx(ctx).Warn().
-					Msgf("Failed to parse autocomplete elem at %s[%d], err: %v", selector, idx, err)
+				log.Infof(ctx, "Failed to parse autocomplete elem at %s[%d], err: %v", selector, idx, err)
 			}
 
 			result = append(result, suggestion)
@@ -82,8 +81,8 @@ func parseAutocompleteElem(ctx context.Context, s *goquery.Selection) (*TagSugge
 }
 
 // Lookup a list of tags
-func (c *client) GetTags(tags []string) (map[string]*Tag, error) {
-	ctx, cancel := c.httpContext()
+func (c *client) GetTags(ctx context.Context, tags []string) (map[string]*Tag, error) {
+	ctx, cancel := c.httpContext(ctx)
 	defer cancel()
 
 	var result []*Tag
@@ -95,10 +94,10 @@ func (c *client) GetTags(tags []string) (map[string]*Tag, error) {
 		return nil, err
 	}
 
-	return indexTagsByName(result), nil
+	return indexTagsByName(ctx, result), nil
 }
 
-func indexTagsByName(tags []*Tag) map[string]*Tag {
+func indexTagsByName(ctx context.Context, tags []*Tag) map[string]*Tag {
 	// Reduce array of results into mapping by tag name
 	mapping := make(map[string]*Tag)
 	for _, tag := range tags {
@@ -109,7 +108,8 @@ func indexTagsByName(tags []*Tag) map[string]*Tag {
 			}
 			// Otherwise, keep the already-seen tag and discard the doppelganger
 			// AFAIK this shouldn't happen, but who knows
-			log.Warn().Msgf(
+			log.Infof(
+				ctx,
 				"collision of tag name '%s', already seen %d, now discarding %d",
 				seen.Name, seen.ID, tag.ID,
 			)
@@ -122,8 +122,8 @@ func indexTagsByName(tags []*Tag) map[string]*Tag {
 // GetTagsMatching returns tags that match a particular search pattern.
 // Use asterisk (*) as a wildcard in the search pattern.
 // https://danbooru.donmai.us/wiki_pages/api%3Aposts
-func (c *client) GetTagsMatching(pattern string) ([]*Tag, error) {
-	ctx, cancel := c.httpContext()
+func (c *client) GetTagsMatching(ctx context.Context, pattern string) ([]*Tag, error) {
+	ctx, cancel := c.httpContext(ctx)
 	defer cancel()
 
 	var result []*Tag

@@ -11,7 +11,15 @@ import (
 	"github.com/fiffu/arisa3/app/utils"
 )
 
-const embedColour = 0xa4815e
+const embedColour = 0xA4815E
+
+func (c *domain) MaintenanceResult() types.ICommandResponse {
+	return types.NewResponse().Embeds(
+		types.NewEmbed().
+			Colour(embedColour).
+			Description("Danbooru is currently under maintenance. Try again later!"),
+	)
+}
 
 func (d *domain) formatZeroResults(q IQueryPosts) types.IEmbed {
 	return types.NewEmbed().

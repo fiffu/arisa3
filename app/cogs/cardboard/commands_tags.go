@@ -2,6 +2,7 @@ package cardboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -24,7 +25,9 @@ func (c *Cog) tagAutocompleteSuggest(ctx context.Context, req types.ICommandEven
 	queryStr, _ := req.Args().String(OptionQuery)
 
 	suggestedTags, err := c.domain.TagsSearch(ctx, queryStr)
-	if err != nil {
+	if errors.Is(err, api.ErrUnderMaintenance) {
+		return req.Respond(ctx, c.domain.MaintenanceResult())
+	} else if err != nil {
 		return err
 	}
 

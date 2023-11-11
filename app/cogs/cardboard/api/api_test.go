@@ -1,8 +1,12 @@
 package api
 
 import (
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/fiffu/arisa3/testfixtures"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,6 +49,42 @@ func Test_NewClient_Auth(t *testing.T) {
 			actual := NewClient(tc.username, tc.apiKey, timeout)
 
 			assert.Equal(t, tc.expectAuth, actual.UseAuth())
+		})
+	}
+}
+
+func Test_maintenanceValidator(t *testing.T) {
+	testCases := []struct {
+		desc      string
+		body      string
+		expectErr error
+	}{
+		{
+			desc:      "no maintenance",
+			body:      "<html></html>",
+			expectErr: nil,
+		},
+		{
+			desc:      "have maintenance - h1",
+			body:      `<html><h1>Danbooru is down for maintenance.</h1></html>`,
+			expectErr: ErrUnderMaintenance,
+		},
+		{
+			desc:      "have maintenance - title",
+			body:      `<html><title>Downbooru</title></html>`,
+			expectErr: ErrUnderMaintenance,
+		},
+		{
+			desc:      "have maintenance - title",
+			body:      testfixtures.Downbooru,
+			expectErr: ErrUnderMaintenance,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			r := &http.Response{Body: io.NopCloser(strings.NewReader(tc.body))}
+			err := (&client{}).maintenanceValidator(r)
+			assert.Equal(t, tc.expectErr, err)
 		})
 	}
 }

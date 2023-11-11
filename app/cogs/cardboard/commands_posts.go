@@ -2,6 +2,7 @@ package cardboard
 
 import (
 	"context"
+	"errors"
 
 	"github.com/fiffu/arisa3/app/cogs/cardboard/api"
 	"github.com/fiffu/arisa3/app/types"
@@ -52,7 +53,9 @@ func (c *Cog) dumbSearch(ctx context.Context, req types.ICommandEvent) error {
 		WithGuildID(getGuildID(req))
 
 	posts, err := c.domain.PostsSearch(ctx, query)
-	if err != nil {
+	if errors.Is(err, api.ErrUnderMaintenance) {
+		return req.Respond(ctx, c.domain.MaintenanceResult())
+	} else if err != nil {
 		return err
 	}
 
@@ -78,7 +81,9 @@ func (c *Cog) smartSearch(safe bool) types.Handler {
 		}
 
 		posts, err := c.domain.PostsSearch(ctx, query)
-		if err != nil {
+		if errors.Is(err, api.ErrUnderMaintenance) {
+			return req.Respond(ctx, c.domain.MaintenanceResult())
+		} else if err != nil {
 			return err
 		}
 

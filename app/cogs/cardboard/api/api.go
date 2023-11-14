@@ -3,14 +3,17 @@ package api
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/carlmjohnson/requests"
 	"github.com/fiffu/arisa3/app/log"
+	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
 )
 
@@ -23,6 +26,8 @@ const (
 
 var (
 	MediaFileExts = []string{"png", "jpg", "jpeg", "gif"}
+
+	ErrUnderMaintenance = errors.New("API is under maintenance")
 )
 
 type client struct {
@@ -138,7 +143,45 @@ func (c *client) baseRequest() *requests.Builder {
 	if c.UseAuth() {
 		b.BasicAuth(c.username, c.apiKey)
 	}
+	b.AddValidator(c.maintenanceValidator)
 	return b
+}
+
+func (c *client) maintenanceValidator(r *http.Response) error {
+	body, err := utils.ReadAndReplaceBody(r)
+	if err != nil {
+		return err
+	}
+
+	doc, err := goquery.NewDocumentFromReader(bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	maint, err := isMaintenanceDoc(doc)
+	if err != nil {
+		return err
+	}
+
+	if maint {
+		return ErrUnderMaintenance
+	}
+	return nil
+}
+
+func isMaintenanceDoc(doc *goquery.Document) (bool, error) {
+	elems := map[string]string{
+		"downbooru":            doc.Find("title").Text(),
+		"down for maintenance": doc.Find("h1").Text(),
+	}
+	indicators := 0.0
+	for expect, elem := range elems {
+		if strings.Contains(strings.ToLower(elem), expect) {
+			indicators += 1
+		}
+	}
+	probability := indicators / float64(len(elems))
+	return probability >= 0.5, nil
 }
 
 func (c *client) postsResource() *requests.Builder {

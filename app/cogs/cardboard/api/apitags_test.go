@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/fiffu/arisa3/lib"
+	"github.com/fiffu/arisa3/testfixtures"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -165,4 +166,16 @@ func Test_AutocompleteTag(t *testing.T) {
 	actual, err := client.AutocompleteTag(context.Background(), "ting")
 	assert.NoError(t, err)
 	assert.Equal(t, expect, actual)
+}
+
+func Test_AutocompleteTag_maintenance(t *testing.T) {
+	client := newClient("username", "apikey", 0)
+	client.fetch = lib.StubHTMLFetcher(t,
+		"https://danbooru.donmai.us/autocomplete?limit=10&search%5Bquery%5D=ting&search%5Btype%5D=tag_query&version=1",
+		http.StatusServiceUnavailable,
+		testfixtures.Downbooru,
+	)
+
+	_, err := client.AutocompleteTag(context.Background(), "ting")
+	assert.Equal(t, ErrUnderMaintenance, err)
 }

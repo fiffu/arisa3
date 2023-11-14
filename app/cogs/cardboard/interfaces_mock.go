@@ -5,6 +5,7 @@
 package cardboard
 
 import (
+	context "context"
 	reflect "reflect"
 
 	api "github.com/fiffu/arisa3/app/cogs/cardboard/api"
@@ -36,104 +37,133 @@ func (m *MockIDomain) EXPECT() *MockIDomainMockRecorder {
 }
 
 // GetAliases mocks base method.
-func (m *MockIDomain) GetAliases(guildID string) (map[Alias]Actual, error) {
+func (m *MockIDomain) GetAliases(ctx context.Context, guildID string) (map[Alias]Actual, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAliases", guildID)
+	ret := m.ctrl.Call(m, "GetAliases", ctx, guildID)
 	ret0, _ := ret[0].(map[Alias]Actual)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAliases indicates an expected call of GetAliases.
-func (mr *MockIDomainMockRecorder) GetAliases(guildID interface{}) *gomock.Call {
+func (mr *MockIDomainMockRecorder) GetAliases(ctx, guildID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAliases", reflect.TypeOf((*MockIDomain)(nil).GetAliases), guildID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAliases", reflect.TypeOf((*MockIDomain)(nil).GetAliases), ctx, guildID)
+}
+
+// MaintenanceResult mocks base method.
+func (m *MockIDomain) MaintenanceResult() types.ICommandResponse {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MaintenanceResult")
+	ret0, _ := ret[0].(types.ICommandResponse)
+	return ret0
+}
+
+// MaintenanceResult indicates an expected call of MaintenanceResult.
+func (mr *MockIDomainMockRecorder) MaintenanceResult() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaintenanceResult", reflect.TypeOf((*MockIDomain)(nil).MaintenanceResult))
 }
 
 // PostsResult mocks base method.
-func (m *MockIDomain) PostsResult(arg0 IQueryPosts, arg1 []*api.Post) (types.IEmbed, error) {
+func (m *MockIDomain) PostsResult(arg0 context.Context, arg1 IQueryPosts, arg2 []*api.Post) (types.IEmbed, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PostsResult", arg0, arg1)
+	ret := m.ctrl.Call(m, "PostsResult", arg0, arg1, arg2)
 	ret0, _ := ret[0].(types.IEmbed)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PostsResult indicates an expected call of PostsResult.
-func (mr *MockIDomainMockRecorder) PostsResult(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockIDomainMockRecorder) PostsResult(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostsResult", reflect.TypeOf((*MockIDomain)(nil).PostsResult), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostsResult", reflect.TypeOf((*MockIDomain)(nil).PostsResult), arg0, arg1, arg2)
 }
 
 // PostsSearch mocks base method.
-func (m *MockIDomain) PostsSearch(arg0 IQueryPosts) ([]*api.Post, error) {
+func (m *MockIDomain) PostsSearch(arg0 context.Context, arg1 IQueryPosts) ([]*api.Post, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PostsSearch", arg0)
+	ret := m.ctrl.Call(m, "PostsSearch", arg0, arg1)
 	ret0, _ := ret[0].([]*api.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PostsSearch indicates an expected call of PostsSearch.
-func (mr *MockIDomainMockRecorder) PostsSearch(arg0 interface{}) *gomock.Call {
+func (mr *MockIDomainMockRecorder) PostsSearch(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostsSearch", reflect.TypeOf((*MockIDomain)(nil).PostsSearch), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostsSearch", reflect.TypeOf((*MockIDomain)(nil).PostsSearch), arg0, arg1)
 }
 
 // SetAlias mocks base method.
-func (m *MockIDomain) SetAlias(guildID string, alias Alias, actual Actual) error {
+func (m *MockIDomain) SetAlias(ctx context.Context, guildID string, alias Alias, actual Actual) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetAlias", guildID, alias, actual)
+	ret := m.ctrl.Call(m, "SetAlias", ctx, guildID, alias, actual)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetAlias indicates an expected call of SetAlias.
-func (mr *MockIDomainMockRecorder) SetAlias(guildID, alias, actual interface{}) *gomock.Call {
+func (mr *MockIDomainMockRecorder) SetAlias(ctx, guildID, alias, actual interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAlias", reflect.TypeOf((*MockIDomain)(nil).SetAlias), guildID, alias, actual)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAlias", reflect.TypeOf((*MockIDomain)(nil).SetAlias), ctx, guildID, alias, actual)
 }
 
 // SetDemote mocks base method.
-func (m *MockIDomain) SetDemote(guildID, tagName string) error {
+func (m *MockIDomain) SetDemote(ctx context.Context, guildID, tagName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetDemote", guildID, tagName)
+	ret := m.ctrl.Call(m, "SetDemote", ctx, guildID, tagName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetDemote indicates an expected call of SetDemote.
-func (mr *MockIDomainMockRecorder) SetDemote(guildID, tagName interface{}) *gomock.Call {
+func (mr *MockIDomainMockRecorder) SetDemote(ctx, guildID, tagName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDemote", reflect.TypeOf((*MockIDomain)(nil).SetDemote), guildID, tagName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDemote", reflect.TypeOf((*MockIDomain)(nil).SetDemote), ctx, guildID, tagName)
 }
 
 // SetOmit mocks base method.
-func (m *MockIDomain) SetOmit(guildID, tagName string) error {
+func (m *MockIDomain) SetOmit(ctx context.Context, guildID, tagName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetOmit", guildID, tagName)
+	ret := m.ctrl.Call(m, "SetOmit", ctx, guildID, tagName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetOmit indicates an expected call of SetOmit.
-func (mr *MockIDomainMockRecorder) SetOmit(guildID, tagName interface{}) *gomock.Call {
+func (mr *MockIDomainMockRecorder) SetOmit(ctx, guildID, tagName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOmit", reflect.TypeOf((*MockIDomain)(nil).SetOmit), guildID, tagName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOmit", reflect.TypeOf((*MockIDomain)(nil).SetOmit), ctx, guildID, tagName)
 }
 
 // SetPromote mocks base method.
-func (m *MockIDomain) SetPromote(guildID, tagName string) error {
+func (m *MockIDomain) SetPromote(ctx context.Context, guildID, tagName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPromote", guildID, tagName)
+	ret := m.ctrl.Call(m, "SetPromote", ctx, guildID, tagName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetPromote indicates an expected call of SetPromote.
-func (mr *MockIDomainMockRecorder) SetPromote(guildID, tagName interface{}) *gomock.Call {
+func (mr *MockIDomainMockRecorder) SetPromote(ctx, guildID, tagName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPromote", reflect.TypeOf((*MockIDomain)(nil).SetPromote), guildID, tagName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPromote", reflect.TypeOf((*MockIDomain)(nil).SetPromote), ctx, guildID, tagName)
+}
+
+// TagsSearch mocks base method.
+func (m *MockIDomain) TagsSearch(ctx context.Context, query string) ([]*api.TagSuggestion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TagsSearch", ctx, query)
+	ret0, _ := ret[0].([]*api.TagSuggestion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TagsSearch indicates an expected call of TagsSearch.
+func (mr *MockIDomainMockRecorder) TagsSearch(ctx, query interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagsSearch", reflect.TypeOf((*MockIDomain)(nil).TagsSearch), ctx, query)
 }
 
 // MockIQueryPosts is a mock of IQueryPosts interface.

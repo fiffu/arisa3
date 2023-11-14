@@ -25,6 +25,7 @@ type IDomain interface {
 	TagsSearch(ctx context.Context, query string) ([]*api.TagSuggestion, error)
 	PostsSearch(context.Context, IQueryPosts) ([]*api.Post, error)
 	PostsResult(context.Context, IQueryPosts, []*api.Post) (types.IEmbed, error)
+	MaintenanceResult() types.ICommandResponse
 
 	SetPromote(ctx context.Context, guildID, tagName string) error
 	SetDemote(ctx context.Context, guildID, tagName string) error

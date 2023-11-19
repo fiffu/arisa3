@@ -9,6 +9,7 @@ import (
 	"github.com/fiffu/arisa3/app/cogs"
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 
@@ -18,6 +19,7 @@ import (
 // IDependencyInjector is an interface for initializing injected dependencies.
 type IDependencyInjector interface {
 	NewDatabase(ctx context.Context, dsn string) (database.IDatabase, error)
+	NewInstrumentationClient(ctx context.Context) (instrumentation.Client, error)
 	Bot(token string, debugMode bool) (*discordgo.Session, error)
 }
 
@@ -26,6 +28,10 @@ type DefaultInjector struct{}
 
 func (d DefaultInjector) NewDatabase(ctx context.Context, dsn string) (database.IDatabase, error) {
 	return database.NewDBClient(ctx, dsn)
+}
+
+func (d DefaultInjector) NewInstrumentationClient(ctx context.Context) (instrumentation.Client, error) {
+	return instrumentation.NewInstrumentationClient(ctx)
 }
 
 func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, error) {
@@ -42,12 +48,14 @@ func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, 
 type app struct {
 	cogsConfigs map[string]interface{}
 	db          database.IDatabase
+	inst        instrumentation.Client
 	sess        *discordgo.Session
 }
 
-func (a *app) Configs() map[string]interface{} { return a.cogsConfigs }
-func (a *app) Database() database.IDatabase    { return a.db }
-func (a *app) BotSession() *discordgo.Session  { return a.sess }
+func (a *app) Configs() map[string]interface{}    { return a.cogsConfigs }
+func (a *app) Database() database.IDatabase       { return a.db }
+func (a *app) Instrument() instrumentation.Client { return a.inst }
+func (a *app) BotSession() *discordgo.Session     { return a.sess }
 func (a *app) Shutdown(ctx context.Context) {
 	if err := a.sess.Close(); err != nil {
 		log.Errorf(ctx, err, "Error while closing session")
@@ -101,6 +109,11 @@ func newApp(ctx context.Context, deps IDependencyInjector, configPath string) (t
 		return nil, err
 	}
 
+	inst, err := instrumentation.NewInstrumentationClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	sess, err := deps.Bot(cfg.BotSecret, cfg.EnableDebug)
 	if err != nil {
 		return nil, fmt.Errorf("invalid bot parameters: %w", err)
@@ -109,6 +122,7 @@ func newApp(ctx context.Context, deps IDependencyInjector, configPath string) (t
 	return &app{
 		cogsConfigs: cogsCfg,
 		db:          db,
+		inst:        inst,
 		sess:        sess,
 	}, nil
 }

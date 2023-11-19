@@ -2,6 +2,7 @@ package instrumentation
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -67,5 +68,9 @@ func fromCtx(ctx context.Context, scope supportedScope) trace.Tracer {
 }
 
 func NewHTTPTransport(base http.RoundTripper) http.RoundTripper {
-	return otelhttp.NewTransport(base)
+	return otelhttp.NewTransport(base, otelhttp.WithSpanNameFormatter(httpSpanNameFormatter))
+}
+
+func httpSpanNameFormatter(operation string, r *http.Request) string {
+	return fmt.Sprintf("HTTP %s %s%s", r.Method, r.URL.Host, r.URL.EscapedPath())
 }

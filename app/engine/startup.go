@@ -61,9 +61,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		span.RecordError(ErrCogNotBootable, instrumentation.WithStackTrace())
 		return bootError(ErrCogNotBootable)
 	}
-
 	span.SetAttributes(instrumentation.KV.Cog(cog.Name()))
-	defer span.End()
 
 	ctx = log.Put(ctx, log.CogName, cog.Name())
 	log.Infof(ctx, "🥾 %s cog is booting", cog.Name())

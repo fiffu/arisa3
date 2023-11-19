@@ -43,6 +43,7 @@ func (r *CommandsRegistry) Register(ctx context.Context, s *dgo.Session, cmds ..
 		data := cmd.Data()
 		log.Infof(context.Background(), "Binding command /%s", cmd.Name())
 		if _, err := s.ApplicationCommandCreate(appID, "", data); err != nil {
+			span.RecordError(err)
 			return err
 		}
 		r.cmds[cmd.Name()] = cmd

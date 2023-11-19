@@ -31,8 +31,14 @@ func NewCommandRegistry() *CommandsRegistry {
 }
 
 // Register creates an ApplicationCommand with the given ICommands.
-func (r *CommandsRegistry) Register(s *dgo.Session, cmds ...types.ICommand) error {
+func (r *CommandsRegistry) Register(ctx context.Context, s *dgo.Session, cmds ...types.ICommand) error {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Internal("CommandsRegistry.Register"))
+	defer span.End()
+
 	for _, cmd := range cmds {
+		_, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.ApplicationCommandCreate))
+		defer span.End()
+
 		appID := s.State.User.ID
 		data := cmd.Data()
 		log.Infof(context.Background(), "Binding command /%s", cmd.Name())

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/lib"
 )
@@ -44,6 +45,9 @@ func (r *MigrationRecord) Scan(rows IRows) error {
 
 // seedMigration pulls the migrations table state, or creates if it doesn't exist.
 func (c *pgclient) seedMigration(ctx context.Context) error {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("seedMigration"))
+	defer span.End()
+
 	log.Infof(ctx, "Creating schema migrations table")
 	if _, err := c.Exec(ctx, createSchemaMigrations); err != nil {
 		log.Errorf(ctx, err, "Failed to creating seed migrations table")
@@ -68,6 +72,10 @@ func (c *pgclient) seedMigration(ctx context.Context) error {
 
 // Migrate executes a migration and records it in the migrations table.
 func (c *pgclient) Migrate(ctx context.Context, schema ISchema) (bool, error) {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("Migrate"))
+	span.SetAttributes(instrumentation.KV.DBOperation(schema.Source()))
+	defer span.End()
+
 	if _, ok := c.existingMigrations[schema.Version()]; ok {
 		return false, nil
 	}

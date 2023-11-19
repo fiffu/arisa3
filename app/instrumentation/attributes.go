@@ -10,6 +10,7 @@ import (
 const (
 	attrTraceID     = string(log.TraceID)
 	attrTraceSubID  = string(log.TraceSubID)
+	attrCogName     = string(log.CogName)
 	attrUser        = string(log.User)
 	attrParams      = "params"
 	attrHTTPPath    = "http_path"
@@ -20,6 +21,10 @@ const (
 type attrs struct{}
 
 var KV = attrs{}
+
+func (attrs) Cog(value string) attribute.KeyValue {
+	return attribute.String(attrCogName, value)
+}
 
 func (attrs) User(value string) attribute.KeyValue {
 	return attribute.String(attrUser, value)

@@ -70,16 +70,17 @@ func (c *Cog) MigrationsDir() string {
 	return migrationsDir
 }
 
-func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
-	if err := c.registerCommands(s); err != nil {
+func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
+	if err := c.registerCommands(ctx, s); err != nil {
 		return err
 	}
-	c.registerEvents(s)
+	c.registerEvents(ctx, s)
 	return nil
 }
 
-func (c *Cog) registerCommands(s *dgo.Session) error {
+func (c *Cog) registerCommands(ctx context.Context, s *dgo.Session) error {
 	err := c.commands.Register(
+		ctx,
 		s,
 		c.colCommand(),
 		c.freezeCommand(),
@@ -93,7 +94,7 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 	return nil
 }
 
-func (c *Cog) registerEvents(sess *dgo.Session) {
+func (c *Cog) registerEvents(_ context.Context, sess *dgo.Session) {
 	sess.AddHandler(engine.NewEventHandler(
 		c.inst,
 		func(ctx context.Context, s *dgo.Session, m *dgo.MessageCreate) {

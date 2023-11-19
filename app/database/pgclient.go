@@ -22,21 +22,32 @@ type pgclient struct {
 }
 
 func NewDBClient(ctx context.Context, dsn string) (IDatabase, error) {
-	pool, err := sql.Open("postgres", dsn)
-	log.Infof(ctx, "Database connection opened")
+	c, err := open(ctx, dsn)
 	if err != nil {
 		return nil, err
 	}
-	c := &pgclient{
-		pool:               pool,
-		existingMigrations: make(map[string]bool),
-	}
+
 	if err := c.seedMigration(ctx); err != nil {
 		log.Errorf(ctx, err, "Seed migrations failed")
 		defer c.Close(ctx)
 		return nil, err
 	}
 	return c, err
+}
+
+func open(ctx context.Context, dsn string) (*pgclient, error) {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("sql.Open"))
+	defer span.End()
+
+	pool, err := sql.Open("postgres", dsn)
+	log.Infof(ctx, "Database connection opened")
+	if err != nil {
+		return nil, err
+	}
+	return &pgclient{
+		pool:               pool,
+		existingMigrations: make(map[string]bool),
+	}, nil
 }
 
 func newSpan(ctx context.Context, caller, operation, sql string) (context.Context, trace.Span) {

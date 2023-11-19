@@ -1,6 +1,6 @@
 module github.com/fiffu/arisa3
 
-go 1.18
+go 1.20
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0

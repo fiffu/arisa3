@@ -67,7 +67,7 @@ func (c *Cog) MigrationsDir() string {
 	return migrationsDir
 }
 
-func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
+func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
 	guildOnly := commandfilters.NewMiddleware(commandfilters.IsFromGuild).
 		FailureResponse(respRequiresGuild).
 		CommandDecorator()
@@ -76,6 +76,7 @@ func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
 		CommandDecorator()
 
 	err := c.commands.Register(
+		ctx,
 		s,
 		// commands to fetch posts
 		c.danCommand(),

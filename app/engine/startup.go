@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/fiffu/arisa3/app/database"
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/envconfig"
@@ -29,7 +30,7 @@ type IBootable interface {
 	Name() string
 	ConfigPointer() types.StructPointer
 	Configure(ctx context.Context, cfg types.CogConfig) error
-	ReadyCallback(s *dgo.Session, r *dgo.Ready) error
+	ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error
 }
 
 type IRepository interface {
@@ -51,11 +52,16 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 		return fmt.Errorf("%w: %v", ErrBootstrap, e)
 	}
 
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Internal("Bootstrap"))
+	defer span.End()
+
 	// Assert interface satisfies IBootable
 	cog, ok := c.(IBootable)
 	if !ok {
+		span.RecordError(ErrCogNotBootable, instrumentation.WithStackTrace())
 		return bootError(ErrCogNotBootable)
 	}
+	span.SetAttributes(instrumentation.KV.Cog(cog.Name()))
 
 	ctx = log.Put(ctx, log.CogName, cog.Name())
 	log.Infof(ctx, "🥾 %s cog is booting", cog.Name())
@@ -100,8 +106,8 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 
 	// Bind ready callback after boot sequence is ready
 	sess := app.BotSession()
-	sess.AddHandler(NewEventHandler(func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
-		if err := cog.ReadyCallback(s, r); err != nil {
+	sess.AddHandler(NewEventHandler(app.Instrument(), func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
+		if err := cog.ReadyCallback(ctx, s, r); err != nil {
 			log.Errorf(ctx, err, "Error in %s.ReadyCallback()", cog.Name())
 		}
 	}))

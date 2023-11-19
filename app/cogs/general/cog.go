@@ -41,9 +41,10 @@ func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.Cog
 	return engine.Bootstrap(ctx, app, rawConfig, c)
 }
 
-func (c *Cog) ReadyCallback(s *dgo.Session, r *dgo.Ready) error {
+func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
 	c.welcome(s, r)
 	err := c.commands.Register(
+		ctx,
 		s,
 		c.gitCommand(),
 	)

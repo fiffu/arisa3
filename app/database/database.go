@@ -14,6 +14,7 @@ var (
 )
 
 // IDatabase describes the interface of a database client.
+//
 //go:generate mockgen -source=database.go -destination=./database_mock.go -package=database
 type IDatabase interface {
 	// Close closes the database client.
@@ -26,7 +27,7 @@ type IDatabase interface {
 	Exec(ctx context.Context, query string, args ...interface{}) (IResult, error)
 
 	// Begin begins a transaction.
-	Begin(ctx context.Context) (ITransaction, error)
+	Begin(ctx context.Context) (context.Context, ITransaction, error)
 
 	// Migrate executes a schema for database migration.
 	Migrate(ctx context.Context, schema ISchema) (executed bool, err error)

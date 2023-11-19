@@ -35,12 +35,13 @@ func (m *MockIDatabase) EXPECT() *MockIDatabaseMockRecorder {
 }
 
 // Begin mocks base method.
-func (m *MockIDatabase) Begin(ctx context.Context) (ITransaction, error) {
+func (m *MockIDatabase) Begin(ctx context.Context) (context.Context, ITransaction, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Begin", ctx)
-	ret0, _ := ret[0].(ITransaction)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(ITransaction)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // Begin indicates an expected call of Begin.

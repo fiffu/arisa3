@@ -91,11 +91,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	// Setup context for handler
 	ctx = log.Put(ctx, log.TraceID, traceID)
 
-	// Instrumentation for the command handler
-	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(cmd.Name()))
-	span.SetAttributes(instrumentation.KV.TraceID(traceID))
-	defer span.End()
-
+	// Extract arguments and stuff
 	who := i.User
 	if who == nil && i.Member != nil {
 		who = i.Member.User
@@ -111,6 +107,15 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 		opts[o.Name] = o.Value
 	}
 	log.Infof(ctx, "Interaction incoming <<< user=%s options=%+v", who, opts)
+
+	// Instrumentation for the command handler
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(cmd.Name()))
+	span.SetAttributes(
+		instrumentation.KV.TraceID(traceID),
+		instrumentation.KV.User(who.String()),
+		instrumentation.KV.Params(opts),
+	)
+	defer span.End()
 
 	// Invoke handler
 	handler := cmd.HandlerFunc()
@@ -138,6 +143,10 @@ func (r *CommandsRegistry) mustRunHandler(
 
 	defer func() {
 		if r := recover(); r != nil {
+			ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Internal("mustRunHandler"))
+			span.RecordError(errPanic, instrumentation.WithStackTrace())
+			defer span.End()
+
 			err = errPanic
 			log.Stack(ctx, err)
 		}

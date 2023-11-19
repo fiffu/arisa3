@@ -59,6 +59,12 @@ func SpanInContext(ctx context.Context, sn ScopedName) (context.Context, trace.S
 	return ctx, span
 }
 
+// WithStackTrace is a wrapper over `trace.EventOption`.
+// This is meant to be used with span.RecordError().
+func WithStackTrace() trace.EventOption {
+	return trace.WithStackTrace(true)
+}
+
 func fromCtx(ctx context.Context, scope supportedScope) trace.Tracer {
 	scopeName := string(scope)
 	if span := trace.SpanFromContext(ctx); span.SpanContext().IsValid() {

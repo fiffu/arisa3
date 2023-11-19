@@ -11,12 +11,18 @@ type supportedScope string
 
 // Supported trace scopes
 const (
+	internalScope     supportedScope = "arisa3/internal"
 	commandScope      supportedScope = "arisa3/command"
 	eventScope        supportedScope = "arisa3/event"
 	databaseScope     supportedScope = "database"
 	externalHTTPScope supportedScope = "external-http"
 	vendorScope       supportedScope = "vendor"
 )
+
+type Internal string
+
+func (sn Internal) scope() supportedScope { return internalScope }
+func (sn Internal) name() string          { return fmt.Sprintf("Internal: %s", sn) }
 
 type Command string
 

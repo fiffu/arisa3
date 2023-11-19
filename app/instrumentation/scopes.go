@@ -29,7 +29,12 @@ type Command string
 func (sn Command) scope() supportedScope { return commandScope }
 func (sn Command) name() string          { return fmt.Sprintf("Command: /%s", sn) }
 
-func EventHandler(callable any) ScopedName { return event(lib.FuncName(callable)) }
+func EventHandler(eventObj, handler any) ScopedName {
+	eventName := fmt.Sprintf("%T", eventObj)
+	handlerName := lib.FuncName(handler)
+	spanName := fmt.Sprintf("%s -> %s", eventName, handlerName)
+	return event(spanName)
+}
 
 type event string
 

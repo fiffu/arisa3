@@ -33,7 +33,7 @@ func (sn event) name() string          { return string(sn) }
 type Database string
 
 func (sn Database) scope() supportedScope { return databaseScope }
-func (sn Database) name() string          { return string(sn) }
+func (sn Database) name() string          { return fmt.Sprintf("DB: %s", sn) }
 
 type ExternalHTTP string
 

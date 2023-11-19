@@ -41,7 +41,7 @@ func (c *mockClient) Begin(ctx context.Context) (context.Context, ITransaction, 
 		return nil, nil, err
 	}
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("Transaction"))
-	return ctx, sqlTxWrap{t, span}, nil
+	return ctx, sqlTxnWrap{t, span}, nil
 }
 
 func (c *mockClient) Migrate(ctx context.Context, schema ISchema) (executed bool, err error) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -31,6 +32,12 @@ func SplitOnce(s, delim string) (left, right string) {
 	left = s[:pivot]
 	right = s[offset:]
 	return
+}
+
+func FuncName(function any) string {
+	funcPtr := runtime.FuncForPC(reflect.ValueOf(function).Pointer())
+	name := funcPtr.Name()
+	return strings.TrimSuffix(name, "-fm")
 }
 
 func WhoCalledMe() string {

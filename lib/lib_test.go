@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -49,6 +50,33 @@ func Test_SplitOnce(t *testing.T) {
 			left, right := SplitOnce(tc.input, tc.delim)
 			assert.Equal(t, tc.left, left)
 			assert.Equal(t, tc.right, right)
+		})
+	}
+}
+
+func Test_FuncName(t *testing.T) {
+	testCases := []struct {
+		function     any
+		expectSuffix string
+	}{
+		{
+			function:     MustGetCallerDir,
+			expectSuffix: "lib.MustGetCallerDir",
+		},
+		{
+			function:     t.Log,
+			expectSuffix: "testing.(*common).Log",
+		},
+		{
+			function:     assert.True,
+			expectSuffix: "assert.True",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.expectSuffix, func(t *testing.T) {
+			actual := FuncName(tc.function)
+			assert.Contains(t, actual, tc.expectSuffix)
+			assert.True(t, strings.HasSuffix(actual, tc.expectSuffix))
 		})
 	}
 }

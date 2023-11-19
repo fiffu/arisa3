@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/functional"
+	"go.opentelemetry.io/otel/attribute"
 
 	dgo "github.com/bwmarrin/discordgo"
 )
@@ -56,6 +58,9 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 	if err != nil {
 		log.Errorf(ctx, err, "Error handling interaction")
 
+		ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.InteractionRespond))
+		defer span.End()
+
 		if err := s.InteractionRespond(
 			i.Interaction,
 			types.NewResponse().Content("Hmm, seems like something went wrong. Try again later?").Data(),
@@ -69,6 +74,9 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (ctx context.Context, err error) {
 	ctx = context.Background()
 	startTime := r.clock()
+
+	traceID := log.Hash(i.ID)[:10]
+	evtName := fmt.Sprintf("%T", i)
 
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
@@ -84,7 +92,12 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	// Code before this line executes for all commands; be careful to avoid excess logging.
 
 	// Setup context for handler
-	ctx = log.Put(ctx, log.TraceID, log.Hash(i.ID)[:10])
+	ctx = log.Put(ctx, log.TraceID, traceID)
+
+	// Instrumentation for the handler
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(evtName))
+	span.SetAttributes(attribute.String(string(log.TraceID), traceID))
+	defer span.End()
 
 	who := i.User
 	if who == nil && i.Member != nil {
@@ -132,6 +145,9 @@ func (r *CommandsRegistry) mustRunHandler(
 			log.Stack(ctx, err)
 		}
 	}()
+
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(cmd.Name()))
+	defer span.End()
 
 	log.Debugf(ctx, "Handler executing")
 	err = handler(ctx, types.NewCommandEvent(s, i, cmd, args))

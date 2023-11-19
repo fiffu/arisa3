@@ -16,16 +16,13 @@ const (
 	envvarAPIKey      = "HONEYCOMB_API_KEY"
 )
 
-type TraceScope string
-
-const (
-	CommandScope TraceScope = "command"
-	EventScope   TraceScope = "event"
-)
+type ScopedName interface {
+	scope() supportedScope
+	name() string
+}
 
 type Client interface {
 	Shutdown()
-	SpanInContext(ctx context.Context, traceScope TraceScope, spanName string) (context.Context, trace.Span)
 }
 
 type instrumentationClient struct {
@@ -53,13 +50,14 @@ func (o *instrumentationClient) Shutdown() {
 	o.shutdownFunc()
 }
 
-func (o *instrumentationClient) SpanInContext(ctx context.Context, traceScope TraceScope, spanName string) (context.Context, trace.Span) {
-	tracer := o.getTracer(ctx, string(traceScope))
-	ctx, span := tracer.Start(ctx, spanName)
+func SpanInContext(ctx context.Context, sn ScopedName) (context.Context, trace.Span) {
+	tracer := fromCtx(ctx, sn.scope())
+	ctx, span := tracer.Start(ctx, sn.name())
 	return ctx, span
 }
 
-func (o *instrumentationClient) getTracer(ctx context.Context, scopeName string) trace.Tracer {
+func fromCtx(ctx context.Context, scope supportedScope) trace.Tracer {
+	scopeName := string(scope)
 	if span := trace.SpanFromContext(ctx); span.SpanContext().IsValid() {
 		return span.TracerProvider().Tracer(scopeName)
 	}

@@ -13,13 +13,13 @@ import (
 
 func NewEventHandler[E any](inst instrumentation.Client, callable func(context.Context, *dgo.Session, E)) func(*dgo.Session, E) {
 	return func(s *dgo.Session, evt E) {
-		evtID := fmt.Sprintf("%T-%d", evt, time.Now().UTC().Unix())
+		traceID := fmt.Sprintf("%T-%d", evt, time.Now().UTC().Unix())
 		ctx := context.Background()
-		ctx = log.Put(ctx, log.TraceID, evtID)
+		ctx = log.Put(ctx, log.TraceID, traceID)
 
 		evtName := fmt.Sprintf("%T", evt)
-		ctx, span := inst.SpanInContext(ctx, instrumentation.EventScope, evtName)
-		span.SetAttributes(attribute.String(string(log.TraceID), evtID))
+		ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Event(evtName))
+		span.SetAttributes(attribute.String(string(log.TraceID), traceID))
 		defer span.End()
 
 		callable(ctx, s, evt)

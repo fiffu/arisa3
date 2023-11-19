@@ -12,7 +12,8 @@ const (
 	attrTraceSubID  = string(log.TraceSubID)
 	attrCogName     = string(log.CogName)
 	attrUser        = string(log.User)
-	attrCommand     = "command"
+	attrCommandName = "command_name"
+	attrEventName   = "event_name"
 	attrParams      = "params"
 	attrHTTPPath    = "http_path"
 	attrDBQuery     = "db_query"
@@ -27,8 +28,12 @@ func (attrs) Cog(value string) attribute.KeyValue {
 	return attribute.String(attrCogName, value)
 }
 
-func (attrs) Command(value string) attribute.KeyValue {
-	return attribute.String(attrCommand, value)
+func (attrs) CommandName(value string) attribute.KeyValue {
+	return attribute.String(attrCommandName, value)
+}
+
+func (attrs) EventName(value string) attribute.KeyValue {
+	return attribute.String(attrEventName, value)
 }
 
 func (attrs) User(value string) attribute.KeyValue {

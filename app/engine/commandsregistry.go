@@ -121,7 +121,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	// Instrumentation for the command handler
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(cmd.Name()))
 	span.SetAttributes(
-		instrumentation.KV.Command(cmd.Name()),
+		instrumentation.KV.CommandName(cmd.Name()),
 		instrumentation.KV.TraceID(traceID),
 		instrumentation.KV.User(who.String()),
 		instrumentation.KV.Params(opts),

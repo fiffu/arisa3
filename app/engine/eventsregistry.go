@@ -8,7 +8,6 @@ import (
 	dgo "github.com/bwmarrin/discordgo"
 	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 func NewEventHandler[E any](inst instrumentation.Client, callable func(context.Context, *dgo.Session, E)) func(*dgo.Session, E) {
@@ -19,7 +18,7 @@ func NewEventHandler[E any](inst instrumentation.Client, callable func(context.C
 
 		evtName := fmt.Sprintf("%T", evt)
 		ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Event(evtName))
-		span.SetAttributes(attribute.String(string(log.TraceID), traceID))
+		span.SetAttributes(instrumentation.KV.TraceID(traceID))
 		defer span.End()
 
 		callable(ctx, s, evt)

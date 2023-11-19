@@ -10,7 +10,6 @@ import (
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib/functional"
-	"go.opentelemetry.io/otel/attribute"
 
 	dgo "github.com/bwmarrin/discordgo"
 )
@@ -96,7 +95,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 
 	// Instrumentation for the handler
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(evtName))
-	span.SetAttributes(attribute.String(string(log.TraceID), traceID))
+	span.SetAttributes(instrumentation.KV.TraceID(traceID))
 	defer span.End()
 
 	who := i.User

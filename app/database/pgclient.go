@@ -12,14 +12,7 @@ import (
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/lib"
 	_ "github.com/lib/pq"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-)
-
-// Instrumentation attributes
-const (
-	attrOperation = "operation"
-	attrSQL       = "query"
 )
 
 // pgclient implements IData for database/sql + lib/pq.
@@ -49,8 +42,8 @@ func NewDBClient(ctx context.Context, dsn string) (IDatabase, error) {
 func newSpan(ctx context.Context, caller, operation, sql string) (context.Context, trace.Span) {
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database(operation))
 	span.SetAttributes(
-		attribute.String(attrOperation, operation),
-		attribute.String(attrSQL, sql),
+		instrumentation.KV.DBOperation(operation),
+		instrumentation.KV.DBQuery(sql),
 	)
 	return ctx, span
 }

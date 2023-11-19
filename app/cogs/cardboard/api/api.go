@@ -12,6 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/carlmjohnson/requests"
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
@@ -80,12 +81,12 @@ func spaceJoin(strs []string) string {
 func defaultFetcher(ctx context.Context, builder *requests.Builder) error {
 	startTime := time.Now()
 	reqID := newRequestID()
-	log.Put(ctx, log.TraceSubID, reqID)
+	ctx = log.Put(ctx, log.TraceSubID, reqID)
 
 	var interceptor requests.RoundTripFunc = func(req *http.Request) (*http.Response, error) {
 		req = req.WithContext(ctx)
 		logRequest(req, startTime)
-		res, err := http.DefaultTransport.RoundTrip(req)
+		res, err := instrumentation.NewHTTPTransport(http.DefaultTransport).RoundTrip(req)
 		logResponse(req, res, startTime, err)
 
 		log.Pop(ctx, log.TraceSubID)

@@ -2,11 +2,13 @@ package instrumentation
 
 import (
 	"context"
+	"net/http"
 	"os"
 
 	"github.com/fiffu/arisa3/app/log"
 	honeycomb "github.com/honeycombio/honeycomb-opentelemetry-go"
 	"github.com/honeycombio/otel-config-go/otelconfig"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -62,4 +64,8 @@ func fromCtx(ctx context.Context, scope supportedScope) trace.Tracer {
 		return span.TracerProvider().Tracer(scopeName)
 	}
 	return otel.GetTracerProvider().Tracer(scopeName)
+}
+
+func NewHTTPTransport(base http.RoundTripper) http.RoundTripper {
+	return otelhttp.NewTransport(base)
 }

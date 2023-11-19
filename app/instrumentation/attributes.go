@@ -1,9 +1,6 @@
 package instrumentation
 
 import (
-	"fmt"
-	"net/url"
-
 	"github.com/fiffu/arisa3/app/log"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -34,9 +31,4 @@ func (attrs) DBQuery(sql string) attribute.KeyValue {
 
 func (attrs) DBOperation(op string) attribute.KeyValue {
 	return attribute.String(attrDBOperation, op)
-}
-
-func (attrs) HTTPRequestPath(method string, u *url.URL) attribute.KeyValue {
-	formatted := fmt.Sprintf("%s %s//%s%s", method, u.Scheme, u.Host, u.EscapedPath())
-	return attribute.String(attrHTTPPath, formatted)
 }

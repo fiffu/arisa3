@@ -7,10 +7,11 @@ type supportedScope string
 
 // Supported trace scopes
 const (
-	commandScope  supportedScope = "arisa3/command"
-	eventScope    supportedScope = "arisa3/event"
-	databaseScope supportedScope = "database"
-	vendorScope   supportedScope = "vendor"
+	commandScope      supportedScope = "arisa3/command"
+	eventScope        supportedScope = "arisa3/event"
+	databaseScope     supportedScope = "database"
+	externalHTTPScope supportedScope = "external-http"
+	vendorScope       supportedScope = "vendor"
 )
 
 type Command string
@@ -27,6 +28,11 @@ type Database string
 
 func (sn Database) scope() supportedScope { return databaseScope }
 func (sn Database) name() string          { return string(sn) }
+
+type ExternalHTTP string
+
+func (sn ExternalHTTP) scope() supportedScope { return externalHTTPScope }
+func (sn ExternalHTTP) name() string          { return string(sn) }
 
 func Vendor(callable any) ScopedName { return vendor(lib.FuncName(callable)) }
 

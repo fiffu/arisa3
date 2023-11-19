@@ -11,6 +11,11 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+const (
+	envvarServiceName = "OTEL_SERVICE_NAME"
+	envvarAPIKey      = "HONEYCOMB_API_KEY"
+)
+
 type TraceScope string
 
 const (
@@ -28,8 +33,8 @@ type instrumentationClient struct {
 }
 
 func NewInstrumentationClient(ctx context.Context) (Client, error) {
-	serviceName, _ := os.LookupEnv("OTEL_SERVICE_NAME")
-	_, haveAPIKey := os.LookupEnv("HONEYCOMB_API_KEY")
+	serviceName, _ := os.LookupEnv(envvarServiceName)
+	_, haveAPIKey := os.LookupEnv(envvarAPIKey)
 	log.Infof(ctx, "Instrumentation client enabled: %v serviceName: %s", haveAPIKey, serviceName)
 
 	// use honeycomb distro to setup OpenTelemetry SDK

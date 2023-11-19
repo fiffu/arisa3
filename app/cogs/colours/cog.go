@@ -6,6 +6,7 @@ import (
 
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
@@ -21,6 +22,7 @@ var (
 type Cog struct {
 	commands *engine.CommandsRegistry
 	db       database.IDatabase
+	inst     instrumentation.Client
 
 	cfg *Config
 
@@ -39,6 +41,7 @@ func NewCog(a types.IApp) types.ICog {
 	return &Cog{
 		commands: engine.NewCommandRegistry(),
 		db:       a.Database(),
+		inst:     a.Instrument(),
 	}
 }
 
@@ -91,10 +94,13 @@ func (c *Cog) registerCommands(s *dgo.Session) error {
 }
 
 func (c *Cog) registerEvents(sess *dgo.Session) {
-	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, s *dgo.Session, m *dgo.MessageCreate) {
-		evt := types.NewMessageEvent(s, m)
-		c.onMessage(ctx, evt)
-	}))
+	sess.AddHandler(engine.NewEventHandler(
+		c.inst,
+		func(ctx context.Context, s *dgo.Session, m *dgo.MessageCreate) {
+			evt := types.NewMessageEvent(s, m)
+			c.onMessage(ctx, evt)
+		},
+	))
 }
 
 func (c *Cog) onMessage(ctx context.Context, evt types.IMessageEvent) {

@@ -23,7 +23,7 @@ install-dev: install tooling  ## Install for dev environments
 
 
 install: ALWAYS  ## Install build dependencies
-	go get
+	go mod download
 	@echo [make install] Done ✓
 
 

@@ -1,6 +1,10 @@
 package instrumentation
 
-import "github.com/fiffu/arisa3/lib"
+import (
+	"fmt"
+
+	"github.com/fiffu/arisa3/lib"
+)
 
 // supportedScope
 type supportedScope string
@@ -17,12 +21,14 @@ const (
 type Command string
 
 func (sn Command) scope() supportedScope { return commandScope }
-func (sn Command) name() string          { return string(sn) }
+func (sn Command) name() string          { return fmt.Sprintf("Command: /%s", sn) }
 
-type Event string
+func EventHandler(callable any) ScopedName { return event(lib.FuncName(callable)) }
 
-func (sn Event) scope() supportedScope { return eventScope }
-func (sn Event) name() string          { return string(sn) }
+type event string
+
+func (sn event) scope() supportedScope { return eventScope }
+func (sn event) name() string          { return string(sn) }
 
 type Database string
 

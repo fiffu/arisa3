@@ -58,6 +58,7 @@ func (c *pgclient) Close(ctx context.Context) error {
 }
 
 type delegate[T any] func(ctx context.Context, query string, args ...any) (T, error)
+type delegateErrOnly func(ctx context.Context, query string, args ...any) error
 
 func newOperation[T any](callable delegate[T], caller string, operation string) delegate[T] {
 	return func(ctx context.Context, query string, args ...any) (T, error) {
@@ -89,27 +90,26 @@ func (c *pgclient) Exec(ctx context.Context, query string, args ...interface{}) 
 	return affected, err
 }
 
-func (c *pgclient) Begin(ctx context.Context) (ITransaction, error) {
+func (c *pgclient) Begin(ctx context.Context) (context.Context, ITransaction, error) {
 	t, err := c.pool.Begin()
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	caller := lib.WhoCalledMe()
 	ctx, span := newSpan(ctx, caller, "Transaction", "BEGIN")
-	return sqlTxWrap{t, ctx, span}, nil
+	return ctx, sqlTxWrap{t, span}, nil
 }
 
 // sqlTxWrap implements ITransaction for (database/sql).*Tx.
 type sqlTxWrap struct {
 	*sql.Tx
 
-	ctx  context.Context
 	span trace.Span
 }
 
 func (t sqlTxWrap) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	op := newOperation[*sql.Rows](t.Tx.QueryContext, lib.WhoCalledMe(), "Query")
+	op := newOperation[*sql.Rows](t.Tx.QueryContext, lib.WhoCalledMe(), "Tx/Query")
 	rows, err := op(ctx, query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
@@ -118,17 +118,27 @@ func (t sqlTxWrap) Query(ctx context.Context, query string, args ...interface{})
 }
 
 func (t sqlTxWrap) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	op := newOperation[sql.Result](t.Tx.ExecContext, lib.WhoCalledMe(), "Exec")
+	op := newOperation[sql.Result](t.Tx.ExecContext, lib.WhoCalledMe(), "Tx/Exec")
 	rows, err := op(ctx, query, args...)
 	return rows, err
 }
 
 func (t sqlTxWrap) Commit(ctx context.Context) error {
-	defer t.span.End()
+	defer t.span.End() // this would execute after commitSpan.End()
+
+	caller := lib.WhoCalledMe()
+	ctx, commitSpan := newSpan(ctx, caller, "Transaction", "COMMIT")
+	defer commitSpan.End()
+
 	return t.Tx.Commit()
 }
 
 func (t sqlTxWrap) Rollback(ctx context.Context) error {
-	defer t.span.End()
+	defer t.span.End() // this would execute after rolbackSpan.End()
+
+	caller := lib.WhoCalledMe()
+	ctx, rollbackSpan := newSpan(ctx, caller, "Transaction", "ROLLBACK")
+	defer rollbackSpan.End()
+
 	return t.Tx.Rollback()
 }

@@ -241,7 +241,7 @@ func (r *repo) upsert(ctx context.Context, userID string, reason string, tstamp 
 		Reason: reason,
 		TStamp: tstamp,
 	}
-	tx, err := r.db.Begin(ctx)
+	ctx, tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return err
 	}

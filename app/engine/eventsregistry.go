@@ -16,8 +16,7 @@ func NewEventHandler[E any](inst instrumentation.Client, callable func(context.C
 		ctx := context.Background()
 		ctx = log.Put(ctx, log.TraceID, traceID)
 
-		evtName := fmt.Sprintf("%T", evt)
-		ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Event(evtName))
+		ctx, span := instrumentation.SpanInContext(ctx, instrumentation.EventHandler(callable))
 		span.SetAttributes(instrumentation.KV.TraceID(traceID))
 		defer span.End()
 

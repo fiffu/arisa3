@@ -35,13 +35,13 @@ func (c *mockClient) Exec(ctx context.Context, query string, args ...interface{}
 	return c.db.Exec(query, args...)
 }
 
-func (c *mockClient) Begin(ctx context.Context) (ITransaction, error) {
+func (c *mockClient) Begin(ctx context.Context) (context.Context, ITransaction, error) {
 	t, err := c.db.Begin()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("Transaction"))
-	return sqlTxWrap{t, ctx, span}, nil
+	return ctx, sqlTxWrap{t, span}, nil
 }
 
 func (c *mockClient) Migrate(ctx context.Context, schema ISchema) (executed bool, err error) {

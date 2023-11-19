@@ -73,9 +73,7 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (ctx context.Context, err error) {
 	ctx = context.Background()
 	startTime := r.clock()
-
 	traceID := log.Hash(i.ID)[:10]
-	evtName := fmt.Sprintf("%T", i)
 
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
@@ -93,8 +91,8 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	// Setup context for handler
 	ctx = log.Put(ctx, log.TraceID, traceID)
 
-	// Instrumentation for the handler
-	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(evtName))
+	// Instrumentation for the command handler
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(cmd.Name()))
 	span.SetAttributes(instrumentation.KV.TraceID(traceID))
 	defer span.End()
 
@@ -144,9 +142,6 @@ func (r *CommandsRegistry) mustRunHandler(
 			log.Stack(ctx, err)
 		}
 	}()
-
-	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(cmd.Name()))
-	defer span.End()
 
 	log.Debugf(ctx, "Handler executing")
 	err = handler(ctx, types.NewCommandEvent(s, i, cmd, args))

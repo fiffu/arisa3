@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/fiffu/arisa3/app/instrumentation"
 )
 
 func NewMockDBClient(t *testing.T) (IDatabase, sqlmock.Sqlmock, error) {
@@ -39,7 +40,8 @@ func (c *mockClient) Begin(ctx context.Context) (ITransaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sqlTxWrap{t}, nil
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("Transaction"))
+	return sqlTxWrap{t, ctx, span}, nil
 }
 
 func (c *mockClient) Migrate(ctx context.Context, schema ISchema) (executed bool, err error) {

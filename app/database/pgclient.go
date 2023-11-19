@@ -8,8 +8,18 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
+	"github.com/fiffu/arisa3/lib"
 	_ "github.com/lib/pq"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+)
+
+// Instrumentation attributes
+const (
+	attrOperation = "operation"
+	attrSQL       = "query"
 )
 
 // pgclient implements IData for database/sql + lib/pq.
@@ -36,6 +46,15 @@ func NewDBClient(ctx context.Context, dsn string) (IDatabase, error) {
 	return c, err
 }
 
+func newSpan(ctx context.Context, caller, operation, sql string) (context.Context, trace.Span) {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database(operation))
+	span.SetAttributes(
+		attribute.String(attrOperation, operation),
+		attribute.String(attrSQL, sql),
+	)
+	return ctx, span
+}
+
 func (c *pgclient) Close(ctx context.Context) error {
 	if err := c.pool.Close(); err != nil {
 		log.Errorf(ctx, err, "Failed to close database connection")
@@ -45,12 +64,26 @@ func (c *pgclient) Close(ctx context.Context) error {
 	return nil
 }
 
-func (c *pgclient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	log.Infof(ctx, "Query: %s", NormalizeSQL(query))
-	if len(args) > 0 {
-		log.Infof(ctx, " Args: %v", args)
+type delegate[T any] func(ctx context.Context, query string, args ...any) (T, error)
+
+func newOperation[T any](callable delegate[T], caller string, operation string) delegate[T] {
+	return func(ctx context.Context, query string, args ...any) (T, error) {
+		prettyQuery := NormalizeSQL(query)
+		log.Infof(ctx, "%s: %s", operation, prettyQuery)
+		if len(args) > 0 {
+			log.Infof(ctx, " Args: %v", args)
+		}
+
+		_, span := newSpan(ctx, caller, operation, NormalizeSQL(operation))
+		defer span.End()
+
+		return callable(ctx, query, args...)
 	}
-	rows, err := c.pool.Query(query, args...)
+}
+
+func (c *pgclient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
+	op := newOperation[*sql.Rows](c.pool.QueryContext, lib.WhoCalledMe(), "Query")
+	rows, err := op(ctx, query, args...)
 	if err == sql.ErrNoRows {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
 	}
@@ -58,11 +91,8 @@ func (c *pgclient) Query(ctx context.Context, query string, args ...interface{})
 }
 
 func (c *pgclient) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	log.Infof(ctx, " Exec: %s", NormalizeSQL(query))
-	if len(args) > 0 {
-		log.Infof(ctx, " Args: %v", args)
-	}
-	affected, err := c.pool.Exec(query, args...)
+	op := newOperation[sql.Result](c.pool.ExecContext, lib.WhoCalledMe(), "Exec")
+	affected, err := op(ctx, query, args...)
 	return affected, err
 }
 
@@ -71,17 +101,23 @@ func (c *pgclient) Begin(ctx context.Context) (ITransaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	return sqlTxWrap{t}, nil
+
+	caller := lib.WhoCalledMe()
+	ctx, span := newSpan(ctx, caller, "Transaction", "BEGIN")
+	return sqlTxWrap{t, ctx, span}, nil
 }
 
 // sqlTxWrap implements ITransaction for (database/sql).*Tx.
 type sqlTxWrap struct {
 	*sql.Tx
+
+	ctx  context.Context
+	span trace.Span
 }
 
 func (t sqlTxWrap) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	log.Infof(ctx, "Query: %s", query)
-	rows, err := t.Tx.Query(query, args...)
+	op := newOperation[*sql.Rows](t.Tx.QueryContext, lib.WhoCalledMe(), "Query")
+	rows, err := op(ctx, query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
 	}
@@ -89,14 +125,17 @@ func (t sqlTxWrap) Query(ctx context.Context, query string, args ...interface{})
 }
 
 func (t sqlTxWrap) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	log.Infof(ctx, "Exec: %s", query)
-	return t.Tx.Exec(query, args...)
+	op := newOperation[sql.Result](t.Tx.ExecContext, lib.WhoCalledMe(), "Exec")
+	rows, err := op(ctx, query, args...)
+	return rows, err
 }
 
 func (t sqlTxWrap) Commit(ctx context.Context) error {
+	defer t.span.End()
 	return t.Tx.Commit()
 }
 
 func (t sqlTxWrap) Rollback(ctx context.Context) error {
+	defer t.span.End()
 	return t.Tx.Rollback()
 }

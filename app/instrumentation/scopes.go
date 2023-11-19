@@ -7,9 +7,10 @@ type supportedScope string
 
 // Supported trace scopes
 const (
-	commandScope supportedScope = "arisa3/command"
-	eventScope   supportedScope = "arisa3/event"
-	vendorScope  supportedScope = "vendor"
+	commandScope  supportedScope = "arisa3/command"
+	eventScope    supportedScope = "arisa3/event"
+	databaseScope supportedScope = "database"
+	vendorScope   supportedScope = "vendor"
 )
 
 type Command string
@@ -21,6 +22,11 @@ type Event string
 
 func (sn Event) scope() supportedScope { return eventScope }
 func (sn Event) name() string          { return string(sn) }
+
+type Database string
+
+func (sn Database) scope() supportedScope { return databaseScope }
+func (sn Database) name() string          { return string(sn) }
 
 func Vendor(callable any) ScopedName { return vendor(lib.FuncName(callable)) }
 

@@ -36,17 +36,20 @@ func (r *CommandsRegistry) Register(ctx context.Context, s *dgo.Session, cmds ..
 	defer span.End()
 
 	for _, cmd := range cmds {
-		_, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.ApplicationCommandCreate))
-		defer span.End()
 
 		appID := s.State.User.ID
 		data := cmd.Data()
 		log.Infof(context.Background(), "Binding command /%s", cmd.Name())
-		if _, err := s.ApplicationCommandCreate(appID, "", data); err != nil {
+
+		_, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.ApplicationCommandCreate))
+		_, err := s.ApplicationCommandCreate(appID, "", data)
+		span.End()
+		if err != nil {
 			span.RecordError(err)
 			return err
 		}
 		r.cmds[cmd.Name()] = cmd
+
 	}
 	return nil
 }
@@ -118,6 +121,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	// Instrumentation for the command handler
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Command(cmd.Name()))
 	span.SetAttributes(
+		instrumentation.KV.Command(cmd.Name()),
 		instrumentation.KV.TraceID(traceID),
 		instrumentation.KV.User(who.String()),
 		instrumentation.KV.Params(opts),

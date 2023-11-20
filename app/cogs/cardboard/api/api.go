@@ -4,18 +4,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/carlmjohnson/requests"
-	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/utils"
-	"github.com/fiffu/arisa3/lib/functional"
 )
 
 const (
@@ -79,48 +75,9 @@ func spaceJoin(strs []string) string {
 }
 
 func defaultFetcher(ctx context.Context, builder *requests.Builder) error {
-	startTime := time.Now()
-	reqID := newRequestID()
-	ctx = log.Put(ctx, log.TraceSubID, reqID)
-
-	var interceptor requests.RoundTripFunc = func(req *http.Request) (*http.Response, error) {
-		req = req.WithContext(ctx)
-		logRequest(req, startTime)
-		res, err := instrumentation.NewHTTPTransport(http.DefaultTransport).RoundTrip(req)
-		logResponse(req, res, startTime, err)
-
-		log.Pop(ctx, log.TraceSubID)
-		return res, err
-	}
-	return builder.Transport(interceptor).Fetch(ctx)
-}
-
-func newRequestID() string {
-	seed := time.Now().UnixMicro()
-	s := strconv.FormatInt(seed, 36)
-	return strings.ToUpper(s)
-}
-
-func logRequest(req *http.Request, startTime time.Time) {
-	ctx := req.Context()
-	log.Infof(ctx, "%s %s", req.Method, req.URL.String())
-}
-
-func logResponse(req *http.Request, res *http.Response, startTime time.Time, err error) {
-	ctx := req.Context()
-	elapsed := time.Since(startTime)
-
-	body, ioErr := io.ReadAll(res.Body)
-	res.Body = io.NopCloser(bytes.NewBuffer(body))
-
-	if err != nil {
-		log.Errorf(ctx, err, "%s %s in %dms - request error: %s", req.Method, res.Status, elapsed.Milliseconds(), err)
-	} else if ioErr != nil {
-		log.Errorf(ctx, ioErr, "%s %s in %dms - io error: %s", req.Method, res.Status, elapsed.Milliseconds(), ioErr)
-	} else {
-		peek100Bytes := functional.SliceOf(body).Take(100) // First 100 bytes
-		log.Infof(ctx, "%s %s in %dms - body: %s ...", req.Method, res.Status, elapsed.Milliseconds(), peek100Bytes)
-	}
+	return builder.
+		Transport(utils.NewInstrumentedTransport()).
+		Fetch(ctx)
 }
 
 // UseAuth implements IClient.

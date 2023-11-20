@@ -3,6 +3,7 @@ package colours
 // types.go implements the interfaces defined by interfaces.go.
 
 import (
+	"context"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -63,7 +64,7 @@ func NewDomainSession(sess *discordgo.Session) IDomainSession {
 	}
 }
 
-func (s *session) GuildMember(guildID, userID string) (IDomainMember, error) {
+func (s *session) GuildMember(ctx context.Context, guildID, userID string) (IDomainMember, error) {
 	// Cache lookup
 	if cached, ok := s.cacheMembers.Peek(userID); ok {
 		return cached, nil
@@ -76,7 +77,7 @@ func (s *session) GuildMember(guildID, userID string) (IDomainMember, error) {
 	}
 
 	// Query for guild roles.
-	allRoles, err := s.GuildRoles(mem.GuildID)
+	allRoles, err := s.GuildRoles(ctx, mem.GuildID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,11 +97,11 @@ func (s *session) GuildMember(guildID, userID string) (IDomainMember, error) {
 	return d, nil
 }
 
-func (s *session) GuildRole(guildID, roleID string) (IDomainRole, error) {
+func (s *session) GuildRole(ctx context.Context, guildID, roleID string) (IDomainRole, error) {
 	if cached, ok := s.cacheRoles.Peek(roleID); ok {
 		return cached, nil
 	}
-	roles, err := s.GuildRoles(guildID)
+	roles, err := s.GuildRoles(ctx, guildID)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +113,8 @@ func (s *session) GuildRole(guildID, roleID string) (IDomainRole, error) {
 	return nil, nil
 }
 
-func (s *session) GuildRoles(guildID string) ([]IDomainRole, error) {
-	roles, err := s.guildRolesNative(guildID)
+func (s *session) GuildRoles(ctx context.Context, guildID string) ([]IDomainRole, error) {
+	roles, err := s.guildRolesNative(ctx, guildID)
 	if err != nil {
 		return nil, err
 	}
@@ -127,12 +128,12 @@ func (s *session) GuildRoles(guildID string) ([]IDomainRole, error) {
 }
 
 // guildRolesNative returns array of discordgo.Role instead of IDomainRole
-func (s *session) guildRolesNative(guildID string) ([]*discordgo.Role, error) {
+func (s *session) guildRolesNative(ctx context.Context, guildID string) ([]*discordgo.Role, error) {
 	return s.sess.GuildRoles(guildID)
 }
 
-func (s *session) guildRoleNative(guildID, roleID string) (*discordgo.Role, error) {
-	roles, err := s.guildRolesNative(guildID)
+func (s *session) guildRoleNative(ctx context.Context, guildID, roleID string) (*discordgo.Role, error) {
+	roles, err := s.guildRolesNative(ctx, guildID)
 	if err != nil {
 		return nil, err
 	}
@@ -144,10 +145,10 @@ func (s *session) guildRoleNative(guildID, roleID string) (*discordgo.Role, erro
 	return nil, nil
 }
 
-func (s *session) GuildRoleReorder(guildID string, roles []IDomainRole) error {
+func (s *session) GuildRoleReorder(ctx context.Context, guildID string, roles []IDomainRole) error {
 	nativeRoles := make([]*discordgo.Role, 0)
 	for _, role := range roles {
-		nativeRole, err := s.guildRoleNative(guildID, role.ID())
+		nativeRole, err := s.guildRoleNative(ctx, guildID, role.ID())
 		if err != nil {
 			return err
 		}
@@ -157,7 +158,7 @@ func (s *session) GuildRoleReorder(guildID string, roles []IDomainRole) error {
 	return err
 }
 
-func (s *session) GuildRoleCreate(guildID string, name string, colour int) (roleID string, err error) {
+func (s *session) GuildRoleCreate(ctx context.Context, guildID string, name string, colour int) (roleID string, err error) {
 	role, err := s.sess.GuildRoleCreate(guildID, &discordgo.RoleParams{Name: name, Color: &colour})
 	if err != nil {
 		return "", err
@@ -165,7 +166,7 @@ func (s *session) GuildRoleCreate(guildID string, name string, colour int) (role
 	return role.ID, nil
 }
 
-func (s *session) GuildRoleEdit(guildID, roleID, name string, colour int) error {
+func (s *session) GuildRoleEdit(ctx context.Context, guildID, roleID, name string, colour int) error {
 	_, err := s.sess.GuildRoleEdit(
 		guildID, roleID,
 		&discordgo.RoleParams{Name: name, Color: &colour},
@@ -177,7 +178,7 @@ func (s *session) GuildRoleEdit(guildID, roleID, name string, colour int) error 
 	return nil
 }
 
-func (s *session) GuildMemberRoleAdd(guildID, userID, roleID string) error {
+func (s *session) GuildMemberRoleAdd(ctx context.Context, guildID, userID, roleID string) error {
 	err := s.sess.GuildMemberRoleAdd(guildID, userID, roleID)
 	if err != nil {
 		return err

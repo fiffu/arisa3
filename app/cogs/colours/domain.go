@@ -142,6 +142,7 @@ func (d *domain) Mutate(ctx context.Context, s IDomainSession, mem IDomainMember
 
 	// API call
 	if err := s.GuildRoleEdit(
+		ctx,
 		mem.Guild().ID(),
 		role.ID(),
 		role.Name(),
@@ -186,6 +187,7 @@ func (d *domain) Reroll(ctx context.Context, s IDomainSession, mem IDomainMember
 	if d.HasColourRole(ctx, mem) {
 		role := d.GetColourRole(ctx, mem)
 		err = s.GuildRoleEdit(
+			ctx,
 			mem.Guild().ID(),
 			role.ID(),
 			role.Name(),
@@ -240,7 +242,7 @@ func (d *domain) CreateColourRole(ctx context.Context, s IDomainSession, mem IDo
 
 	// Create role
 	col := colour.ToDecimal()
-	id, err := s.GuildRoleCreate(guildID, roleName, col)
+	id, err := s.GuildRoleCreate(ctx, guildID, roleName, col)
 	if err != nil {
 		return nil, err
 	}
@@ -260,14 +262,14 @@ func (d *domain) CreateColourRole(ctx context.Context, s IDomainSession, mem IDo
 }
 
 func (d *domain) AssignColourRole(ctx context.Context, s IDomainSession, mem IDomainMember, role IDomainRole) error {
-	return s.GuildMemberRoleAdd(mem.Guild().ID(), mem.UserID(), role.ID())
+	return s.GuildMemberRoleAdd(ctx, mem.Guild().ID(), mem.UserID(), role.ID())
 }
 
 func (d *domain) GetColourRoleHeight(ctx context.Context, s IDomainSession, guild IDomainGuild) (int, error) {
 	if d.maxRoleHeight > -1 {
 		return d.maxRoleHeight, nil
 	}
-	roles, err := s.GuildRoles(guild.ID())
+	roles, err := s.GuildRoles(ctx, guild.ID())
 	if err != nil {
 		return -1, err
 	}
@@ -288,7 +290,7 @@ func (d *domain) SetRoleHeight(ctx context.Context, s IDomainSession, g IDomainG
 		return ErrInvalidRoleHeight
 	}
 	guildID := g.ID()
-	allRoles, err := s.GuildRoles(guildID)
+	allRoles, err := s.GuildRoles(ctx, guildID)
 	if err != nil {
 		return err
 	}
@@ -322,5 +324,5 @@ func (d *domain) SetRoleHeight(ctx context.Context, s IDomainSession, g IDomainG
 	payload = append(payload, allRoles[:height]...)
 	payload = append(payload, theRole)
 	payload = append(payload, allRoles[height:]...)
-	return s.GuildRoleReorder(guildID, payload)
+	return s.GuildRoleReorder(ctx, guildID, payload)
 }

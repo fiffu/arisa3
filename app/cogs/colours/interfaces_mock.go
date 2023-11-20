@@ -294,105 +294,105 @@ func (m *MockIDomainSession) EXPECT() *MockIDomainSessionMockRecorder {
 }
 
 // GuildMember mocks base method.
-func (m *MockIDomainSession) GuildMember(guildID, userID string) (IDomainMember, error) {
+func (m *MockIDomainSession) GuildMember(ctx context.Context, guildID, userID string) (IDomainMember, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GuildMember", guildID, userID)
+	ret := m.ctrl.Call(m, "GuildMember", ctx, guildID, userID)
 	ret0, _ := ret[0].(IDomainMember)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GuildMember indicates an expected call of GuildMember.
-func (mr *MockIDomainSessionMockRecorder) GuildMember(guildID, userID interface{}) *gomock.Call {
+func (mr *MockIDomainSessionMockRecorder) GuildMember(ctx, guildID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildMember", reflect.TypeOf((*MockIDomainSession)(nil).GuildMember), guildID, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildMember", reflect.TypeOf((*MockIDomainSession)(nil).GuildMember), ctx, guildID, userID)
 }
 
 // GuildMemberRoleAdd mocks base method.
-func (m *MockIDomainSession) GuildMemberRoleAdd(guildID, userID, roleID string) error {
+func (m *MockIDomainSession) GuildMemberRoleAdd(ctx context.Context, guildID, userID, roleID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GuildMemberRoleAdd", guildID, userID, roleID)
+	ret := m.ctrl.Call(m, "GuildMemberRoleAdd", ctx, guildID, userID, roleID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // GuildMemberRoleAdd indicates an expected call of GuildMemberRoleAdd.
-func (mr *MockIDomainSessionMockRecorder) GuildMemberRoleAdd(guildID, userID, roleID interface{}) *gomock.Call {
+func (mr *MockIDomainSessionMockRecorder) GuildMemberRoleAdd(ctx, guildID, userID, roleID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildMemberRoleAdd", reflect.TypeOf((*MockIDomainSession)(nil).GuildMemberRoleAdd), guildID, userID, roleID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildMemberRoleAdd", reflect.TypeOf((*MockIDomainSession)(nil).GuildMemberRoleAdd), ctx, guildID, userID, roleID)
 }
 
 // GuildRole mocks base method.
-func (m *MockIDomainSession) GuildRole(guildID, roleID string) (IDomainRole, error) {
+func (m *MockIDomainSession) GuildRole(ctx context.Context, guildID, roleID string) (IDomainRole, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GuildRole", guildID, roleID)
+	ret := m.ctrl.Call(m, "GuildRole", ctx, guildID, roleID)
 	ret0, _ := ret[0].(IDomainRole)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GuildRole indicates an expected call of GuildRole.
-func (mr *MockIDomainSessionMockRecorder) GuildRole(guildID, roleID interface{}) *gomock.Call {
+func (mr *MockIDomainSessionMockRecorder) GuildRole(ctx, guildID, roleID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRole", reflect.TypeOf((*MockIDomainSession)(nil).GuildRole), guildID, roleID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRole", reflect.TypeOf((*MockIDomainSession)(nil).GuildRole), ctx, guildID, roleID)
 }
 
 // GuildRoleCreate mocks base method.
-func (m *MockIDomainSession) GuildRoleCreate(guildID, name string, colour int) (string, error) {
+func (m *MockIDomainSession) GuildRoleCreate(ctx context.Context, guildID, name string, colour int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GuildRoleCreate", guildID, name, colour)
+	ret := m.ctrl.Call(m, "GuildRoleCreate", ctx, guildID, name, colour)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GuildRoleCreate indicates an expected call of GuildRoleCreate.
-func (mr *MockIDomainSessionMockRecorder) GuildRoleCreate(guildID, name, colour interface{}) *gomock.Call {
+func (mr *MockIDomainSessionMockRecorder) GuildRoleCreate(ctx, guildID, name, colour interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoleCreate", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoleCreate), guildID, name, colour)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoleCreate", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoleCreate), ctx, guildID, name, colour)
 }
 
 // GuildRoleEdit mocks base method.
-func (m *MockIDomainSession) GuildRoleEdit(guildID, roleID, name string, colour int) error {
+func (m *MockIDomainSession) GuildRoleEdit(ctx context.Context, guildID, roleID, name string, colour int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GuildRoleEdit", guildID, roleID, name, colour)
+	ret := m.ctrl.Call(m, "GuildRoleEdit", ctx, guildID, roleID, name, colour)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // GuildRoleEdit indicates an expected call of GuildRoleEdit.
-func (mr *MockIDomainSessionMockRecorder) GuildRoleEdit(guildID, roleID, name, colour interface{}) *gomock.Call {
+func (mr *MockIDomainSessionMockRecorder) GuildRoleEdit(ctx, guildID, roleID, name, colour interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoleEdit", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoleEdit), guildID, roleID, name, colour)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoleEdit", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoleEdit), ctx, guildID, roleID, name, colour)
 }
 
 // GuildRoleReorder mocks base method.
-func (m *MockIDomainSession) GuildRoleReorder(guildID string, roles []IDomainRole) error {
+func (m *MockIDomainSession) GuildRoleReorder(ctx context.Context, guildID string, roles []IDomainRole) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GuildRoleReorder", guildID, roles)
+	ret := m.ctrl.Call(m, "GuildRoleReorder", ctx, guildID, roles)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // GuildRoleReorder indicates an expected call of GuildRoleReorder.
-func (mr *MockIDomainSessionMockRecorder) GuildRoleReorder(guildID, roles interface{}) *gomock.Call {
+func (mr *MockIDomainSessionMockRecorder) GuildRoleReorder(ctx, guildID, roles interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoleReorder", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoleReorder), guildID, roles)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoleReorder", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoleReorder), ctx, guildID, roles)
 }
 
 // GuildRoles mocks base method.
-func (m *MockIDomainSession) GuildRoles(guildID string) ([]IDomainRole, error) {
+func (m *MockIDomainSession) GuildRoles(ctx context.Context, guildID string) ([]IDomainRole, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GuildRoles", guildID)
+	ret := m.ctrl.Call(m, "GuildRoles", ctx, guildID)
 	ret0, _ := ret[0].([]IDomainRole)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GuildRoles indicates an expected call of GuildRoles.
-func (mr *MockIDomainSessionMockRecorder) GuildRoles(guildID interface{}) *gomock.Call {
+func (mr *MockIDomainSessionMockRecorder) GuildRoles(ctx, guildID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoles", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoles), guildID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GuildRoles", reflect.TypeOf((*MockIDomainSession)(nil).GuildRoles), ctx, guildID)
 }
 
 // MockIDomainGuild is a mock of IDomainGuild interface.

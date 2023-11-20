@@ -1,12 +1,17 @@
 package instrumentation
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func Test_NewInstrumentationClient(t *testing.T) {
@@ -27,7 +32,7 @@ func Test_httpSpanNameFormatter(t *testing.T) {
 		expect string
 	}{
 		{
-			path:   "http://example.com/test?query=ignored",
+			path:   "http://user:password@example.com/test?query=ignored",
 			expect: "POST example.com/test",
 		},
 		{
@@ -46,4 +51,40 @@ func Test_httpSpanNameFormatter(t *testing.T) {
 			assert.Equal(t, tc.expect, actual)
 		})
 	}
+}
+
+func Test_NewHTTPTransport(t *testing.T) {
+	serv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		assert.NoError(t, err)
+		w.Write(body)
+	}))
+
+	req, err := http.NewRequest(http.MethodPatch, serv.URL, bytes.NewBufferString("hello world"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	span := CaptureInstrumentation(t, func() {
+		res, err := NewHTTPTransport(http.DefaultTransport).RoundTrip(req)
+		assert.NoError(t, err)
+
+		reply, err := io.ReadAll(res.Body)
+		assert.NoError(t, err)
+		assert.Equal(t, []byte("hello world"), reply)
+	})
+	expects := map[string]attribute.KeyValue{
+		"http_host":                 KV.HTTPHost(strings.TrimPrefix(serv.URL, "http://")),
+		"http_method":               KV.HTTPMethod("PATCH"),
+		"http_resp_status":          KV.HTTPRespStatusCode(200),
+		"http_total_content_length": KV.HTTPTotalContentLength(int64(len("hello world") * 2)),
+	}
+	for k, x := range expects {
+		assert.Contains(t, span.Attributes, k)
+
+		expect := x.Value.Emit()
+		actual := span.Attributes[k].Value.Emit()
+		assert.Equal(t, expect, actual)
+	}
+	assert.True(t, span.Ended)
 }

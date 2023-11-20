@@ -78,7 +78,7 @@ func newOperation[T any](callable delegate[T], caller string, operation string) 
 			log.Infof(ctx, " Args: %v", args)
 		}
 
-		_, span := newSpan(ctx, caller, operation, NormalizeSQL(operation))
+		_, span := newSpan(ctx, caller, operation, NormalizeSQL(prettyQuery))
 		defer span.End()
 
 		return callable(ctx, query, args...)

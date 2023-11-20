@@ -61,7 +61,17 @@ type testSpan struct {
 	Description string
 	Events      []string
 	Errors      []error
-	Attributes  map[string]attribute.KeyValue
+	Attributes  AttrDict
+}
+
+type AttrDict map[string]attribute.KeyValue
+
+func (ad AttrDict) GetAsString(attrKey string) string {
+	kv, ok := ad[attrKey]
+	if !ok {
+		return ""
+	}
+	return kv.Value.Emit()
 }
 
 // End completes the Span. The Span is considered complete and ready to be

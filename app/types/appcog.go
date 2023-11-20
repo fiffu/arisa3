@@ -9,13 +9,11 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fiffu/arisa3/app/database"
-	"github.com/fiffu/arisa3/app/instrumentation"
 )
 
 type IApp interface {
 	Configs() map[string]interface{}
 	Database() database.IDatabase
-	Instrument() instrumentation.Client
 	BotSession() *discordgo.Session
 	Shutdown(context.Context)
 }

@@ -106,7 +106,7 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 
 	// Bind ready callback after boot sequence is ready
 	sess := app.BotSession()
-	sess.AddHandler(NewEventHandler(app.Instrument(), func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
+	sess.AddHandler(NewEventHandler(func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
 		if err := cog.ReadyCallback(ctx, s, r); err != nil {
 			log.Errorf(ctx, err, "Error in %s.ReadyCallback()", cog.Name())
 		}

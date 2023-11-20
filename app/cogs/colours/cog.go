@@ -6,7 +6,6 @@ import (
 
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
-	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
@@ -22,7 +21,6 @@ var (
 type Cog struct {
 	commands *engine.CommandsRegistry
 	db       database.IDatabase
-	inst     instrumentation.Client
 
 	cfg *Config
 
@@ -41,7 +39,6 @@ func NewCog(a types.IApp) types.ICog {
 	return &Cog{
 		commands: engine.NewCommandRegistry(),
 		db:       a.Database(),
-		inst:     a.Instrument(),
 	}
 }
 
@@ -96,7 +93,6 @@ func (c *Cog) registerCommands(ctx context.Context, s *dgo.Session) error {
 
 func (c *Cog) registerEvents(_ context.Context, sess *dgo.Session) {
 	sess.AddHandler(engine.NewEventHandler(
-		c.inst,
 		c.onMessageCreate,
 	))
 }

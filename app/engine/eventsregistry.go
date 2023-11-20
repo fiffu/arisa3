@@ -10,7 +10,7 @@ import (
 	"github.com/fiffu/arisa3/app/log"
 )
 
-func NewEventHandler[E any](inst instrumentation.Client, callable func(context.Context, *dgo.Session, E)) func(*dgo.Session, E) {
+func NewEventHandler[E any](callable func(context.Context, *dgo.Session, E)) func(*dgo.Session, E) {
 	return func(s *dgo.Session, evt E) {
 		traceID := fmt.Sprintf("%T-%d", evt, time.Now().UTC().Unix())
 		ctx := context.Background()

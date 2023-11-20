@@ -54,11 +54,11 @@ type app struct {
 	sess        *discordgo.Session
 }
 
-func (a *app) Configs() map[string]interface{}    { return a.cogsConfigs }
-func (a *app) Database() database.IDatabase       { return a.db }
-func (a *app) Instrument() instrumentation.Client { return a.inst }
-func (a *app) BotSession() *discordgo.Session     { return a.sess }
+func (a *app) Configs() map[string]interface{} { return a.cogsConfigs }
+func (a *app) Database() database.IDatabase    { return a.db }
+func (a *app) BotSession() *discordgo.Session  { return a.sess }
 func (a *app) Shutdown(ctx context.Context) {
+	defer a.inst.Shutdown()
 	if err := a.sess.Close(); err != nil {
 		log.Errorf(ctx, err, "Error while closing session")
 		log.Stack(ctx, err)

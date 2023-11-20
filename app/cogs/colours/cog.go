@@ -97,14 +97,12 @@ func (c *Cog) registerCommands(ctx context.Context, s *dgo.Session) error {
 func (c *Cog) registerEvents(_ context.Context, sess *dgo.Session) {
 	sess.AddHandler(engine.NewEventHandler(
 		c.inst,
-		func(ctx context.Context, s *dgo.Session, m *dgo.MessageCreate) {
-			evt := types.NewMessageEvent(s, m)
-			c.onMessage(ctx, evt)
-		},
+		c.onMessageCreate,
 	))
 }
 
-func (c *Cog) onMessage(ctx context.Context, evt types.IMessageEvent) {
+func (c *Cog) onMessageCreate(ctx context.Context, s *dgo.Session, m *dgo.MessageCreate) {
+	evt := types.NewMessageEvent(s, m)
 	if evt.IsFromSelf() {
 		// Ignore bot's own messages
 		return

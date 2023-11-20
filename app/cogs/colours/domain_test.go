@@ -188,14 +188,14 @@ func Test_Reroll(t *testing.T) {
 
 			case Provision:
 				repo.EXPECT().UpdateReroll(Any, Any, Any).Return(nil)
-				s.EXPECT().GuildRoleCreate(Any, Any, Any)
-				s.EXPECT().GuildRoles(Any)
+				s.EXPECT().GuildRoleCreate(Any, Any, Any, Any)
+				s.EXPECT().GuildRoles(Any, Any)
 				// s.EXPECT().GuildRoleReorder(Any, Any)  // commented out; lazy to mock guild roles
-				s.EXPECT().GuildMemberRoleAdd(Any, Any, Any)
+				s.EXPECT().GuildMemberRoleAdd(Any, Any, Any, Any)
 
 			case Reuse:
 				repo.EXPECT().UpdateReroll(Any, Any, Any).Return(nil)
-				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any)
+				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any, Any)
 			}
 
 			_, err := d.Reroll(context.Background(), s, mem)
@@ -311,7 +311,7 @@ func Test_Mutate(t *testing.T) {
 				expectError = ErrMutateFrozen
 			case Allow:
 				repo.EXPECT().UpdateMutate(Any, Any, Any).Return(nil)
-				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any)
+				s.EXPECT().GuildRoleEdit(Any, Any, Any, Any, Any)
 			}
 
 			_, err := d.Mutate(context.Background(), s, mem)
@@ -551,10 +551,10 @@ func Test_SetRoleHeight(t *testing.T) {
 		desc := fmt.Sprintf("when height=%d, expect roles to be ordered as %+v", tc.height, tc.expect)
 
 		currentRoleOrdering := []IDomainRole{r, newRole, r, r, r}
-		s.EXPECT().GuildRoles(guildID).Return(currentRoleOrdering, nil).Times(1)
+		s.EXPECT().GuildRoles(Any, guildID).Return(currentRoleOrdering, nil).Times(1)
 
 		t.Run(desc, func(t *testing.T) {
-			s.EXPECT().GuildRoleReorder(guildID, tc.expect).Return(nil).Times(1)
+			s.EXPECT().GuildRoleReorder(Any, guildID, tc.expect).Return(nil).Times(1)
 			err := d.SetRoleHeight(context.Background(), s, g, newRoleID, tc.height)
 			assert.NoError(t, err)
 		})

@@ -20,7 +20,7 @@ func (c *Cog) col(ctx context.Context, req types.ICommandEvent) error {
 	s := NewDomainSession(req.Session())
 	guildID := req.Interaction().GuildID
 	userID := req.User().ID
-	mem, err := s.GuildMember(guildID, userID)
+	mem, err := s.GuildMember(ctx, guildID, userID)
 	if err != nil {
 		// failed to get member
 		log.Errorf(ctx, err, "Errored while retrieving member, guild=%s user=%s", guildID, userID)
@@ -93,7 +93,7 @@ func (c *Cog) mutate(ctx context.Context, msg types.IMessageEvent) {
 
 	userID := msg.User().ID
 	s := NewDomainSession(msg.Event().Session())
-	member, err := s.GuildMember(guildID, userID)
+	member, err := s.GuildMember(ctx, guildID, userID)
 	if err != nil {
 		log.Errorf(ctx, err, "Errored while retrieving member, guild=%s user=%s", guildID, userID)
 		return
@@ -127,7 +127,7 @@ func (c *Cog) fetchMember(ctx context.Context, req types.ICommandEvent) (IDomain
 	s := NewDomainSession(req.Session())
 	guildID := req.Interaction().GuildID
 	userID := req.User().ID
-	mem, err := s.GuildMember(guildID, userID)
+	mem, err := s.GuildMember(ctx, guildID, userID)
 	if err != nil {
 		// failed to get member
 		log.Errorf(ctx, err, "Errored while retrieving member, guild=%s user=%s", guildID, userID)

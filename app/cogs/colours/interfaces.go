@@ -52,13 +52,13 @@ type IColoursDomain interface {
 
 // IDomainSession wraps methods of discordgo.Session that IColoursDomain will use.
 type IDomainSession interface {
-	GuildMember(guildID, userID string) (IDomainMember, error)
-	GuildMemberRoleAdd(guildID, userID, roleID string) error
-	GuildRole(guildID, roleID string) (IDomainRole, error)
-	GuildRoles(guildID string) ([]IDomainRole, error)
-	GuildRoleCreate(guildID string, name string, colour int) (roleID string, err error)
-	GuildRoleEdit(guildID, roleID, name string, colour int) error
-	GuildRoleReorder(guildID string, roles []IDomainRole) error
+	GuildMember(ctx context.Context, guildID, userID string) (IDomainMember, error)
+	GuildMemberRoleAdd(ctx context.Context, guildID, userID, roleID string) error
+	GuildRole(ctx context.Context, guildID, roleID string) (IDomainRole, error)
+	GuildRoles(ctx context.Context, guildID string) ([]IDomainRole, error)
+	GuildRoleCreate(ctx context.Context, guildID string, name string, colour int) (roleID string, err error)
+	GuildRoleEdit(ctx context.Context, guildID, roleID, name string, colour int) error
+	GuildRoleReorder(ctx context.Context, guildID string, roles []IDomainRole) error
 }
 
 // IDomainGuild describes information that IColoursDomain derives from discordgo.Guild.

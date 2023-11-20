@@ -20,7 +20,7 @@ func (d testDependencyInjector) NewDatabase(ctx context.Context, dsn string) (da
 }
 
 func (d testDependencyInjector) NewInstrumentationClient(ctx context.Context) (instrumentation.Client, error) {
-	return instrumentation.InitInstrumentation(ctx)
+	return instrumentation.NewInstrumentationClient(ctx)
 }
 
 func (d testDependencyInjector) Bot(token string, debugMode bool) (*discordgo.Session, error) {

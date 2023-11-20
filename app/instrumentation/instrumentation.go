@@ -32,7 +32,7 @@ type instrumentationClient struct {
 	shutdownFunc func()
 }
 
-func InitInstrumentation(ctx context.Context) (Client, error) {
+func NewInstrumentationClient(ctx context.Context) (Client, error) {
 	serviceName, _ := os.LookupEnv(envvarServiceName)
 	_, haveAPIKey := os.LookupEnv(envvarAPIKey)
 	log.Infof(ctx, "Instrumentation client enabled: %v serviceName: %s", haveAPIKey, serviceName)

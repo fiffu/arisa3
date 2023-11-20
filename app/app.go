@@ -32,7 +32,7 @@ func (d DefaultInjector) NewDatabase(ctx context.Context, dsn string) (database.
 }
 
 func (d DefaultInjector) NewInstrumentationClient(ctx context.Context) (instrumentation.Client, error) {
-	return instrumentation.InitInstrumentation(ctx)
+	return instrumentation.NewInstrumentationClient(ctx)
 }
 
 func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, error) {
@@ -111,7 +111,7 @@ func newApp(ctx context.Context, deps IDependencyInjector, configPath string) (t
 		return nil, err
 	}
 
-	inst, err := instrumentation.InitInstrumentation(ctx)
+	inst, err := instrumentation.NewInstrumentationClient(ctx)
 	if err != nil {
 		return nil, err
 	}

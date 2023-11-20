@@ -12,6 +12,7 @@ import (
 	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/app/utils"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -41,6 +42,7 @@ func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, 
 	}
 
 	sess.Debug = debugMode
+	sess.Client.Transport = utils.NewInstrumentedTransport()
 	return sess, nil
 }
 

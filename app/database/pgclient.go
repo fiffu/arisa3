@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
@@ -50,13 +51,21 @@ func open(ctx context.Context, dsn string) (*pgclient, error) {
 	}, nil
 }
 
-func newSpan(ctx context.Context, caller, operation, sql string) (context.Context, trace.Span) {
-	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database(operation))
+func newSpan(ctx context.Context, caller, sql string) (context.Context, trace.Span) {
+	operation := firstWord(sql)
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database(sql))
 	span.SetAttributes(
 		instrumentation.KV.DBOperation(operation),
 		instrumentation.KV.DBQuery(sql),
 	)
 	return ctx, span
+}
+
+func firstWord(s string) (word string) {
+	word = strings.SplitN(s, " ", 2)[0]
+	word = strings.TrimSuffix(word, ";")
+	word = strings.ToUpper(word)
+	return
 }
 
 func (c *pgclient) Close(ctx context.Context) error {
@@ -70,15 +79,15 @@ func (c *pgclient) Close(ctx context.Context) error {
 
 type delegate[T any] func(ctx context.Context, query string, args ...any) (T, error)
 
-func newOperation[T any](callable delegate[T], caller string, operation string) delegate[T] {
+func newOperation[T any](callable delegate[T], caller string) delegate[T] {
 	return func(ctx context.Context, query string, args ...any) (T, error) {
 		prettyQuery := NormalizeSQL(query)
-		log.Infof(ctx, "%s: %s", operation, prettyQuery)
+		log.Infof(ctx, prettyQuery)
 		if len(args) > 0 {
-			log.Infof(ctx, " Args: %v", args)
+			log.Infof(ctx, "  Args: %v", args)
 		}
 
-		_, span := newSpan(ctx, caller, operation, NormalizeSQL(prettyQuery))
+		_, span := newSpan(ctx, caller, prettyQuery)
 		defer span.End()
 
 		return callable(ctx, query, args...)
@@ -86,7 +95,7 @@ func newOperation[T any](callable delegate[T], caller string, operation string) 
 }
 
 func (c *pgclient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	op := newOperation[*sql.Rows](c.pool.QueryContext, lib.WhoCalledMe(), "Query")
+	op := newOperation[*sql.Rows](c.pool.QueryContext, lib.WhoCalledMe())
 	rows, err := op(ctx, query, args...)
 	if err == sql.ErrNoRows {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
@@ -95,7 +104,7 @@ func (c *pgclient) Query(ctx context.Context, query string, args ...interface{})
 }
 
 func (c *pgclient) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	op := newOperation[sql.Result](c.pool.ExecContext, lib.WhoCalledMe(), "Exec")
+	op := newOperation[sql.Result](c.pool.ExecContext, lib.WhoCalledMe())
 	affected, err := op(ctx, query, args...)
 	return affected, err
 }
@@ -107,7 +116,7 @@ func (c *pgclient) Begin(ctx context.Context) (context.Context, ITransaction, er
 	}
 
 	caller := lib.WhoCalledMe()
-	ctx, span := newSpan(ctx, caller, "Transaction", "BEGIN")
+	ctx, span := newSpan(ctx, caller, "BEGIN")
 	return ctx, sqlTxnWrap{t, span}, nil
 }
 
@@ -119,7 +128,7 @@ type sqlTxnWrap struct {
 }
 
 func (txn sqlTxnWrap) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
-	op := newOperation[*sql.Rows](txn.Tx.QueryContext, lib.WhoCalledMe(), "Tx/Query")
+	op := newOperation[*sql.Rows](txn.Tx.QueryContext, lib.WhoCalledMe())
 	rows, err := op(ctx, query, args...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return rows, fmt.Errorf("%w (driver: %v)", ErrNoRecords, err)
@@ -128,7 +137,7 @@ func (txn sqlTxnWrap) Query(ctx context.Context, query string, args ...interface
 }
 
 func (txn sqlTxnWrap) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
-	op := newOperation[sql.Result](txn.Tx.ExecContext, lib.WhoCalledMe(), "Tx/Exec")
+	op := newOperation[sql.Result](txn.Tx.ExecContext, lib.WhoCalledMe())
 	rows, err := op(ctx, query, args...)
 	return rows, err
 }
@@ -137,7 +146,7 @@ func (txn sqlTxnWrap) Commit(ctx context.Context) error {
 	defer txn.span.End() // this would execute after commitSpan.End()
 
 	caller := lib.WhoCalledMe()
-	_, commitSpan := newSpan(ctx, caller, "Transaction", "COMMIT")
+	_, commitSpan := newSpan(ctx, caller, "COMMIT")
 	defer commitSpan.End()
 
 	return txn.Tx.Commit()
@@ -147,7 +156,7 @@ func (txn sqlTxnWrap) Rollback(ctx context.Context) error {
 	defer txn.span.End() // this would execute after rollbackSpan.End()
 
 	caller := lib.WhoCalledMe()
-	_, rollbackSpan := newSpan(ctx, caller, "Transaction", "ROLLBACK")
+	_, rollbackSpan := newSpan(ctx, caller, "ROLLBACK")
 	defer rollbackSpan.End()
 
 	return txn.Tx.Rollback()

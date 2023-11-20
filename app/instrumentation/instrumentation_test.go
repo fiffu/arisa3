@@ -80,11 +80,7 @@ func Test_NewHTTPTransport(t *testing.T) {
 		"http_total_content_length": KV.HTTPTotalContentLength(int64(len("hello world") * 2)),
 	}
 	for k, x := range expects {
-		assert.Contains(t, span.Attributes, k)
-
-		expect := x.Value.Emit()
-		actual := span.Attributes[k].Value.Emit()
-		assert.Equal(t, expect, actual)
+		assert.Equal(t, x.Value.Emit(), span.Attributes.GetAsString(k))
 	}
 	assert.True(t, span.Ended)
 }

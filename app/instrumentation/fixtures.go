@@ -38,10 +38,14 @@ type testTracer struct {
 }
 
 func (tt testTracer) Start(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	var span trace.Span
 	if tt.baggage != nil {
-		return ctx, tt.baggage
+		span = tt.baggage
+	} else {
+		span = newTestSpan(tt.T)
 	}
-	return ctx, newTestSpan(tt.T)
+	span.SetName(spanName)
+	return ctx, span
 }
 
 func newTestSpan(t *testing.T) *testSpan {
@@ -61,7 +65,17 @@ type testSpan struct {
 	Description string
 	Events      []string
 	Errors      []error
-	Attributes  map[string]attribute.KeyValue
+	Attributes  AttrDict
+}
+
+type AttrDict map[string]attribute.KeyValue
+
+func (ad AttrDict) GetAsString(attrKey string) string {
+	kv, ok := ad[attrKey]
+	if !ok {
+		return ""
+	}
+	return kv.Value.Emit()
 }
 
 // End completes the Span. The Span is considered complete and ready to be
@@ -115,6 +129,7 @@ func (ts *testSpan) SetName(name string) { ts.Name = name }
 // the value contained in kv.
 func (ts *testSpan) SetAttributes(kv ...attribute.KeyValue) {
 	for _, attr := range kv {
+		ts.T.Logf("SetAttributes: %s => %s", attr.Key, attr.Value.Emit())
 		ts.Attributes[string(attr.Key)] = attr
 	}
 }

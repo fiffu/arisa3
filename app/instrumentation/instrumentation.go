@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/carlmjohnson/requests"
 	"github.com/fiffu/arisa3/app/log"
 	honeycomb "github.com/honeycombio/honeycomb-opentelemetry-go"
 	"github.com/honeycombio/otel-config-go/otelconfig"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -78,11 +78,34 @@ func fromCtx(ctx context.Context, scope supportedScope) trace.Tracer {
 	return otel.GetTracerProvider().Tracer(scopeName)
 }
 
-func NewHTTPTransport(base http.RoundTripper) http.RoundTripper {
-	return otelhttp.NewTransport(base, otelhttp.WithSpanNameFormatter(httpSpanNameFormatter))
+func NewHTTPTransport(tpt http.RoundTripper) http.RoundTripper {
+	return requests.RoundTripFunc(func(req *http.Request) (res *http.Response, err error) {
+		spanName := httpSpanNameFormatter(req)
+
+		ctx := req.Context()
+		ctx, span := SpanInContext(ctx, ExternalHTTP(spanName))
+		req = req.WithContext(ctx)
+		defer span.End()
+
+		reqSize := req.ContentLength
+		span.SetAttributes(
+			KV.HTTPHost(req.Host),
+			KV.HTTPMethod(req.Method),
+			KV.HTTPPath(req.URL.EscapedPath()),
+		)
+
+		res, err = tpt.RoundTrip(req)
+		resSize := res.ContentLength
+
+		span.SetAttributes(
+			KV.HTTPTotalContentLength(reqSize+resSize),
+			KV.HTTPRespStatusCode(res.StatusCode),
+		)
+		return
+	})
 }
 
-func httpSpanNameFormatter(operation string, r *http.Request) string {
+func httpSpanNameFormatter(r *http.Request) string {
 	path := r.URL.Host + r.URL.EscapedPath()
 	if discordAPIPath := MatchDiscordAPIPath(r.Context(), path); discordAPIPath != "" {
 		path = discordAPIPath

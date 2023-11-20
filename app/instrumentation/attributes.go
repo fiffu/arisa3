@@ -8,16 +8,20 @@ import (
 )
 
 const (
-	attrTraceID     = string(log.TraceID)
-	attrTraceSubID  = string(log.TraceSubID)
-	attrCogName     = string(log.CogName)
-	attrUser        = string(log.User)
-	attrCommandName = "command_name"
-	attrEventName   = "event_name"
-	attrParams      = "params"
-	attrHTTPPath    = "http_path"
-	attrDBQuery     = "db_query"
-	attrDBOperation = "db_operation"
+	attrTraceID            = string(log.TraceID)
+	attrTraceSubID         = string(log.TraceSubID)
+	attrCogName            = string(log.CogName)
+	attrUser               = string(log.User)
+	attrCommandName        = "command_name"
+	attrEventName          = "event_name"
+	attrParams             = "params"
+	attrHTTPHost           = "http_host"
+	attrHTTPMethod         = "http_method"
+	attrHTTPPath           = "http_path"
+	attrHTTPRespStatusCode = "http_resp_status"
+	attrHTTPContentLength  = "http_total_content_length"
+	attrDBQuery            = "db_query"
+	attrDBOperation        = "db_operation"
 )
 
 type attrs struct{}
@@ -42,6 +46,25 @@ func (attrs) User(value string) attribute.KeyValue {
 
 func (attrs) Params(value map[string]any) attribute.KeyValue {
 	return attribute.String(attrParams, fmt.Sprint(value))
+}
+
+func (attrs) HTTPHost(value string) attribute.KeyValue {
+	return attribute.String(attrHTTPHost, value)
+}
+func (attrs) HTTPMethod(value string) attribute.KeyValue {
+	return attribute.String(attrHTTPMethod, value)
+}
+
+func (attrs) HTTPPath(value string) attribute.KeyValue {
+	return attribute.String(attrHTTPPath, value)
+}
+
+func (attrs) HTTPRespStatusCode(value int) attribute.KeyValue {
+	return attribute.Int(attrHTTPRespStatusCode, value)
+}
+
+func (attrs) HTTPTotalContentLength(value int64) attribute.KeyValue {
+	return attribute.Int64(attrHTTPContentLength, value)
 }
 
 func (attrs) TraceID(value string) attribute.KeyValue {

@@ -42,7 +42,7 @@ func Test_httpSpanNameFormatter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			actual := httpSpanNameFormatter("unit test", req)
+			actual := httpSpanNameFormatter(req)
 			assert.Equal(t, tc.expect, actual)
 		})
 	}

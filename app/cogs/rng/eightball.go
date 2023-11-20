@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
+	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib/functional"
 )
 
@@ -60,7 +60,7 @@ func (c *Cog) eightBall(ctx context.Context, req types.ICommandEvent) error {
 
 	embed := types.NewEmbed().Description(reply)
 
-	title := fmt.Sprintf("%s: %s", asker, engine.PrettifyCustomEmoji(question))
+	title := fmt.Sprintf("%s: %s", asker, utils.PrettifyCustomEmoji(question))
 	msg := fmt.Sprintf("**%s**", reply)
 	embed.Description(title + "\n\n" + msg)
 

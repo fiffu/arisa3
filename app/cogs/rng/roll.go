@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fiffu/arisa3/app/engine"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
 	"github.com/fiffu/arisa3/lib"
@@ -191,7 +190,7 @@ func formatResponse(req types.ICommandEvent, d dice, result int, comment string)
 	embed := types.NewEmbed().
 		Description(fmt.Sprintf("Rolling %s: **%s**", whatDice, resultStr))
 	if comment != "" {
-		foot := fmt.Sprintf("%s: %s", asker, engine.PrettifyCustomEmoji(comment))
+		foot := fmt.Sprintf("%s: %s", asker, utils.PrettifyCustomEmoji(comment))
 		embed.Footer(foot, "")
 	}
 	return types.NewResponse().Embeds(embed)

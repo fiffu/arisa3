@@ -49,5 +49,5 @@ func (evt *commandEvent) Respond(ctx context.Context, resp ICommandResponse) err
 	itr := evt.i.Interaction
 	data := resp.Data()
 	log.Infof(ctx, "Interaction response >>> resp: \n| %s", resp.String())
-	return evt.s.InteractionRespond(itr, data)
+	return evt.s.InteractionRespond(itr, data, dgo.WithContext(ctx))
 }

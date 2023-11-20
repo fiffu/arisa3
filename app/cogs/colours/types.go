@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/lib"
 )
 
@@ -65,13 +66,16 @@ func NewDomainSession(sess *discordgo.Session) IDomainSession {
 }
 
 func (s *session) GuildMember(ctx context.Context, guildID, userID string) (IDomainMember, error) {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.sess.GuildMember))
+	defer span.End()
+
 	// Cache lookup
 	if cached, ok := s.cacheMembers.Peek(userID); ok {
 		return cached, nil
 	}
 
 	// Query API for guild member
-	mem, err := s.sess.GuildMember(guildID, userID)
+	mem, err := s.sess.GuildMember(guildID, userID, discordgo.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +133,10 @@ func (s *session) GuildRoles(ctx context.Context, guildID string) ([]IDomainRole
 
 // guildRolesNative returns array of discordgo.Role instead of IDomainRole
 func (s *session) guildRolesNative(ctx context.Context, guildID string) ([]*discordgo.Role, error) {
-	return s.sess.GuildRoles(guildID)
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.sess.GuildRoles))
+	defer span.End()
+
+	return s.sess.GuildRoles(guildID, discordgo.WithContext(ctx))
 }
 
 func (s *session) guildRoleNative(ctx context.Context, guildID, roleID string) (*discordgo.Role, error) {
@@ -146,6 +153,9 @@ func (s *session) guildRoleNative(ctx context.Context, guildID, roleID string) (
 }
 
 func (s *session) GuildRoleReorder(ctx context.Context, guildID string, roles []IDomainRole) error {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.sess.GuildRoleReorder))
+	defer span.End()
+
 	nativeRoles := make([]*discordgo.Role, 0)
 	for _, role := range roles {
 		nativeRole, err := s.guildRoleNative(ctx, guildID, role.ID())
@@ -154,12 +164,16 @@ func (s *session) GuildRoleReorder(ctx context.Context, guildID string, roles []
 		}
 		nativeRoles = append(nativeRoles, nativeRole)
 	}
-	_, err := s.sess.GuildRoleReorder(guildID, nativeRoles)
+	_, err := s.sess.GuildRoleReorder(guildID, nativeRoles, discordgo.WithContext(ctx))
 	return err
 }
 
 func (s *session) GuildRoleCreate(ctx context.Context, guildID string, name string, colour int) (roleID string, err error) {
-	role, err := s.sess.GuildRoleCreate(guildID, &discordgo.RoleParams{Name: name, Color: &colour})
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.sess.GuildRoleCreate))
+	defer span.End()
+
+	roleParams := &discordgo.RoleParams{Name: name, Color: &colour}
+	role, err := s.sess.GuildRoleCreate(guildID, roleParams, discordgo.WithContext(ctx))
 	if err != nil {
 		return "", err
 	}
@@ -167,10 +181,11 @@ func (s *session) GuildRoleCreate(ctx context.Context, guildID string, name stri
 }
 
 func (s *session) GuildRoleEdit(ctx context.Context, guildID, roleID, name string, colour int) error {
-	_, err := s.sess.GuildRoleEdit(
-		guildID, roleID,
-		&discordgo.RoleParams{Name: name, Color: &colour},
-	)
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.sess.GuildRoleEdit))
+	defer span.End()
+
+	roleParams := discordgo.RoleParams{Name: name, Color: &colour}
+	_, err := s.sess.GuildRoleEdit(guildID, roleID, &roleParams, discordgo.WithContext(ctx))
 	if err != nil {
 		return err
 	}
@@ -179,7 +194,10 @@ func (s *session) GuildRoleEdit(ctx context.Context, guildID, roleID, name strin
 }
 
 func (s *session) GuildMemberRoleAdd(ctx context.Context, guildID, userID, roleID string) error {
-	err := s.sess.GuildMemberRoleAdd(guildID, userID, roleID)
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.sess.GuildMemberRoleAdd))
+	defer span.End()
+
+	err := s.sess.GuildMemberRoleAdd(guildID, userID, roleID, discordgo.WithContext(ctx))
 	if err != nil {
 		return err
 	}

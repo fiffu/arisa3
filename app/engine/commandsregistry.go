@@ -31,18 +31,18 @@ func NewCommandRegistry() *CommandsRegistry {
 }
 
 // Register creates an ApplicationCommand with the given ICommands.
-func (r *CommandsRegistry) Register(ctx context.Context, s *dgo.Session, cmds ...types.ICommand) error {
+func (r *CommandsRegistry) Register(ctx context.Context, sess *dgo.Session, cmds ...types.ICommand) error {
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Internal("CommandsRegistry.Register"))
 	defer span.End()
 
 	for _, cmd := range cmds {
 
-		appID := s.State.User.ID
+		appID := sess.State.User.ID
 		data := cmd.Data()
 		log.Infof(context.Background(), "Binding command /%s", cmd.Name())
 
-		_, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(s.ApplicationCommandCreate))
-		_, err := s.ApplicationCommandCreate(appID, "", data)
+		_, span := instrumentation.SpanInContext(ctx, instrumentation.Vendor(sess.ApplicationCommandCreate))
+		_, err := sess.ApplicationCommandCreate(appID, "", data, dgo.WithContext(ctx))
 		span.End()
 		if err != nil {
 			span.RecordError(err)
@@ -73,6 +73,7 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 		if err := s.InteractionRespond(
 			i.Interaction,
 			types.NewResponse().Content("Hmm, seems like something went wrong. Try again later?").Data(),
+			dgo.WithContext(ctx),
 		); err != nil {
 			log.Errorf(ctx, err, "Error sending response, maybe interaction already acknowledged?")
 		}

@@ -14,7 +14,7 @@ func Test_NewInstrumentationClient(t *testing.T) {
 	var c Client
 	var err error
 	logs := log.CaptureLogging(t, func() {
-		c, err = NewInstrumentationClient(context.Background())
+		c, err = InitInstrumentation(context.Background())
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, c)

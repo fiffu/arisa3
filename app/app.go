@@ -32,7 +32,7 @@ func (d DefaultInjector) NewDatabase(ctx context.Context, dsn string) (database.
 }
 
 func (d DefaultInjector) NewInstrumentationClient(ctx context.Context) (instrumentation.Client, error) {
-	return instrumentation.NewInstrumentationClient(ctx)
+	return instrumentation.InitInstrumentation(ctx)
 }
 
 func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, error) {
@@ -54,11 +54,11 @@ type app struct {
 	sess        *discordgo.Session
 }
 
-func (a *app) Configs() map[string]interface{}    { return a.cogsConfigs }
-func (a *app) Database() database.IDatabase       { return a.db }
-func (a *app) Instrument() instrumentation.Client { return a.inst }
-func (a *app) BotSession() *discordgo.Session     { return a.sess }
+func (a *app) Configs() map[string]interface{} { return a.cogsConfigs }
+func (a *app) Database() database.IDatabase    { return a.db }
+func (a *app) BotSession() *discordgo.Session  { return a.sess }
 func (a *app) Shutdown(ctx context.Context) {
+	defer a.inst.Shutdown()
 	if err := a.sess.Close(); err != nil {
 		log.Errorf(ctx, err, "Error while closing session")
 		log.Stack(ctx, err)
@@ -111,7 +111,7 @@ func newApp(ctx context.Context, deps IDependencyInjector, configPath string) (t
 		return nil, err
 	}
 
-	inst, err := instrumentation.NewInstrumentationClient(ctx)
+	inst, err := instrumentation.InitInstrumentation(ctx)
 	if err != nil {
 		return nil, err
 	}

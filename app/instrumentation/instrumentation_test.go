@@ -22,12 +22,28 @@ func Test_NewInstrumentationClient(t *testing.T) {
 }
 
 func Test_httpSpanNameFormatter(t *testing.T) {
-	req, err := http.NewRequest(http.MethodPost, "http://example.com/test?query=ignored", nil)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		path   string
+		expect string
+	}{
+		{
+			path:   "http://example.com/test?query=ignored",
+			expect: "POST example.com/test",
+		},
+		{
+			path:   "http://discord.com/api/v9/applications/964085462748774401/commands",
+			expect: "POST discord.com/api/.+/applications/.+/commands",
+		},
 	}
+	for _, tc := range testCases {
+		t.Run(tc.expect, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	expect := "HTTP POST example.com/test"
-	actual := httpSpanNameFormatter("ignoredOperation", req)
-	assert.Equal(t, expect, actual)
+			actual := httpSpanNameFormatter("unit test", req)
+			assert.Equal(t, tc.expect, actual)
+		})
+	}
 }

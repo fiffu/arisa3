@@ -59,6 +59,11 @@ func SpanInContext(ctx context.Context, sn ScopedName) (context.Context, trace.S
 	return ctx, span
 }
 
+func EmitErrorf(ctx context.Context, msg string, args ...any) {
+	span := trace.SpanFromContext(ctx)
+	span.RecordError(fmt.Errorf(msg, args...))
+}
+
 // WithStackTrace is a wrapper over `trace.EventOption`.
 // This is meant to be used with span.RecordError().
 func WithStackTrace() trace.EventOption {
@@ -78,5 +83,9 @@ func NewHTTPTransport(base http.RoundTripper) http.RoundTripper {
 }
 
 func httpSpanNameFormatter(operation string, r *http.Request) string {
-	return fmt.Sprintf("HTTP %s %s%s", r.Method, r.URL.Host, r.URL.EscapedPath())
+	path := r.URL.Host + r.URL.EscapedPath()
+	if discordAPIPath := MatchDiscordAPIPath(r.Context(), path); discordAPIPath != "" {
+		path = discordAPIPath
+	}
+	return fmt.Sprintf("%s %s", r.Method, path)
 }

@@ -183,7 +183,6 @@ func parseTags(str string) []string {
 	for i, tag := range tags {
 		tags[i] = utils.EscapeMarkdown(untaggify(tag))
 	}
-	fmt.Println(tags)
 	return tags
 }
 

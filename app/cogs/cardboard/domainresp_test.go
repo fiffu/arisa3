@@ -338,3 +338,53 @@ func Test_splitTags(t *testing.T) {
 		})
 	}
 }
+
+func Test_fitString(t *testing.T) {
+	type expect struct {
+		str string
+		ok  bool
+	}
+	testCases := []struct {
+		desc                                   string
+		strs                                   []string
+		sep, sepLast, sepOverflowf, mustAppend string
+		maxLen                                 int
+		expect                                 expect
+	}{
+		{
+			"everything fits within maxLen",
+			[]string{"A", "B", "C"},
+			", ", " and ", " and %d more", " drawn by artist",
+			50,
+			expect{"A, B and C drawn by artist", true},
+		},
+		{
+			"doesn't fit within maxLen",
+			[]string{"A", "B", "C"},
+			", ", " and ", " and %d more", strings.Repeat(" drawn by artist", 100),
+			50,
+			expect{"", false},
+		},
+		{
+			"unlimited maxLen",
+			[]string{"A", "B", strings.Repeat("C", 50)},
+			", ", " and ", " and %d more", " drawn by artist",
+			-1,
+			expect{"A, B and CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC drawn by artist", true},
+		},
+		{
+			"item in strs collapses to fit length",
+			[]string{"A", "B", strings.Repeat("C", 50)},
+			", ", " and ", " and %d more", " drawn by artist",
+			50,
+			expect{"A, B and 1 more drawn by artist", true},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			str, ok := fitString(tc.strs, tc.sep, tc.sepLast, tc.sepOverflowf, tc.mustAppend, tc.maxLen)
+			assert.Equal(t, tc.expect.str, str)
+			assert.Equal(t, tc.expect.ok, ok)
+		})
+	}
+}

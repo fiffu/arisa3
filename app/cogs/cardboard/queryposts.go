@@ -8,12 +8,9 @@ const (
 	unsafe    Safety = 2
 )
 
-const (
-	ratingG   = "rating:g"
-	noRatingG = "-" + ratingG
-	// noRatingQ = "-rating:questionable"
-	// noRatingS = "-rating:suggestive"
-	// noRatingE = "-rating:explicit"
+var (
+	safeTags   = []string{"rating:g"}
+	unsafeTags = []string{"-rating:g", "-rating:s"}
 )
 
 // queryPosts implements IQueryPosts
@@ -39,9 +36,9 @@ func (q *queryPosts) Tags() []string {
 	if q.MagicMode() {
 		switch q.safety {
 		case safe:
-			tags = append(tags, ratingG)
+			tags = append(tags, safeTags...)
 		case unsafe:
-			tags = append(tags, noRatingG)
+			tags = append(tags, unsafeTags...)
 		}
 	}
 	return tags

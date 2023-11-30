@@ -208,6 +208,10 @@ func Test_joinWithTail(t *testing.T) {
 		expect string
 	}{
 		{
+			input:  []string{},
+			expect: "",
+		},
+		{
 			input:  []string{"a"},
 			expect: "a",
 		},

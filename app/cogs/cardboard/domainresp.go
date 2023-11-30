@@ -214,7 +214,10 @@ func fitString(
 }
 
 func joinWithTail(strs []string, joiner, penult string) string {
-	if len(strs) == 1 {
+	switch len(strs) {
+	case 0:
+		return ""
+	case 1:
 		return strs[0]
 	}
 

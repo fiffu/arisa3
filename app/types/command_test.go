@@ -74,7 +74,7 @@ func Test_Handler(t *testing.T) {
 	expectErr := errors.New(time.Now().Format(time.RFC3339Nano))
 
 	fn := func(context.Context, ICommandEvent) error { return expectErr }
-	hdlr := Handler(fn)
+	hdlr := CommandHandler(fn)
 	cmd := NewCommand("test").Handler(hdlr)
 
 	actualErr := cmd.HandlerFunc()(nil, nil)

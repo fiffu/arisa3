@@ -24,18 +24,18 @@ type ICommand interface {
 	ForUser() *Command
 	ForMessage() *Command
 	Desc(string) *Command
-	Handler(hdlr Handler) *Command
-	HandlerFunc() Handler
+	Handler(hdlr CommandHandler) *Command
+	HandlerFunc() CommandHandler
 	FindOption(string) (IOption, bool)
 }
 
-type Handler func(context.Context, ICommandEvent) error
+type CommandHandler func(context.Context, ICommandEvent) error
 
 type Command struct {
 	name    string
 	data    *dgo.ApplicationCommand
 	opts    map[string]IOption
-	handler Handler
+	handler CommandHandler
 }
 
 func NewCommand(name string) *Command {
@@ -81,10 +81,10 @@ func (c *Command) ForUser() *Command { c.data.Type = dgo.UserApplicationCommand;
 func (c *Command) ForMessage() *Command { c.data.Type = dgo.MessageApplicationCommand; return c }
 
 // Handler assigns a callback to this command.
-func (c *Command) Handler(hdlr Handler) *Command { c.handler = hdlr; return c }
+func (c *Command) Handler(hdlr CommandHandler) *Command { c.handler = hdlr; return c }
 
 // HandlerFunc returns the callback assigned to this command.
-func (c *Command) HandlerFunc() Handler { return c.handler }
+func (c *Command) HandlerFunc() CommandHandler { return c.handler }
 
 // Option defines options accepted by this command.
 func (c *Command) Options(opts ...IOption) *Command {

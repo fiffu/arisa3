@@ -67,7 +67,7 @@ func (c *Cog) dumbSearch(ctx context.Context, req types.ICommandEvent) error {
 	return req.Respond(ctx, resp)
 }
 
-func (c *Cog) smartSearch(safe bool) types.Handler {
+func (c *Cog) smartSearch(safe bool) types.CommandHandler {
 	return func(ctx context.Context, req types.ICommandEvent) error {
 		queryStr, _ := req.Args().String(OptionTag)
 

@@ -61,15 +61,17 @@ func (d *domain) magicSearch(ctx context.Context, q IQueryPosts, trySuggestion b
 	case trySuggestion:
 		log.Infof(ctx, "magicSearch attempting to suggest another tag from query: %+v", q)
 		suggest, err := d.guessTag(ctx, q)
-		if err != nil {
+		switch {
+		case err != nil:
 			// Log the error then give up
 			log.Errorf(ctx, err, "Errored while fetching suggestion")
 			return posts, nil
-		}
-		if suggest.Name == q.Term() {
-			// Our suggestion exactly matched the query, give up
+
+		case suggest == nil, suggest.Name == q.Term():
+			// No suggestions available, or it exactly matched the query, give up
 			return posts, nil
-		} else {
+
+		default:
 			// Retry with suggestion
 			log.Infof(ctx, "magicSearch retrying with suggestion=%+v", suggest)
 			q.SetTerm(suggest.Name)

@@ -51,36 +51,35 @@ func (d *domain) magicSearch(ctx context.Context, q IQueryPosts, trySuggestion b
 		posts = filtered
 	}
 
-	switch {
 	// Found results, we are done
-	case len(posts) > 0:
+	if len(posts) > 0 {
 		log.Infof(ctx, "magicSearch returning with %d posts", len(posts))
 		return posts, nil
+	}
+
+	// If no results, but we're not given a chance for suggestions, give up
+	if !trySuggestion {
+		return posts, nil
+	}
 
 	// If we still have a chance to make a suggestion, do it
-	case trySuggestion:
-		log.Infof(ctx, "magicSearch attempting to suggest another tag from query: %+v", q)
-		suggest, err := d.guessTag(ctx, q)
-		switch {
-		case err != nil:
-			// Log the error then give up
-			log.Errorf(ctx, err, "Errored while fetching suggestion")
-			return posts, nil
-
-		case suggest == nil, suggest.Name == q.Term():
-			// No suggestions available, or it exactly matched the query, give up
-			return posts, nil
-
-		default:
-			// Retry with suggestion
-			log.Infof(ctx, "magicSearch retrying with suggestion=%+v", suggest)
-			q.SetTerm(suggest.Name)
-			return d.magicSearch(ctx, q, false)
-		}
-
-	// No more suggestions, give up
-	default:
+	log.Infof(ctx, "magicSearch attempting to suggest another tag from query: %+v", q)
+	suggest, err := d.guessTag(ctx, q)
+	switch {
+	case err != nil:
+		// Log the error then give up
+		log.Errorf(ctx, err, "Errored while fetching suggestion")
 		return posts, nil
+
+	case suggest == nil, suggest.Name == q.Term():
+		// No suggestions available, or it exactly matched the query, give up
+		return posts, nil
+
+	default:
+		// Retry with suggestion
+		log.Infof(ctx, "magicSearch retrying with suggestion=%+v", suggest)
+		q.SetTerm(suggest.Name)
+		return d.magicSearch(ctx, q, false)
 	}
 }
 

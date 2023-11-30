@@ -17,7 +17,6 @@ import (
 var (
 	errNotCommand = errors.New("not a command")
 	errNoHandler  = errors.New("no handler")
-	errPanic      = errors.New("panic while executing command handler")
 )
 
 type CommandsRegistry struct {
@@ -135,7 +134,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 		return ctx, r.fallbackHandler(ctx, s, i, cmd)
 	}
 	args := parseArgs(ctx, cmd, i.ApplicationCommandData().Options)
-	err = r.mustRunHandler(ctx, s, i, cmd, handler, args)
+	err = mustHandleCommand(ctx, cmd, handler, args, s, i)
 	if err != nil {
 		log.Errorf(ctx, err, "Handler errored")
 	}
@@ -147,29 +146,7 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 	return ctx, err
 }
 
-// mustRunHandler executes a command's handler, trapping and logging any panics/errors.
-func (r *CommandsRegistry) mustRunHandler(
-	ctx context.Context,
-	s *dgo.Session, i *dgo.InteractionCreate,
-	cmd types.ICommand, handler types.Handler, args types.IArgs) (err error) {
-
-	defer func() {
-		if r := recover(); r != nil {
-			ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Internal("mustRunHandler"))
-			span.RecordError(errPanic, instrumentation.WithStackTrace())
-			defer span.End()
-
-			err = errPanic
-			log.Stack(ctx, err)
-		}
-	}()
-
-	log.Debugf(ctx, "Handler executing")
-	err = handler(ctx, types.NewCommandEvent(s, i, cmd, args))
-	return
-}
-
-// fallbackHandler is invoked in lieu of mustRunHandler if a command has no associated handler.
+// fallbackHandler is invoked if a command has no associated handler.
 func (r *CommandsRegistry) fallbackHandler(ctx context.Context, s *dgo.Session, i *dgo.InteractionCreate, cmd types.ICommand) error {
 	log.Warnf(ctx, "No interaction handler registered for command: %s")
 	return fmt.Errorf("%w: %s", errNoHandler, cmd.Name())

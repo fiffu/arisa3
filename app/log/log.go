@@ -6,13 +6,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/fiffu/arisa3/lib"
 
 	zero "github.com/rs/zerolog"
 	zerolog "github.com/rs/zerolog/log"
-	"github.com/rs/zerolog/pkgerrors"
 )
 
 type internalKey string
@@ -103,14 +103,15 @@ func Warnf(ctx context.Context, msg string, args ...any) {
 
 func Errorf(ctx context.Context, err error, msg string, args ...any) {
 	msg, entry := newEntry(ctx, zerolog.Error(), lib.WhoCalledMe(), msg)
-	entry.Err(err).Stack().Msgf(msg, args...)
+	entry.Str("stack_trace", string(debug.Stack()))
+	entry.Err(err).Msgf(msg, args...)
 }
 
 func Stack(ctx context.Context, err error) {
-	msg := "Stack dump"
+	msg := fmt.Sprintf("Stack dump from err: %v", err)
 	msg, entry := newEntry(ctx, zerolog.Error(), lib.WhoCalledMe(), msg)
-	zero.ErrorStackMarshaler = pkgerrors.MarshalStack
-	entry.Stack().Err(err).Msg(msg)
+	entry.Str("stack_trace", string(debug.Stack()))
+	entry.Err(err).Msg(msg)
 }
 
 func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (string, *zero.Event) {

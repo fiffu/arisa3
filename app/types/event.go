@@ -1,10 +1,20 @@
 package types
 
-import dgo "github.com/bwmarrin/discordgo"
+import (
+	"context"
+
+	dgo "github.com/bwmarrin/discordgo"
+)
 
 const (
 	MessageCreateEvent = "MessageCreateEvent"
 )
+
+type SupportedEvents interface {
+	*dgo.Ready | *dgo.MessageCreate
+}
+
+type EventHandler[E SupportedEvents] func(context.Context, *dgo.Session, E)
 
 type IEvent interface {
 	Name() string

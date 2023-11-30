@@ -61,7 +61,7 @@ func SpanInContext(ctx context.Context, sn ScopedName) (context.Context, trace.S
 
 func EmitErrorf(ctx context.Context, msg string, args ...any) {
 	span := trace.SpanFromContext(ctx)
-	span.RecordError(fmt.Errorf(msg, args...))
+	span.RecordError(fmt.Errorf(msg, args...), WithStackTrace())
 }
 
 // WithStackTrace is a wrapper over `trace.EventOption`.

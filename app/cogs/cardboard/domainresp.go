@@ -189,20 +189,20 @@ func parseTags(str string) []string {
 func fitString(
 	strs []string,
 	sep, sepLast, sepOverflowf, mustAppend string,
-	totalLength int) (string, bool) {
+	maxLen int) (string, bool) {
 
 	if len(strs) == 0 {
 		return "", true
 	}
 
-	if totalLength < 0 {
-		totalLength = 9999999
+	if maxLen < 0 {
+		maxLen = 9999999
 	}
 
 	joined := joinWithTail(strs, sep, sepLast)
 	tailCount := 0
 
-	for len(joined+mustAppend) > totalLength {
+	for len(joined+mustAppend) > maxLen {
 		tailCount += 1
 		head := strs[:len(strs)-tailCount]
 		joined = joinWithTailf(head, sep, sepOverflowf, tailCount)
@@ -214,14 +214,17 @@ func fitString(
 }
 
 func joinWithTail(strs []string, joiner, penult string) string {
-	if len(strs) == 1 {
+	switch len(strs) {
+	case 0:
+		return ""
+	case 1:
 		return strs[0]
 	}
 
 	lastIdx := len(strs) - 1
-	last := strs[lastIdx]
-	joined := strings.Join(strs, joiner)
-	return joined + penult + last
+	head, tail := strs[:lastIdx], strs[lastIdx]
+	heads := strings.Join(head, joiner)
+	return heads + penult + tail
 }
 
 func joinWithTailf(strs []string, joiner, tailFmt string, args ...interface{}) string {

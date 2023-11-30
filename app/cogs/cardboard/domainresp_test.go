@@ -2,6 +2,7 @@ package cardboard
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -176,6 +177,12 @@ func Test_embedTitle(t *testing.T) {
 			artists:        "",
 			expectContains: []string{"Picture #"},
 		},
+		{
+			name:           "https://github.com/fiffu/arisa3/issues/151",
+			characters:     "shun_(blue_archive) shun_(small)_(blue_archive)",
+			artists:        "zhnyy3",
+			expectContains: []string{"shun (blue archive) and shun (small) (blue archive) drawn by zhnyy3"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -194,6 +201,7 @@ func Test_embedTitle(t *testing.T) {
 		})
 	}
 }
+
 func Test_embedTitleArtists(t *testing.T) {
 	testCases := []struct {
 		desc    string
@@ -289,6 +297,94 @@ func Test_splitTags(t *testing.T) {
 			actual := splitTags(tc.str)
 			assert.Equal(t, len(tc.expect), len(actual))
 			assert.ElementsMatch(t, tc.expect, actual)
+		})
+	}
+}
+
+func Test_fitString(t *testing.T) {
+	type expect struct {
+		str string
+		ok  bool
+	}
+	testCases := []struct {
+		desc                                   string
+		strs                                   []string
+		sep, sepLast, sepOverflowf, mustAppend string
+		maxLen                                 int
+		expect                                 expect
+	}{
+		{
+			"everything fits within maxLen",
+			[]string{"A", "B", "C"},
+			", ", " and ", " and %d more", " drawn by artist",
+			50,
+			expect{"A, B and C drawn by artist", true},
+		},
+		{
+			"doesn't fit within maxLen",
+			[]string{"A", "B", "C"},
+			", ", " and ", " and %d more", strings.Repeat(" drawn by artist", 100),
+			50,
+			expect{"", false},
+		},
+		{
+			"unlimited maxLen",
+			[]string{"A", "B", strings.Repeat("C", 50)},
+			", ", " and ", " and %d more", " drawn by artist",
+			-1,
+			expect{"A, B and CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC drawn by artist", true},
+		},
+		{
+			"item in strs collapses to fit length",
+			[]string{"A", "B", strings.Repeat("C", 50)},
+			", ", " and ", " and %d more", " drawn by artist",
+			50,
+			expect{"A, B and 1 more drawn by artist", true},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			str, ok := fitString(tc.strs, tc.sep, tc.sepLast, tc.sepOverflowf, tc.mustAppend, tc.maxLen)
+			assert.Equal(t, tc.expect.str, str)
+			assert.Equal(t, tc.expect.ok, ok)
+		})
+	}
+}
+
+func Test_joinWithTail(t *testing.T) {
+	testCases := []struct {
+		input  []string
+		expect string
+	}{
+		{
+			input:  []string{},
+			expect: "",
+		},
+		{
+			input:  []string{"a"},
+			expect: "a",
+		},
+		{
+			input:  []string{"a", "b"},
+			expect: "a and b",
+		},
+		{
+			input:  []string{"a", "b", "c"},
+			expect: "a, b and c",
+		},
+		{
+			input:  []string{"a", "b", "c", "d"},
+			expect: "a, b, c and d",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprint(tc.input), func(t *testing.T) {
+			actual := joinWithTail(
+				tc.input,
+				", ",
+				" and ",
+			)
+			assert.Equal(t, tc.expect, actual)
 		})
 	}
 }

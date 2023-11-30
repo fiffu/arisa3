@@ -2,6 +2,7 @@ package cardboard
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -176,6 +177,12 @@ func Test_embedTitle(t *testing.T) {
 			artists:        "",
 			expectContains: []string{"Picture #"},
 		},
+		{
+			name:           "https://github.com/fiffu/arisa3/issues/151",
+			characters:     "shun_(blue_archive) shun_(small)_(blue_archive)",
+			artists:        "zhnyy3",
+			expectContains: []string{"shun (blue archive) and shun (small) (blue archive) drawn by zhnyy3"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -194,6 +201,41 @@ func Test_embedTitle(t *testing.T) {
 		})
 	}
 }
+
+func Test_joinWithTail(t *testing.T) {
+	testCases := []struct {
+		input  []string
+		expect string
+	}{
+		{
+			input:  []string{"a"},
+			expect: "a",
+		},
+		{
+			input:  []string{"a", "b"},
+			expect: "a and b",
+		},
+		{
+			input:  []string{"a", "b", "c"},
+			expect: "a, b and c",
+		},
+		{
+			input:  []string{"a", "b", "c", "d"},
+			expect: "a, b, c and d",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprint(tc.input), func(t *testing.T) {
+			actual := joinWithTail(
+				tc.input,
+				", ",
+				" and ",
+			)
+			assert.Equal(t, tc.expect, actual)
+		})
+	}
+}
+
 func Test_embedTitleArtists(t *testing.T) {
 	testCases := []struct {
 		desc    string

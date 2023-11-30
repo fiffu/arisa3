@@ -183,6 +183,7 @@ func parseTags(str string) []string {
 	for i, tag := range tags {
 		tags[i] = utils.EscapeMarkdown(untaggify(tag))
 	}
+	fmt.Println(tags)
 	return tags
 }
 
@@ -219,9 +220,9 @@ func joinWithTail(strs []string, joiner, penult string) string {
 	}
 
 	lastIdx := len(strs) - 1
-	last := strs[lastIdx]
-	joined := strings.Join(strs, joiner)
-	return joined + penult + last
+	head, tail := strs[:lastIdx], strs[lastIdx]
+	heads := strings.Join(head, joiner)
+	return heads + penult + tail
 }
 
 func joinWithTailf(strs []string, joiner, tailFmt string, args ...interface{}) string {

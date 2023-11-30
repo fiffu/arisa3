@@ -202,44 +202,6 @@ func Test_embedTitle(t *testing.T) {
 	}
 }
 
-func Test_joinWithTail(t *testing.T) {
-	testCases := []struct {
-		input  []string
-		expect string
-	}{
-		{
-			input:  []string{},
-			expect: "",
-		},
-		{
-			input:  []string{"a"},
-			expect: "a",
-		},
-		{
-			input:  []string{"a", "b"},
-			expect: "a and b",
-		},
-		{
-			input:  []string{"a", "b", "c"},
-			expect: "a, b and c",
-		},
-		{
-			input:  []string{"a", "b", "c", "d"},
-			expect: "a, b, c and d",
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(fmt.Sprint(tc.input), func(t *testing.T) {
-			actual := joinWithTail(
-				tc.input,
-				", ",
-				" and ",
-			)
-			assert.Equal(t, tc.expect, actual)
-		})
-	}
-}
-
 func Test_embedTitleArtists(t *testing.T) {
 	testCases := []struct {
 		desc    string
@@ -385,6 +347,44 @@ func Test_fitString(t *testing.T) {
 			str, ok := fitString(tc.strs, tc.sep, tc.sepLast, tc.sepOverflowf, tc.mustAppend, tc.maxLen)
 			assert.Equal(t, tc.expect.str, str)
 			assert.Equal(t, tc.expect.ok, ok)
+		})
+	}
+}
+
+func Test_joinWithTail(t *testing.T) {
+	testCases := []struct {
+		input  []string
+		expect string
+	}{
+		{
+			input:  []string{},
+			expect: "",
+		},
+		{
+			input:  []string{"a"},
+			expect: "a",
+		},
+		{
+			input:  []string{"a", "b"},
+			expect: "a and b",
+		},
+		{
+			input:  []string{"a", "b", "c"},
+			expect: "a, b and c",
+		},
+		{
+			input:  []string{"a", "b", "c", "d"},
+			expect: "a, b, c and d",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprint(tc.input), func(t *testing.T) {
+			actual := joinWithTail(
+				tc.input,
+				", ",
+				" and ",
+			)
+			assert.Equal(t, tc.expect, actual)
 		})
 	}
 }

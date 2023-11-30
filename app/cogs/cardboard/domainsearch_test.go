@@ -62,3 +62,36 @@ func Test_magicSearch_tryGuessTermNoRetry(t *testing.T) {
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, noPosts, actualPosts)
 }
+
+func Test_magicSearch_noSuggestion(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockRepo := NewMockIRepository(ctrl)
+	mockClient := api.NewMockIClient(ctrl)
+	d := &domain{mockRepo, mockClient}
+
+	q := NewQuery("foo")
+	noPosts := []*api.Post{}
+	mockClient.EXPECT().GetPosts(gomock.Any(), []string{"foo"}).Return(noPosts, nil).Times(1)
+	mockClient.EXPECT().AutocompleteTag(gomock.Any(), "foo").Return(nil, nil)
+
+	actualPosts, err := d.magicSearch(context.Background(), q, true)
+	assert.NoError(t, err)
+	assert.ElementsMatch(t, noPosts, actualPosts)
+}
+
+func Test_magicSearch_guessErrorShouldBeSilent(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockRepo := NewMockIRepository(ctrl)
+	mockClient := api.NewMockIClient(ctrl)
+	d := &domain{mockRepo, mockClient}
+
+	q := NewQuery("foo")
+	noPosts := []*api.Post{}
+	var mockErr error = assert.AnError
+	mockClient.EXPECT().GetPosts(gomock.Any(), []string{"foo"}).Return(noPosts, nil).Times(1)
+	mockClient.EXPECT().AutocompleteTag(gomock.Any(), "foo").Return(nil, mockErr)
+
+	actualPosts, err := d.magicSearch(context.Background(), q, true)
+	assert.Nil(t, err, err)
+	assert.Empty(t, actualPosts)
+}

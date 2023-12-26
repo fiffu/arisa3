@@ -8,10 +8,14 @@ const (
 	unsafe    Safety = 2
 )
 
-var (
-	safeTags   = []string{"rating:g"}
-	unsafeTags = []string{"-rating:g", "-rating:s"}
+const (
+	safeTag   = "rating:g,s"
+	unsafeTag = "-rating:g,s"
 )
+
+func invertTagString(s string) string {
+	return "-" + s
+}
 
 // queryPosts implements IQueryPosts
 type queryPosts struct {
@@ -36,9 +40,9 @@ func (q *queryPosts) Tags() []string {
 	if q.MagicMode() {
 		switch q.safety {
 		case safe:
-			tags = append(tags, safeTags...)
+			tags = append(tags, safeTag)
 		case unsafe:
-			tags = append(tags, unsafeTags...)
+			tags = append(tags, unsafeTag)
 		}
 	}
 	return tags

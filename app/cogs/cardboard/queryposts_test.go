@@ -10,13 +10,12 @@ func Test_Tags_WithMagic_ShouldYieldRatingTags(t *testing.T) {
 	q := NewQuery("xyz").WithMagic()
 
 	q.WithSafe()
-	tags := []string{"xyz"}
 	actual := q.Tags()
-	assert.Equal(t, append(tags, safeTags...), actual)
+	assert.Equal(t, []string{"xyz", "rating:g,s"}, actual)
 
 	q.WithUnsafe()
 	actual = q.Tags()
-	assert.Equal(t, append(tags, unsafeTags...), actual)
+	assert.Equal(t, []string{"xyz", "-rating:g,s"}, actual)
 }
 
 func Test_Tags_WithNoMagic_ShouldDropRatingTags(t *testing.T) {
@@ -25,12 +24,12 @@ func Test_Tags_WithNoMagic_ShouldDropRatingTags(t *testing.T) {
 	q.WithSafe()
 	actual := q.Tags()
 	assert.Contains(t, actual, "xyz")
-	assert.NotContains(t, actual, unsafeTags)
-	assert.NotContains(t, actual, safeTags)
+	assert.NotContains(t, actual, unsafeTag)
+	assert.NotContains(t, actual, safeTag)
 
 	q.WithUnsafe()
 	actual = q.Tags()
 	assert.Contains(t, actual, "xyz")
-	assert.NotContains(t, actual, unsafeTags)
-	assert.NotContains(t, actual, safeTags)
+	assert.NotContains(t, actual, unsafeTag)
+	assert.NotContains(t, actual, safeTag)
 }

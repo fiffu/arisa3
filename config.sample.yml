@@ -3,8 +3,8 @@ database_dsn: 'postgres://username:password@host:port/database'
 enable_debug: false
 cogs:
   general:
-    motd: "Don't forget to drink water!"
-    repo_name: "GitHub · fiffu/arisa2"
+    motd: "Don't forget to stay hydrated!"
+    repo_name: "GitHub · fiffu/arisa3"
     repo_web_url: "https://github.com/fiffu/arisa3"
     repo_issues_url: "https://github.com/fiffu/arisa3/issues"
     repo_gitclone_url: "https://github.com/fiffu/arisa3.git"

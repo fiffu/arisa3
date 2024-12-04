@@ -89,34 +89,27 @@ func Test_Zip_MixedTypes(t *testing.T) {
 }
 
 func Test_Shuffle(t *testing.T) {
-	trials := 10
-	identicalCount := 0
-
-	src := []int{
+	original := []int{
 		1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 		11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 	}
 
+	buf := make([]int, len(original))
 	test := func() (fail bool) {
-		dst := make([]int, len(src))
-		copy(dst, src)
-
-		for _, tup := range Zip(src, Shuffle(dst)) {
-			if tup.Left == tup.Right {
-				return true
-			}
-		}
-
-		return false
+		copy(buf, original)
+		shuffled := Shuffle(buf)
+		return Equal(original, shuffled)
 	}
 
-	for i := 0; i < trials; i++ {
+	testCount := 1000
+	identicalCount := 0
+	for i := 0; i < testCount; i++ {
 		if fail := test(); fail {
 			identicalCount += 1
 		}
 	}
 
-	assert.Less(t, identicalCount, trials)
+	assert.Less(t, identicalCount, testCount, "shuffled outcome matches the original input for all of %d", testCount)
 }
 
 func Test_Take(t *testing.T) {

@@ -108,3 +108,16 @@ func Deref[T any](elems []*T) []T {
 		return *in
 	})
 }
+
+// Equal returns true when input slices are equal.
+func Equal[T comparable](s1, s2 []T) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	for i, elem := range s1 {
+		if elem != s2[i] {
+			return false
+		}
+	}
+	return true
+}

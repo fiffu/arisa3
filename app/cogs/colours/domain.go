@@ -19,7 +19,7 @@ var (
 	ErrRerollCooldownPending = errors.New("reroll cooldown is still in progress")
 	ErrInvalidRoleHeight     = errors.New("invalid target role height, it should be >=0")
 
-	rolePattern = regexp.MustCompile(`\w+#\d{4}`)
+	rolePattern = regexp.MustCompile(`\w+#(0|\d{4})`)
 )
 
 type domain struct {

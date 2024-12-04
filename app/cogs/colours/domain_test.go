@@ -80,6 +80,11 @@ func Test_GetColourRole(t *testing.T) {
 			currentRoleName: "abcd#1234",
 			expectFound:     true,
 		},
+		{
+			desc:            "have roles, role name has new #0 denominator",
+			currentRoleName: "abcd#0",
+			expectFound:     true,
+		},
 	}
 	for _, tc := range testCases {
 		ctrl := gomock.NewController(t)

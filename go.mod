@@ -1,6 +1,8 @@
 module github.com/fiffu/arisa3
 
-go 1.20
+go 1.21.3
+
+toolchain go1.22.5
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
@@ -9,6 +11,7 @@ require (
 	github.com/carlmjohnson/requests v0.22.3
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/golang/mock v1.6.0
+	github.com/google/btree v1.1.3
 	github.com/honeycombio/honeycomb-opentelemetry-go v0.8.1
 	github.com/honeycombio/otel-config-go v1.12.1
 	github.com/lib/pq v1.10.5

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/app/utils"
@@ -69,7 +70,7 @@ func (c *Cog) colInfo(ctx context.Context, req types.ICommandEvent) error {
 	)
 	log.Infof(ctx, "Colour history guild=%s user=%s: %v", guildID, userID, historyStr)
 
-	info, err := c.formatColInfo(time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime, history)
+	info, err := c.formatColInfo(ctx, time.Now(), rerollCDEndTime, lastMutateTime, lastFrozenTime, history)
 	if err != nil {
 		log.Errorf(ctx, err, "Errored formatting colour info, guild=%s user=%s", guildID, userID)
 		return err
@@ -96,7 +97,7 @@ type colInfo struct {
 }
 
 func (c *Cog) formatColInfo(
-	now time.Time,
+	ctx context.Context, now time.Time,
 	rerollCDEndTime, lastMutateTime, lastFrozenTime time.Time,
 	history *History,
 ) (*colInfo, error) {
@@ -127,7 +128,7 @@ func (c *Cog) formatColInfo(
 	ret := &colInfo{}
 
 	if history != nil && len(history.records) > 0 {
-		buf, ext, mime, err := makeColHistoryImg(history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
+		buf, ext, mime, err := makeColHistoryImg(ctx, history, time.Duration(c.cfg.MutateCooldownMins)*time.Minute)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +145,10 @@ func (c *Cog) formatColInfo(
 	return ret, nil
 }
 
-func makeColHistoryImg(h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {
+func makeColHistoryImg(ctx context.Context, h *History, interval time.Duration) (file *bytes.Buffer, fileExt, fileContent string, err error) {
+	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Internal("makeColHistoryImg"))
+	defer span.End()
+
 	colours := partitionColours(h, interval)
 
 	// reverse colours before drawing

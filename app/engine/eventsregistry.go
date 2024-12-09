@@ -13,7 +13,7 @@ import (
 
 func NewEventHandler[E types.SupportedEvents](callable func(context.Context, *dgo.Session, E)) func(*dgo.Session, E) {
 	return func(s *dgo.Session, evt E) {
-		traceID := fmt.Sprintf("%T-%d", evt, time.Now().UTC().Unix())
+		traceID := fmt.Sprintf("%T-%d", evt, time.Now().UTC().UnixMilli())
 		ctx := context.Background()
 		ctx = log.Put(ctx, log.TraceID, traceID)
 

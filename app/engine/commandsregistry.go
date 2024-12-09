@@ -15,18 +15,20 @@ import (
 )
 
 var (
-	errNotCommand = errors.New("not a command")
-	errNoHandler  = errors.New("no handler")
+	errNotCommand        = errors.New("not a command")
+	errNoHandler         = errors.New("no handler")
+	errDuplicatedRequest = errors.New("duplicated request")
 )
 
 type CommandsRegistry struct {
-	cmds  map[string]types.ICommand
-	clock func() time.Time
+	cmds        map[string]types.ICommand
+	clock       func() time.Time
+	idempotency *idempotency
 }
 
 func NewCommandRegistry() *CommandsRegistry {
 	cmds := make(map[string]types.ICommand)
-	return &CommandsRegistry{cmds, time.Now}
+	return &CommandsRegistry{cmds, time.Now, newIdempotencyChecker()}
 }
 
 // Register creates an ApplicationCommand with the given ICommands.
@@ -63,6 +65,10 @@ func (r *CommandsRegistry) BindCallbacks(s *dgo.Session) {
 // onInteractionCreate logs errors from registryHandler.
 func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.InteractionCreate) {
 	ctx, err := r.registryHandler(s, i)
+	if err == errDuplicatedRequest {
+		log.Warnf(ctx, "Ignoring duplicated request")
+		return
+	}
 	if err != nil {
 		log.Errorf(ctx, err, "Error handling interaction")
 
@@ -83,7 +89,6 @@ func (r *CommandsRegistry) onInteractionCreate(s *dgo.Session, i *dgo.Interactio
 func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCreate) (ctx context.Context, err error) {
 	ctx = context.Background()
 	startTime := r.clock()
-	traceID := log.Hash(i.ID)[:10]
 
 	if i.Interaction.Data.Type() != dgo.InteractionApplicationCommand {
 		err = errNotCommand
@@ -96,9 +101,16 @@ func (r *CommandsRegistry) registryHandler(s *dgo.Session, i *dgo.InteractionCre
 		return
 	}
 
+	id := i.ID
+	if ok := r.idempotency.Check(id); !ok {
+		err = errDuplicatedRequest
+		return
+	}
+
 	// Code before this line executes for all commands; be careful to avoid excess logging.
 
 	// Setup context for handler
+	traceID := log.Hash(id)[:10]
 	ctx = log.Put(ctx, log.TraceID, traceID)
 
 	// Extract arguments and stuff

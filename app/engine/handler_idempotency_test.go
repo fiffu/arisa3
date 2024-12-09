@@ -20,25 +20,25 @@ func Test_idempotencyKey_Before(t *testing.T) {
 }
 
 func Test_handlerIdempotency_Acquire(t *testing.T) {
-	hi := newHandlerIdempotency()
-	assert.True(t, hi.Acquire("abc"))
-	assert.True(t, hi.Acquire("def"))
-	assert.False(t, hi.Acquire("abc"))
+	hi := newIdempotencyChecker()
+	assert.True(t, hi.Check("abc"))
+	assert.True(t, hi.Check("def"))
+	assert.False(t, hi.Check("abc"))
 }
 
 func Test_handlerIdempotency_Acquire_afterExpiry(t *testing.T) {
-	hi := newHandlerIdempotency()
+	hi := newIdempotencyChecker()
 	clock := lib.FrozenNow(t)
 	hi.clock = clock.Now
 
-	assert.True(t, hi.Acquire("abc"))
+	assert.True(t, hi.Check("abc"))
 	assert.Equal(t, 1, hi.tree.Len())
 
 	clock.Add(1 + 2*idempotencyWindow) // time passes
-	assert.True(t, hi.Acquire("def"))
+	assert.True(t, hi.Check("def"))
 	assert.Equal(t, 1, hi.tree.Len()) // key 'abc' should have been deleted
 
 	clock.Add(1)                      // later...
-	assert.True(t, hi.Acquire("abc")) // since 'abc' was deleted, we can acquire it again
+	assert.True(t, hi.Check("abc"))   // since 'abc' was deleted, we can acquire it again
 	assert.Equal(t, 2, hi.tree.Len()) // now there should be 2 keys
 }

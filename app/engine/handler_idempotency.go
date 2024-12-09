@@ -20,26 +20,26 @@ func (ik *idempotencyKey) Before(other *idempotencyKey) bool {
 	return ik.acquiredAt.Before(other.acquiredAt)
 }
 
-type handlerIdempotency struct {
+type idempotency struct {
 	tree  *btree.BTreeG[*idempotencyKey]
 	mutex *sync.Mutex
 	clock func() time.Time
 }
 
-func newHandlerIdempotency() *handlerIdempotency {
+func newIdempotencyChecker() *idempotency {
 	var mu sync.Mutex
 	var degree int = 2 // idk wtf this means, looks like higher = lower memory usage but slower inserts?
-	return &handlerIdempotency{
+	return &idempotency{
 		tree:  btree.NewG(degree, func(a, b *idempotencyKey) bool { return a.Before(b) }),
 		mutex: &mu,
 		clock: time.Now,
 	}
 }
 
-// Acquire attempts to acquire a lock against the given key.
+// Check attempts to acquire a lock against the given key.
 // If there is no existing lock, it creates the lock using the given key and retuns true.
 // Otherwise, it returns false.
-func (hi *handlerIdempotency) Acquire(key string) (acquired bool) {
+func (hi *idempotency) Check(key string) (acquired bool) {
 	hi.mutex.Lock()
 	defer hi.mutex.Unlock()
 

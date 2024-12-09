@@ -134,7 +134,7 @@ func newEntry(ctx context.Context, entry *zero.Event, caller, msg string) (strin
 
 func SetupLogger() {
 	output := zero.ConsoleWriter{Out: os.Stdout}
-	output.TimeFormat = "2006/01/02 15:04:05"
+	output.TimeFormat = "2006/01/02 15:04:05.00000"
 	output.FormatMessage = func(i interface{}) string {
 		return fmt.Sprintf(":: %s  ", i)
 	}

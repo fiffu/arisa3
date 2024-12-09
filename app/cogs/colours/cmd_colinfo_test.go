@@ -1,6 +1,7 @@
 package colours
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -171,6 +172,7 @@ func Test_formatColInfo(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			reply, err := cog.formatColInfo(
+				context.Background(),
 				now,
 				tc.rerollCDEndTime,
 				tc.lastMutateTime,
@@ -211,6 +213,7 @@ func Test_horizontalPartitionImage(t *testing.T) {
 }
 
 func Test_makeColHistoryImg(t *testing.T) {
+	ctx := context.Background()
 	h := &History{
 		start: unix(00),
 		end:   unix(40),
@@ -220,7 +223,7 @@ func Test_makeColHistoryImg(t *testing.T) {
 		},
 	}
 
-	file, fileExt, fileContent, err := makeColHistoryImg(h, 20*time.Second)
+	file, fileExt, fileContent, err := makeColHistoryImg(ctx, h, 20*time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, file)
 	assert.Equal(t, "png", fileExt)

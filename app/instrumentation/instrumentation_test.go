@@ -3,12 +3,14 @@ package instrumentation
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/carlmjohnson/requests"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/otel/attribute"
@@ -82,5 +84,26 @@ func Test_NewHTTPTransport(t *testing.T) {
 	for k, x := range expects {
 		assert.Equal(t, x.Value.Emit(), span.Attributes.GetAsString(k))
 	}
+	assert.True(t, span.Ended)
+}
+
+func Test_NewHTTPTransport_withError(t *testing.T) {
+	someError := errors.New("http transport error")
+	erroringRoundTripper := requests.RoundTripFunc(func(req *http.Request) (res *http.Response, err error) {
+		return nil, someError
+	})
+
+	req, err := http.NewRequest(http.MethodPatch, "example.com", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	span := CaptureInstrumentation(t, func() {
+		res, err := NewHTTPTransport(erroringRoundTripper).RoundTrip(req)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	assert.Equal(t, someError.Error(), span.Attributes.GetAsString("error"))
 	assert.True(t, span.Ended)
 }

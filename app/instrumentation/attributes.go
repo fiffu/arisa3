@@ -14,6 +14,7 @@ const (
 	attrUser               = string(log.User)
 	attrCommandName        = "command_name"
 	attrEventName          = "event_name"
+	attrError              = "error"
 	attrParams             = "params"
 	attrHTTPHost           = "http_host"
 	attrHTTPMethod         = "http_method"
@@ -38,6 +39,10 @@ func (attrs) CommandName(value string) attribute.KeyValue {
 
 func (attrs) EventName(value string) attribute.KeyValue {
 	return attribute.String(attrEventName, value)
+}
+
+func (attrs) Error(err error) attribute.KeyValue {
+	return attribute.String(attrError, err.Error())
 }
 
 func (attrs) User(value string) attribute.KeyValue {

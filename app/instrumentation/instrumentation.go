@@ -95,12 +95,19 @@ func NewHTTPTransport(tpt http.RoundTripper) http.RoundTripper {
 		)
 
 		res, err = tpt.RoundTrip(req)
-		resSize := res.ContentLength
+		if res != nil {
+			resSize := res.ContentLength
 
-		span.SetAttributes(
-			KV.HTTPTotalContentLength(reqSize+resSize),
-			KV.HTTPRespStatusCode(res.StatusCode),
-		)
+			span.SetAttributes(
+				KV.HTTPTotalContentLength(reqSize+resSize),
+				KV.HTTPRespStatusCode(res.StatusCode),
+			)
+		}
+		if err != nil {
+			span.SetAttributes(
+				KV.Error(err),
+			)
+		}
 		return
 	})
 }

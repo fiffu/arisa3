@@ -43,13 +43,20 @@ func (hi *idempotency) Check(key string) (acquired bool) {
 	hi.mutex.Lock()
 	defer hi.mutex.Unlock()
 
+	expiredItems := make([]*idempotencyKey, 0)
+	defer func() { // defer until we're done iterating, if not this causes index out-of-bounds
+		for _, item := range expiredItems {
+			hi.tree.Delete(item)
+		}
+	}()
+
 	now := hi.clock()
 	acquired = true
 
 	hi.tree.Ascend(func(item *idempotencyKey) bool {
 		age := now.Sub(item.acquiredAt)
 		if age > idempotencyWindow {
-			hi.tree.Delete(item)
+			expiredItems = append(expiredItems, item)
 			return true // continue iterating tree
 		}
 

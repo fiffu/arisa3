@@ -147,7 +147,7 @@ func (c *Cog) listAliases(ctx context.Context, req types.ICommandEvent) error {
 
 	resp := respNoAliases
 	if len(list) > 0 {
-		message := fmt.Sprintf("```\n" + strings.Join(list, "\n") + "```")
+		message := "```\n" + strings.Join(list, "\n") + "```"
 		resp.Content(message)
 	}
 	return req.Respond(ctx, resp)

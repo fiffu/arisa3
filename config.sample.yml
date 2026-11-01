@@ -1,5 +1,5 @@
 bot_secret: 'sample'  # replace or overwrite by setting BOT_SECRET in env vars!
-database_dsn: 'postgres://username:password@host:port/database'
+database_dsn: '/data/arisa3.db'  # SQLite file; created on first start
 enable_debug: false
 cogs:
   general:

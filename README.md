@@ -49,9 +49,11 @@ setup event handlers, and run database migrations.
 
 #### Stack
 
-arisa3 talks directly to PostgreSQL without any ORM layer. Some degree of flexibility is
-available thanks to Go's `database/sql` abstraction and 12-Factor configurability, but
-the migrations have to be translated from the PostgreSQL dialect.
+arisa3 talks directly to SQLite (via the pure-Go `modernc.org/sqlite`, so no cgo) without
+any ORM layer. `database_dsn` is the path to the database file, which is created on first
+start. Timestamps are stored as UTC text in a fixed-width format (`database.TimeFormat`) so
+that comparing them as strings gives time order; the client converts every `time.Time`
+argument automatically.
 
 ## Contributing
 

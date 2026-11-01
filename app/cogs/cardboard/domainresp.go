@@ -59,7 +59,7 @@ func (d *domain) formatResult(ctx context.Context, query IQueryPosts, posts []*a
 	sourcesField := embedFieldTags(copyrightTags, tagData)
 	linksField := d.embedLinks(query, post)
 
-	footer := fmt.Sprintf("Matched against: " + term)
+	footer := "Matched against: " + term
 	if termTag, ok := tagData[term]; ok {
 		footer += fmt.Sprintf(" (%d)", termTag.PostCount)
 	}

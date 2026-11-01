@@ -13,7 +13,7 @@ import (
 	"github.com/fiffu/arisa3/lib"
 )
 
-// pgmigrations.go implements migrations for pgclient
+// migrations.go implements migrations for sqlclient
 
 const (
 	createSchemaMigrations = `CREATE TABLE IF NOT EXISTS "_schema_migrations" (version TEXT PRIMARY KEY);`
@@ -44,7 +44,7 @@ func (r *MigrationRecord) Scan(rows IRows) error {
 }
 
 // seedMigration pulls the migrations table state, or creates if it doesn't exist.
-func (c *pgclient) seedMigration(ctx context.Context) error {
+func (c *sqlclient) seedMigration(ctx context.Context) error {
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("seedMigration"))
 	defer span.End()
 
@@ -71,7 +71,7 @@ func (c *pgclient) seedMigration(ctx context.Context) error {
 }
 
 // Migrate executes a migration and records it in the migrations table.
-func (c *pgclient) Migrate(ctx context.Context, schema ISchema) (bool, error) {
+func (c *sqlclient) Migrate(ctx context.Context, schema ISchema) (bool, error) {
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("Migrate"))
 	span.SetAttributes(instrumentation.KV.DBOperation(schema.Source()))
 	defer span.End()
@@ -106,7 +106,7 @@ func (c *pgclient) Migrate(ctx context.Context, schema ISchema) (bool, error) {
 }
 
 // ParseMigration implements parsing of files into sqlSchema.
-func (c *pgclient) ParseMigration(ctx context.Context, theFile string) (ISchema, error) {
+func (c *sqlclient) ParseMigration(ctx context.Context, theFile string) (ISchema, error) {
 	name, err := validateFileName(theFile)
 	if err != nil {
 		return nil, err

@@ -1,6 +1,6 @@
 package database
 
-// pgclient.go implements a Postgres client satisfying IDatabase.
+// sqlclient.go implements a SQLite client satisfying IDatabase.
 
 import (
 	"context"
@@ -8,16 +8,66 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/lib"
-	_ "github.com/lib/pq"
 	"go.opentelemetry.io/otel/trace"
+	_ "modernc.org/sqlite"
 )
 
-// pgclient implements IData for database/sql + lib/pq.
-type pgclient struct {
+// TimeFormat is how timestamps are stored. SQLite has no timestamp type, so they are TEXT and compared as
+// strings. A fixed width in UTC keeps string order the same as time order.
+const TimeFormat = "2006-01-02T15:04:05.000000000Z"
+
+// FormatTime converts t to its stored form.
+func FormatTime(t time.Time) string {
+	return t.UTC().Format(TimeFormat)
+}
+
+// sqlitePragmas are applied to every connection. WAL lets reads run alongside a write, busy_timeout waits
+// for a lock instead of failing at once, and _txlock=immediate takes the write lock at BEGIN so two
+// transactions can't deadlock upgrading from read to write.
+var sqlitePragmas = []string{
+	"_pragma=busy_timeout(5000)",
+	"_pragma=journal_mode(WAL)",
+	"_pragma=synchronous(NORMAL)",
+	"_txlock=immediate",
+}
+
+// sqliteDSN turns a file path (or a "file:" URI) into a DSN with sqlitePragmas added.
+func sqliteDSN(dsn string) (string, error) {
+	if dsn == "" {
+		return "", errors.New("database_dsn is empty; set it to a SQLite file path")
+	}
+	if strings.Contains(dsn, "://") {
+		return "", fmt.Errorf("database_dsn looks like a URL (%q...), expected a SQLite file path", strings.SplitN(dsn, "://", 2)[0])
+	}
+	if !strings.HasPrefix(dsn, "file:") {
+		dsn = "file:" + dsn
+	}
+	sep := "?"
+	if strings.Contains(dsn, "?") {
+		sep = "&"
+	}
+	return dsn + sep + strings.Join(sqlitePragmas, "&"), nil
+}
+
+// normalizeArgs stores every time.Time in TimeFormat, whatever its location.
+func normalizeArgs(args []any) []any {
+	out := make([]any, len(args))
+	for i, a := range args {
+		if t, ok := a.(time.Time); ok {
+			a = FormatTime(t)
+		}
+		out[i] = a
+	}
+	return out
+}
+
+// sqlclient implements IDatabase for database/sql + modernc.org/sqlite.
+type sqlclient struct {
 	pool               *sql.DB
 	existingMigrations map[string]bool
 }
@@ -36,16 +86,25 @@ func NewDBClient(ctx context.Context, dsn string) (IDatabase, error) {
 	return c, err
 }
 
-func open(ctx context.Context, dsn string) (*pgclient, error) {
+func open(ctx context.Context, dsn string) (*sqlclient, error) {
 	ctx, span := instrumentation.SpanInContext(ctx, instrumentation.Database("sql.Open"))
 	defer span.End()
 
-	pool, err := sql.Open("postgres", dsn)
-	log.Infof(ctx, "Database connection opened")
+	dsn, err := sqliteDSN(dsn)
 	if err != nil {
 		return nil, err
 	}
-	return &pgclient{
+	pool, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, err
+	}
+	// sql.Open doesn't connect; fail now if the file can't be opened.
+	if err := pool.PingContext(ctx); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("opening sqlite database: %w", err)
+	}
+	log.Infof(ctx, "Database connection opened")
+	return &sqlclient{
 		pool:               pool,
 		existingMigrations: make(map[string]bool),
 	}, nil
@@ -68,7 +127,7 @@ func firstWord(s string) (word string) {
 	return
 }
 
-func (c *pgclient) Close(ctx context.Context) error {
+func (c *sqlclient) Close(ctx context.Context) error {
 	if err := c.pool.Close(); err != nil {
 		log.Errorf(ctx, err, "Failed to close database connection")
 		return err
@@ -90,11 +149,11 @@ func newOperation[T any](callable delegate[T], caller string) delegate[T] {
 		_, span := newSpan(ctx, caller, prettyQuery)
 		defer span.End()
 
-		return callable(ctx, query, args...)
+		return callable(ctx, query, normalizeArgs(args)...)
 	}
 }
 
-func (c *pgclient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
+func (c *sqlclient) Query(ctx context.Context, query string, args ...interface{}) (IRows, error) {
 	op := newOperation[*sql.Rows](c.pool.QueryContext, lib.WhoCalledMe())
 	rows, err := op(ctx, query, args...)
 	if err == sql.ErrNoRows {
@@ -103,13 +162,13 @@ func (c *pgclient) Query(ctx context.Context, query string, args ...interface{})
 	return rows, err
 }
 
-func (c *pgclient) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
+func (c *sqlclient) Exec(ctx context.Context, query string, args ...interface{}) (IResult, error) {
 	op := newOperation[sql.Result](c.pool.ExecContext, lib.WhoCalledMe())
 	affected, err := op(ctx, query, args...)
 	return affected, err
 }
 
-func (c *pgclient) Begin(ctx context.Context) (context.Context, ITransaction, error) {
+func (c *sqlclient) Begin(ctx context.Context) (context.Context, ITransaction, error) {
 	t, err := c.pool.Begin()
 	if err != nil {
 		return ctx, nil, err

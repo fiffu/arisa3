@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/embedded"
 )
 
 func CaptureInstrumentation(t *testing.T, callback func()) *testSpan {
@@ -16,7 +17,7 @@ func CaptureInstrumentation(t *testing.T, callback func()) *testSpan {
 	oldProvider := otel.GetTracerProvider()
 	defer otel.SetTracerProvider(oldProvider)
 
-	customProvider := testProvider{t, newTestSpan(t)}
+	customProvider := testProvider{T: t, baggage: newTestSpan(t)}
 	otel.SetTracerProvider(customProvider)
 	callback()
 
@@ -24,15 +25,17 @@ func CaptureInstrumentation(t *testing.T, callback func()) *testSpan {
 }
 
 type testProvider struct {
+	embedded.TracerProvider
 	*testing.T
 	baggage *testSpan
 }
 
 func (tp testProvider) Tracer(name string, options ...trace.TracerOption) trace.Tracer {
-	return testTracer{tp.T, tp.baggage} //lint:ignore S1016 - it's clearer this way
+	return testTracer{T: tp.T, baggage: tp.baggage}
 }
 
 type testTracer struct {
+	embedded.Tracer
 	*testing.T
 	baggage *testSpan
 }
@@ -58,6 +61,7 @@ func newTestSpan(t *testing.T) *testSpan {
 }
 
 type testSpan struct {
+	embedded.Span
 	*testing.T
 	Name        string
 	Ended       bool
@@ -108,6 +112,9 @@ func (ts *testSpan) RecordError(err error, options ...trace.EventOption) {
 	}
 }
 
+// AddLink adds a link to the Span. Links are not captured by this fixture.
+func (ts *testSpan) AddLink(link trace.Link) {}
+
 // SpanContext returns the SpanContext of the Span. The returned SpanContext
 // is usable even after the End method has been called for the Span.
 func (ts *testSpan) SpanContext() trace.SpanContext { return trace.SpanContext{} } // wtf is this
@@ -137,5 +144,5 @@ func (ts *testSpan) SetAttributes(kv ...attribute.KeyValue) {
 // TracerProvider returns a TracerProvider that can be used to generate
 // additional Spans on the same telemetry pipeline as the current Span.
 func (ts *testSpan) TracerProvider() trace.TracerProvider {
-	return testProvider{ts.T, ts}
+	return testProvider{T: ts.T, baggage: ts}
 }

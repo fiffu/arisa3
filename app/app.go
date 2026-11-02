@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/fiffu/arisa3/app/cogs"
 	"github.com/fiffu/arisa3/app/database"
@@ -139,7 +140,8 @@ func getCogsConfigs(cfg *Config) map[string]interface{} {
 
 func waitUntilInterrupt(ctx context.Context) {
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
+	// Note: docker stop will send SIGTERM, so handle that too
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
 	log.Infof(ctx, "Interrupted! Shutting down...")
 }

@@ -1,0 +1,6 @@
+.git
+.github
+.circleci
+coverage.out
+config.yml
+arisa3

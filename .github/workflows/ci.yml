@@ -3,13 +3,27 @@ name: Build and test
 on:
   push:
     branches: [ "main" ]
+  # No branch filter, so stacked PRs that target a feature branch also run.
   pull_request:
-    branches: [ "main" ]
 
 jobs:
 
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
     - uses: actions/checkout@v3
 
@@ -23,3 +37,6 @@ jobs:
 
     - name: Test
       run: make test
+      env:
+        # Tests that need a real Postgres skip when this is not set.
+        STONKS_TEST_DSN: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable

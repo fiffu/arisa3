@@ -162,8 +162,8 @@ func Test_Wrap(t *testing.T) {
 }
 
 func Test_Wrap_badMetaIsAnError(t *testing.T) {
-	feed := Wrap[FredMeta](NewSP500(api.NewFred(http.DefaultTransport)))
-	_, err := feed.Fetch(context.Background(), State[json.RawMessage]{Meta: json.RawMessage(`{"source_date":5}`)})
+	source := Wrap[FredMeta](NewSP500(api.NewFred(http.DefaultTransport)))
+	_, err := source.Fetch(context.Background(), State[json.RawMessage]{Meta: json.RawMessage(`{"source_date":5}`)})
 	assert.ErrorContains(t, err, "decode meta")
 }
 

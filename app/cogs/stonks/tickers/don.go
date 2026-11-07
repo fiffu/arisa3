@@ -2,6 +2,7 @@ package tickers
 
 import (
 	"context"
+	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -68,11 +69,12 @@ var blockTags = map[string]bool{
 	"p": true, "br": true, "div": true, "blockquote": true, "li": true,
 }
 
-// Archive links such as "View image" and "View video" are not post text, so they do not count.
+// The archive links each image and video to its attachment store, with link text such as
+// "View image". Those links are not post text, so they do not count.
 func postLength(desc string) int {
 	z := html.NewTokenizer(strings.NewReader(desc))
-	var text, link strings.Builder
-	inLink := false
+	var text strings.Builder
+	inMediaLink := false
 
 	for {
 		tt := z.Next()
@@ -81,33 +83,36 @@ func postLength(desc string) int {
 			return utf8.RuneCountInString(strings.Join(strings.Fields(text.String()), " "))
 
 		case html.StartTagToken, html.EndTagToken, html.SelfClosingTagToken:
-			name, _ := z.TagName()
+			name, hasAttr := z.TagName()
 			tag := string(name)
 			switch {
 			case tag == "a" && tt == html.StartTagToken:
-				inLink = true
-				link.Reset()
-			case tag == "a" && tt == html.EndTagToken && inLink:
-				inLink = false
-				if !isMediaLink(link.String()) {
-					text.WriteString(link.String())
-				}
+				inMediaLink = hasAttr && isMediaLink(z)
+			case tag == "a" && tt == html.EndTagToken:
+				inMediaLink = false
 			case blockTags[tag]:
 				text.WriteString(" ")
 			}
 
 		case html.TextToken:
 			// Text() returns the text with entities such as &amp; decoded.
-			if inLink {
-				link.Write(z.Text())
-			} else {
+			if !inMediaLink {
 				text.Write(z.Text())
 			}
 		}
 	}
 }
 
-func isMediaLink(s string) bool {
-	f := strings.Fields(s)
-	return len(f) == 2 && f[0] == "View"
+// isMediaLink reads the attributes of the current <a> tag.
+func isMediaLink(z *html.Tokenizer) bool {
+	for {
+		key, val, more := z.TagAttr()
+		if string(key) == "href" {
+			u, err := url.Parse(string(val))
+			return err == nil && strings.Contains(u.Path, "/attachments/")
+		}
+		if !more {
+			return false
+		}
+	}
 }

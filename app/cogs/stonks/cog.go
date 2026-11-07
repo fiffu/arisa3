@@ -4,6 +4,7 @@ package stonks
 import (
 	"context"
 	"math/rand"
+	"net/http"
 	"path/filepath"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/fiffu/arisa3/app/cogs/stonks/tickers"
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/engine"
+	"github.com/fiffu/arisa3/app/instrumentation"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 	"github.com/fiffu/arisa3/lib"
@@ -54,7 +56,8 @@ func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) e
 }
 
 func (c *Cog) startTicker(ctx context.Context) error {
-	sources := tickers.All(rand.New(rand.NewSource(time.Now().UnixNano())))
+	transport := instrumentation.NewHTTPTransport(http.DefaultTransport)
+	sources := tickers.All(transport, rand.New(rand.NewSource(time.Now().UnixNano())))
 
 	names := make([]string, len(sources))
 	for i, s := range sources {

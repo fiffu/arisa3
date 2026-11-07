@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"time"
-)
 
-const DefaultSlotSize = 12 * time.Hour
+	"github.com/fiffu/arisa3/app/cogs/stonks/tickers/api"
+)
 
 type Outcome string
 
@@ -90,9 +91,14 @@ func (w wrapped[T]) Fetch(ctx context.Context, st State[json.RawMessage]) (Resul
 	return out, nil
 }
 
-func All(rnd *rand.Rand) []Source {
+func All(transport http.RoundTripper, rnd *rand.Rand) []Source {
+	fred := api.NewFred(transport)
 	return []Source{
 		Wrap[RndmMeta](&Rndm{Rand: rnd}),
 		Wrap[RollMeta](&Roll{}),
+		Wrap[FredMeta](NewSP500(fred)),
+		Wrap[FredMeta](NewDJIA(fred)),
+		Wrap[GreedMeta](&Greed{Client: api.NewGreed(transport)}),
+		Wrap[DonMeta](&Don{Client: api.NewTrumpsTruth(transport)}),
 	}
 }

@@ -56,6 +56,12 @@ func logResponse(req *http.Request, res *http.Response, startTime time.Time, req
 	ctx := req.Context()
 	elapsed := time.Since(startTime)
 
+	// A request that fails before a response arrives has no response to read.
+	if res == nil {
+		log.Errorf(ctx, reqErr, "%s %s in %dms - request error, no response: %v", req.Method, req.URL.String(), elapsed.Milliseconds(), reqErr)
+		return
+	}
+
 	body, readErr := ReadAndReplaceBody(res)
 
 	if reqErr != nil {

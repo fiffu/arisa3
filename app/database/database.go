@@ -61,6 +61,11 @@ type IResult interface {
 type IRows interface {
 	Next() bool
 	Scan(dest ...interface{}) error
+	// Err returns the error, if any, that stopped Next early. Check it after the loop,
+	// because Next also returns false when a read fails partway.
+	Err() error
+	// Close releases the connection. Call it when you stop reading before Next returns false.
+	Close() error
 }
 
 // ISchema represents a schema used in database migrations.

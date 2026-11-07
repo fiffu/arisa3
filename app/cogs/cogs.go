@@ -9,6 +9,7 @@ import (
 	"github.com/fiffu/arisa3/app/cogs/colours"
 	"github.com/fiffu/arisa3/app/cogs/general"
 	"github.com/fiffu/arisa3/app/cogs/rng"
+	"github.com/fiffu/arisa3/app/cogs/stonks"
 	"github.com/fiffu/arisa3/app/log"
 	"github.com/fiffu/arisa3/app/types"
 )
@@ -19,11 +20,13 @@ var (
 
 // getCogsList maintains a list of cogs to load when the app starts.
 func getCogsList(app types.IApp) []types.ICog {
+	stonksCog := stonks.NewCog(app)
 	return []types.ICog{
 		general.NewCog(app),
-		rng.NewCog(app),
+		rng.NewCog(app, stonksCog),
 		colours.NewCog(app),
 		cardboard.NewCog(app),
+		stonksCog,
 	}
 }
 

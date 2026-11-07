@@ -68,7 +68,19 @@ func (c *Cog) roll(ctx context.Context, req types.ICommandEvent) error {
 	}
 	result := toss(d)
 	resp := formatResponse(req, d, result, comment)
-	return req.Respond(ctx, resp)
+	if err := req.Respond(ctx, resp); err != nil {
+		return err
+	}
+
+	roll := newRoll(d, result)
+	for _, o := range c.rollObservers {
+		o.OnRoll(ctx, roll)
+	}
+	return nil
+}
+
+func newRoll(d dice, result int) Roll {
+	return Roll{Result: result, Count: d.count, Sides: d.sides, Modifier: d.modif, Parsed: d.parsed}
 }
 
 func parse(input string) (dice, string) {

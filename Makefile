@@ -6,11 +6,11 @@ build: ALWAYS  ## Build app
 	@echo [make build] Done ✓
 
 
-test:  ## Run unit tests
+test:  ## Run unit tests with the race detector
 	# Ensure gotestsum is installed
 	go install gotest.tools/gotestsum@v1.8.1
 
-	gotestsum -f dots -- -failfast -covermode=count -coverprofile coverage.out ./...
+	gotestsum -f dots -- -failfast -race -covermode=atomic -coverprofile coverage.out ./...
 
 	# Strip mock files from the coverage count 😔
 	sed -i '/.*_mock.go:.*/d' coverage.out

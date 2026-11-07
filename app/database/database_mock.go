@@ -301,6 +301,34 @@ func (m *MockIRows) EXPECT() *MockIRowsMockRecorder {
 	return m.recorder
 }
 
+// Close mocks base method.
+func (m *MockIRows) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockIRowsMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockIRows)(nil).Close))
+}
+
+// Err mocks base method.
+func (m *MockIRows) Err() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Err")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Err indicates an expected call of Err.
+func (mr *MockIRowsMockRecorder) Err() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Err", reflect.TypeOf((*MockIRows)(nil).Err))
+}
+
 // Next mocks base method.
 func (m *MockIRows) Next() bool {
 	m.ctrl.T.Helper()

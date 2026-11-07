@@ -244,3 +244,27 @@ func Test_formatAsker(t *testing.T) {
 		})
 	}
 }
+
+func Test_newRoll(t *testing.T) {
+	cases := []struct {
+		in       string
+		modifier int
+		parsed   bool
+		bounds   [2]int
+	}{
+		{"", -1, false, [2]int{0, 99}}, // default roll, d100-1
+		{"d50", 0, true, [2]int{1, 50}},
+		{"3d6", 0, true, [2]int{3, 18}},
+		{"d50+2000", 2000, true, [2]int{2001, 2050}},
+		{"some text", -1, false, [2]int{0, 99}}, // not parsed: default roll
+	}
+	for _, tc := range cases {
+		d, _ := parse(tc.in)
+		roll := newRoll(d, 7)
+		lo, hi := roll.Bounds()
+		assert.Equal(t, 7, roll.Result, tc.in)
+		assert.Equal(t, tc.modifier, roll.Modifier, tc.in)
+		assert.Equal(t, tc.parsed, roll.Parsed, tc.in)
+		assert.Equal(t, tc.bounds, [2]int{lo, hi}, tc.in)
+	}
+}

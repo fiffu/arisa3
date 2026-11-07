@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/fiffu/arisa3/app/cogs/stonks/tickers"
+	"github.com/fiffu/arisa3/app/cogs/stonks/tickers/api"
+	"github.com/fiffu/arisa3/testfixtures"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/metric/noop"
@@ -276,4 +279,39 @@ func Test_Tick_missingRowIsAnErrorNotANewTicker(t *testing.T) {
 
 	assert.ErrorContains(t, err, "ROLL: no row in stonks_tickers")
 	assert.Equal(t, []int64{50000}, repo.prices["ROLL"], "the price must not reset to the start price")
+}
+
+// flakyTransport fails while fail is true, and serves a fixture otherwise.
+type flakyTransport struct {
+	fail    bool
+	fixture *testfixtures.Transport
+}
+
+func (f *flakyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if f.fail {
+		return nil, errors.New("connection refused")
+	}
+	return f.fixture.RoundTrip(req)
+}
+
+func Test_Tick_donCountsPostsFromAFailedWindow(t *testing.T) {
+	repo := newFakeRepo()
+	tr := &flakyTransport{fixture: &testfixtures.Transport{Body: testfixtures.StonksDonFeed}}
+	don := tickers.Wrap[tickers.DonMeta](&tickers.Don{Client: api.NewTrumpsTruth(tr)})
+	tk := newTestTicker(t, repo, don)
+	ctx := context.Background()
+	at := func(day, hour int) time.Time { return time.Date(2026, 11, day, hour, 0, 0, 0, time.UTC) }
+
+	// Window Nov 6 00:00–12:00: 3 posts, 300 chars.
+	require.NoError(t, tk.Tick(ctx, at(6, 12)))
+
+	tr.fail = true
+	assert.Error(t, tk.Tick(ctx, at(7, 0)))
+
+	// Window Nov 6 12:00–Nov 7 12:00 covers the failed window too: 5 posts, 2272 chars.
+	// Without CoveredUntil, it would start at Nov 7 00:00: 1 post, 100 chars.
+	tr.fail = false
+	require.NoError(t, tk.Tick(ctx, at(7, 12)))
+
+	assert.Equal(t, []int64{100000, 100000, 454400}, repo.prices["DON"])
 }

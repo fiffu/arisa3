@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"math"
 	"math/rand"
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/fiffu/arisa3/app/cogs/stonks/tickers/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -160,8 +162,8 @@ func Test_Wrap(t *testing.T) {
 }
 
 func Test_Wrap_badMetaIsAnError(t *testing.T) {
-	source := Wrap[RollMeta](&Roll{})
-	_, err := source.Fetch(context.Background(), State[json.RawMessage]{Meta: json.RawMessage(`{"used_roll_at":5}`)})
+	source := Wrap[FredMeta](NewSP500(api.NewFred(http.DefaultTransport)))
+	_, err := source.Fetch(context.Background(), State[json.RawMessage]{Meta: json.RawMessage(`{"source_date":5}`)})
 	assert.ErrorContains(t, err, "decode meta")
 }
 

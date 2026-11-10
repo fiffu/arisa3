@@ -96,7 +96,7 @@ func (t *ticker) tickOne(ctx context.Context, source tickers.Source, row tickerR
 	case fetchErr != nil:
 		// A fetch stopped by shutdown did not fail. Storing the previous price would mark
 		// the slot as priced, and the next start would not fetch it again.
-		if !row.HasPrev || ctx.Err() != nil {
+		if !row.HasPrev || isShutdown(ctx) {
 			return fetchErr
 		}
 		// Keep the previous price, so every ticker has a value for every slot.

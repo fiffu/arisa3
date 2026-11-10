@@ -71,3 +71,20 @@ func Test_OnShutdown_stopsUpdateWithoutPricingTheSlot(t *testing.T) {
 	defer repo.mu.Unlock()
 	assert.Equal(t, []int64{prevSlot}, repo.slots["BLOCK"], "the stopped slot must stay unpriced")
 }
+
+func Test_isShutdown(t *testing.T) {
+	shutdown, stop := context.WithCancelCause(context.Background())
+	stop(errShutdown)
+	assert.True(t, isShutdown(shutdown))
+
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+	assert.False(t, isShutdown(cancelled))
+
+	expired, cancel := context.WithTimeout(context.Background(), 0)
+	defer cancel()
+	<-expired.Done()
+	assert.False(t, isShutdown(expired))
+
+	assert.False(t, isShutdown(context.Background()))
+}

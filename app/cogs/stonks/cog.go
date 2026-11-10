@@ -3,6 +3,7 @@ package stonks
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"net/http"
 	"path/filepath"
@@ -23,7 +24,14 @@ import (
 
 var (
 	migrationsDir = filepath.Join(lib.MustGetCallerDir(), "dbmigrations")
+
+	// errShutdown is the cancel cause of the updater's context when the app shuts down.
+	errShutdown = errors.New("stonks: shutting down")
 )
+
+func isShutdown(ctx context.Context) bool {
+	return errors.Is(context.Cause(ctx), errShutdown)
+}
 
 type Cog struct {
 	db         database.IDatabase
@@ -79,15 +87,15 @@ func (c *Cog) startTicker(ctx context.Context, sources []tickers.Source) error {
 
 	runner := lib.NewRunner(SlotSize, c.ticker.Tick)
 	runner.OnError = func(ctx context.Context, slot time.Time, err error) {
-		if ctx.Err() != nil {
+		if isShutdown(ctx) {
 			log.Infof(ctx, "stonks: update for slot %d stopped by shutdown", slot.Unix())
 			return
 		}
 		log.Errorf(ctx, err, "stonks: update for slot %d had errors", slot.Unix())
 	}
 
-	runCtx, cancel := context.WithCancel(context.Background())
-	c.stopTicker = cancel
+	runCtx, cancel := context.WithCancelCause(context.Background())
+	c.stopTicker = func() { cancel(errShutdown) }
 	c.tickerDone = make(chan struct{})
 	go func() {
 		defer close(c.tickerDone)

@@ -62,7 +62,7 @@ func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.Cog
 	if err := engine.Bootstrap(ctx, app, rawConfig, c); err != nil {
 		return err
 	}
-	if err := c.startWallets(ctx, app.BotSession()); err != nil {
+	if err := c.loadGuildEmojis(ctx); err != nil {
 		return err
 	}
 	transport := instrumentation.NewHTTPTransport(http.DefaultTransport)
@@ -75,12 +75,11 @@ func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) e
 		return err
 	}
 	c.commands.BindCallbacks(s)
+	c.registerEvents(s)
 	return nil
 }
 
-// startWallets adds the reaction handlers here, not in ReadyCallback, because Ready can
-// fire again after a reconnect and would add a second set.
-func (c *Cog) startWallets(ctx context.Context, sess *dgo.Session) error {
+func (c *Cog) loadGuildEmojis(ctx context.Context) error {
 	emojis, err := c.wallets.repo.GuildEmojis(ctx)
 	if err != nil {
 		return fmt.Errorf("load guild emojis: %w", err)
@@ -88,17 +87,19 @@ func (c *Cog) startWallets(ctx context.Context, sess *dgo.Session) error {
 	for guildID, emojiID := range emojis {
 		c.wallets.emojis.Set(guildID, emojiID)
 	}
+	return nil
+}
+
+func (c *Cog) registerEvents(sess *dgo.Session) {
 	c.wallets.fetch = func(channelID, messageID string) (*dgo.Message, error) {
 		return sess.ChannelMessage(channelID, messageID)
 	}
-
 	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, _ *dgo.Session, r *dgo.MessageReactionAdd) {
 		c.wallets.onReactionAdd(ctx, r.MessageReaction)
 	}))
 	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, _ *dgo.Session, r *dgo.MessageReactionRemove) {
 		c.wallets.onReactionRemove(ctx, r.MessageReaction)
 	}))
-	return nil
 }
 
 func (c *Cog) startTicker(ctx context.Context, sources []tickers.Source) error {

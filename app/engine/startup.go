@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 
 	"github.com/fiffu/arisa3/app/database"
 	"github.com/fiffu/arisa3/app/instrumentation"
@@ -106,12 +107,32 @@ func Bootstrap(ctx context.Context, app types.IApp, rawConfig types.CogConfig, c
 
 	// Bind ready callback after boot sequence is ready
 	sess := app.BotSession()
-	sess.AddHandler(NewEventHandler(func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
+	sess.AddHandler(NewEventHandler(readyOnce(cog)))
+	return nil
+}
+
+// readyOnce calls cog.ReadyCallback until it first succeeds, then ignores later Ready events.
+// Discord sends Ready again when it rejects a resume and the session identifies anew.
+// Handlers bound in ReadyCallback stay bound across reconnects, so a second call
+// would bind each of them twice.
+func readyOnce(cog IBootable) func(context.Context, *dgo.Session, *dgo.Ready) {
+	var (
+		mu   sync.Mutex
+		done bool
+	)
+	return func(ctx context.Context, s *dgo.Session, r *dgo.Ready) {
+		mu.Lock()
+		defer mu.Unlock()
+		if done {
+			log.Infof(ctx, "Skipped %s.ReadyCallback() on a repeated Ready", cog.Name())
+			return
+		}
 		if err := cog.ReadyCallback(ctx, s, r); err != nil {
 			log.Errorf(ctx, err, "Error in %s.ReadyCallback()", cog.Name())
+			return
 		}
-	}))
-	return nil
+		done = true
+	}
 }
 
 func runMigrations(ctx context.Context, cog IRepository, db database.IDatabase) error {

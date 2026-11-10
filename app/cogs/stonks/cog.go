@@ -4,6 +4,7 @@ package stonks
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"path/filepath"
@@ -39,6 +40,7 @@ type Cog struct {
 	ticker     *ticker
 	stopTicker context.CancelFunc
 	tickerDone chan struct{}
+	wallets    *wallets
 }
 
 func NewCog(a types.IApp) *Cog {
@@ -51,6 +53,11 @@ func (c *Cog) MigrationsDir() string              { return migrationsDir }
 
 func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 	c.repo = NewRepository(c.db)
+	c.wallets = &wallets{
+		repo:   NewWalletRepository(c.db),
+		emojis: &guildEmojis{},
+		now:    time.Now,
+	}
 	return nil
 }
 
@@ -58,13 +65,40 @@ func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.Cog
 	if err := engine.Bootstrap(ctx, app, rawConfig, c); err != nil {
 		return err
 	}
+
+	if err := c.loadGuildEmojis(ctx); err != nil {
+		return err
+	}
+
 	transport := instrumentation.NewHTTPTransport(http.DefaultTransport)
-	sources := tickers.All(transport, rand.New(rand.NewSource(time.Now().UnixNano())))
+	sources := tickers.Sources(transport, rand.New(rand.NewSource(time.Now().UnixNano())))
 	return c.startTicker(ctx, sources)
 }
 
 func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
+	c.registerEvents(s)
 	return nil
+}
+
+func (c *Cog) loadGuildEmojis(ctx context.Context) error {
+	emojis, err := c.wallets.repo.GuildEmojis(ctx)
+	if err != nil {
+		return fmt.Errorf("load guild emojis: %w", err)
+	}
+	for guildID, emojiID := range emojis {
+		c.wallets.emojis.Set(guildID, emojiID)
+	}
+	return nil
+}
+
+func (c *Cog) registerEvents(sess *dgo.Session) {
+	onReactionAdd := engine.NewEventHandler(c.wallets.onMessageReactionAdd)
+	sess.AddHandler(func(s *dgo.Session, e *dgo.Event) {
+		if e.Type == "MESSAGE_REACTION_ADD" {
+			onReactionAdd(s, e)
+		}
+	})
+	sess.AddHandler(engine.NewEventHandler(c.wallets.onMessageReactionRemove))
 }
 
 func (c *Cog) startTicker(ctx context.Context, sources []tickers.Source) error {

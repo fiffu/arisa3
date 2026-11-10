@@ -66,7 +66,6 @@ func newReact(r *dgo.MessageReaction, msgAuthor string) React {
 		ChannelID:   r.ChannelID,
 		MessageID:   r.MessageID,
 		ReactorID:   r.UserID,
-		Source:      SourceLive,
 		RecipientID: msgAuthor,
 	}
 }

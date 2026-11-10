@@ -35,7 +35,6 @@ CREATE TABLE "stonks_coin_reactions" (
     reactor_id   BIGINT      NOT NULL,
     recipient_id BIGINT      NOT NULL,
     active       BOOLEAN     NOT NULL,
-    source       TEXT        NOT NULL CHECK (source IN ('live', 'backfill')),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (message_id, reactor_id)
 );

@@ -140,7 +140,7 @@ func Test_walletRepo_postgres(t *testing.T) {
 	require.NoError(t, rows.Close())
 	assert.Equal(t, "true", done)
 
-	cr := React{GuildID: guild, ChannelID: channel, MessageID: "600", ReactorID: reactor, RecipientID: author, Source: SourceLive}
+	cr := React{GuildID: guild, ChannelID: channel, MessageID: "600", ReactorID: reactor, RecipientID: author}
 
 	// An unknown author changes nothing, not even the wallet.
 	_, err = r.AddCoinReaction(ctx, cr)
@@ -188,7 +188,6 @@ func Test_walletRepo_postgres(t *testing.T) {
 	assert.Equal(t, StartingBalance, balance(author))
 
 	// A react after an un-react activates the row again.
-	cr.Source = SourceBackfill
 	granted, err = r.AddCoinReaction(ctx, cr)
 	require.NoError(t, err)
 	assert.True(t, granted)

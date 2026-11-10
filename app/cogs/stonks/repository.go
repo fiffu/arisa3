@@ -122,13 +122,6 @@ const (
 	CoinPerReaction int64 = 1_000
 )
 
-type ReactionSource string
-
-const (
-	SourceLive     ReactionSource = "live"
-	SourceBackfill ReactionSource = "backfill"
-)
-
 // React holds Discord snowflake IDs as decimal strings.
 type React struct {
 	GuildID     string
@@ -136,7 +129,6 @@ type React struct {
 	MessageID   string
 	ReactorID   string
 	RecipientID string
-	Source      ReactionSource
 	// EmojiID is not stored. It is "" for a built-in emoji.
 	EmojiID string
 }
@@ -221,13 +213,13 @@ func (r *repo) AddCoinReaction(ctx context.Context, cr React) (bool, error) {
 		// so RETURNING gives a row only when this call activated the pair.
 		changed, err := execReturnsRow(ctx, tx, `
 			INSERT INTO stonks_coin_reactions
-				(guild_id, channel_id, message_id, reactor_id, recipient_id, active, source)
-			VALUES ($1, $2, $3, $4, $5, true, $6)
+				(guild_id, channel_id, message_id, reactor_id, recipient_id, active)
+			VALUES ($1, $2, $3, $4, $5, true)
 			ON CONFLICT (message_id, reactor_id) DO UPDATE
 			SET active = true, updated_at = now()
 			WHERE stonks_coin_reactions.active = false
 			RETURNING 1`,
-			cr.GuildID, cr.ChannelID, cr.MessageID, cr.ReactorID, cr.RecipientID, string(cr.Source))
+			cr.GuildID, cr.ChannelID, cr.MessageID, cr.ReactorID, cr.RecipientID)
 		if err != nil || !changed {
 			return false, err
 		}

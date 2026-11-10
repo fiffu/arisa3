@@ -26,3 +26,9 @@ type ICog interface {
 	ConfigPointer() StructPointer
 	OnStartup(ctx context.Context, app IApp, config CogConfig) error
 }
+
+// IShutdown is optional for a cog. The app calls OnShutdown after it closes the gateway session
+// and before it closes the database. OnShutdown must return when ctx ends.
+type IShutdown interface {
+	OnShutdown(ctx context.Context) error
+}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/fiffu/arisa3/app/cogs"
 	"github.com/fiffu/arisa3/app/database"
@@ -47,12 +48,17 @@ func (d DefaultInjector) Bot(token string, debugMode bool) (*discordgo.Session, 
 	return sess, nil
 }
 
+// shutdownTimeout is the time that all cogs together get to stop. It must stay well under
+// the time the deploy waits after SIGTERM before it kills the container.
+const shutdownTimeout = 10 * time.Second
+
 // app implements IApp
 type app struct {
 	cogsConfigs map[string]interface{}
 	db          database.IDatabase
 	inst        instrumentation.Client
 	sess        *discordgo.Session
+	cogs        []types.ICog
 }
 
 func (a *app) Configs() map[string]interface{} { return a.cogsConfigs }
@@ -60,10 +66,13 @@ func (a *app) Database() database.IDatabase    { return a.db }
 func (a *app) BotSession() *discordgo.Session  { return a.sess }
 func (a *app) Shutdown(ctx context.Context) {
 	defer a.inst.Shutdown()
+	// Close the gateway first, so no new events reach the cogs while they stop.
 	if err := a.sess.Close(); err != nil {
 		log.Errorf(ctx, err, "Error while closing session")
 		log.Stack(ctx, err)
 	}
+	// Cogs stop before the database closes, so their last queries do not fail.
+	cogs.ShutdownCogs(ctx, a.cogs, shutdownTimeout)
 	if err := a.db.Close(ctx); err != nil {
 		log.Errorf(ctx, err, "Error while closing DB connection")
 		log.Stack(ctx, err)
@@ -79,7 +88,7 @@ func Main(deps IDependencyInjector, configPath string) error {
 	}
 
 	log.Infof(ctx, "Initializing cogs")
-	if err = cogs.SetupCogs(ctx, app); err != nil {
+	if app.cogs, err = cogs.SetupCogs(ctx, app); err != nil {
 		return err
 	}
 
@@ -98,7 +107,7 @@ func Main(deps IDependencyInjector, configPath string) error {
 	return nil
 }
 
-func newApp(ctx context.Context, deps IDependencyInjector, configPath string) (types.IApp, error) {
+func newApp(ctx context.Context, deps IDependencyInjector, configPath string) (*app, error) {
 	log.SetupLogger()
 
 	cfg, err := Configure(configPath)

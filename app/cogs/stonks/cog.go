@@ -3,6 +3,7 @@ package stonks
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"net/http"
 	"path/filepath"
@@ -23,12 +24,21 @@ import (
 
 var (
 	migrationsDir = filepath.Join(lib.MustGetCallerDir(), "dbmigrations")
+
+	// errShutdown is the cancel cause of the updater's context when the app shuts down.
+	errShutdown = errors.New("stonks: shutting down")
 )
 
+func isShutdown(ctx context.Context) bool {
+	return errors.Is(context.Cause(ctx), errShutdown)
+}
+
 type Cog struct {
-	db     database.IDatabase
-	repo   IRepository
-	ticker *ticker
+	db         database.IDatabase
+	repo       IRepository
+	ticker     *ticker
+	stopTicker context.CancelFunc
+	tickerDone chan struct{}
 }
 
 func NewCog(a types.IApp) *Cog {
@@ -48,17 +58,16 @@ func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.Cog
 	if err := engine.Bootstrap(ctx, app, rawConfig, c); err != nil {
 		return err
 	}
-	return c.startTicker(ctx)
+	transport := instrumentation.NewHTTPTransport(http.DefaultTransport)
+	sources := tickers.All(transport, rand.New(rand.NewSource(time.Now().UnixNano())))
+	return c.startTicker(ctx, sources)
 }
 
 func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
 	return nil
 }
 
-func (c *Cog) startTicker(ctx context.Context) error {
-	transport := instrumentation.NewHTTPTransport(http.DefaultTransport)
-	sources := tickers.All(transport, rand.New(rand.NewSource(time.Now().UnixNano())))
-
+func (c *Cog) startTicker(ctx context.Context, sources []tickers.Source) error {
 	names := make([]string, len(sources))
 	for i, s := range sources {
 		names[i] = s.Ticker()
@@ -78,13 +87,36 @@ func (c *Cog) startTicker(ctx context.Context) error {
 
 	runner := lib.NewRunner(SlotSize, c.ticker.Tick)
 	runner.OnError = func(ctx context.Context, slot time.Time, err error) {
+		if isShutdown(ctx) {
+			log.Infof(ctx, "stonks: update for slot %d stopped by shutdown", slot.Unix())
+			return
+		}
 		log.Errorf(ctx, err, "stonks: update for slot %d had errors", slot.Unix())
 	}
+
+	runCtx, cancel := context.WithCancelCause(context.Background())
+	c.stopTicker = func() { cancel(errShutdown) }
+	c.tickerDone = make(chan struct{})
 	go func() {
-		// The process exits on shutdown. A tick that stops halfway finishes on the next start.
-		_ = runner.Run(context.Background())
+		defer close(c.tickerDone)
+		_ = runner.Run(runCtx)
 	}()
 	return nil
+}
+
+// OnShutdown implements types.IShutdown. A running update stops at its next HTTP or database
+// call. Its slot stays unpriced for the stopped tickers, so the next start runs it again.
+func (c *Cog) OnShutdown(ctx context.Context) error {
+	if c.stopTicker == nil {
+		return nil
+	}
+	c.stopTicker()
+	select {
+	case <-c.tickerDone:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // OnRoll implements rng.RollObserver.

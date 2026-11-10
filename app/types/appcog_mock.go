@@ -200,3 +200,40 @@ func (mr *MockICogMockRecorder) OnStartup(ctx, app, config interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnStartup", reflect.TypeOf((*MockICog)(nil).OnStartup), ctx, app, config)
 }
+
+// MockIShutdown is a mock of IShutdown interface.
+type MockIShutdown struct {
+	ctrl     *gomock.Controller
+	recorder *MockIShutdownMockRecorder
+}
+
+// MockIShutdownMockRecorder is the mock recorder for MockIShutdown.
+type MockIShutdownMockRecorder struct {
+	mock *MockIShutdown
+}
+
+// NewMockIShutdown creates a new mock instance.
+func NewMockIShutdown(ctrl *gomock.Controller) *MockIShutdown {
+	mock := &MockIShutdown{ctrl: ctrl}
+	mock.recorder = &MockIShutdownMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIShutdown) EXPECT() *MockIShutdownMockRecorder {
+	return m.recorder
+}
+
+// OnShutdown mocks base method.
+func (m *MockIShutdown) OnShutdown(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnShutdown", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OnShutdown indicates an expected call of OnShutdown.
+func (mr *MockIShutdownMockRecorder) OnShutdown(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnShutdown", reflect.TypeOf((*MockIShutdown)(nil).OnShutdown), ctx)
+}

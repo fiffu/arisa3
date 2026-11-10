@@ -91,7 +91,7 @@ func (w wrapped[T]) Fetch(ctx context.Context, st State[json.RawMessage]) (Resul
 	return out, nil
 }
 
-func All(transport http.RoundTripper, rnd *rand.Rand) []Source {
+func Sources(transport http.RoundTripper, rnd *rand.Rand) []Source {
 	fred := api.NewFred(transport)
 	return []Source{
 		Wrap[RndmMeta](&Rndm{Rand: rnd}),

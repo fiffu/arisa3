@@ -129,22 +129,30 @@ const (
 	SourceBackfill ReactionSource = "backfill"
 )
 
-// CoinReaction holds Discord snowflake IDs as decimal strings.
-type CoinReaction struct {
+// React holds Discord snowflake IDs as decimal strings.
+type React struct {
 	GuildID     string
 	ChannelID   string
 	MessageID   string
 	ReactorID   string
 	RecipientID string
 	Source      ReactionSource
+	// EmojiID is not stored. It is "" for a built-in emoji.
+	EmojiID string
 }
+
+// ErrUnknownUser means the recipient is not in stonks_users yet. Save it with SaveUser, then retry.
+var ErrUnknownUser = errors.New("stonks: user not in stonks_users")
 
 type IWalletRepository interface {
 	// GuildEmojis maps each guild ID to the ID of its coin emoji.
 	GuildEmojis(ctx context.Context) (map[string]string, error)
 	SaveGuildSettings(ctx context.Context, guildID, emojiID, marketChannelID string) error
-	// AddCoinReaction grants the recipient one coin, unless the pair is already active.
-	AddCoinReaction(ctx context.Context, r CoinReaction) (granted bool, err error)
+	SaveUser(ctx context.Context, userID string, isBot bool) error
+	// AddCoinReaction grants the recipient one coin, unless the pair is already active
+	// or the recipient is a bot. It returns ErrUnknownUser and changes nothing
+	// if the recipient is not in stonks_users.
+	AddCoinReaction(ctx context.Context, r React) (granted bool, err error)
 	// RemoveCoinReaction takes the coin back, unless the pair is not active.
 	RemoveCoinReaction(ctx context.Context, messageID, reactorID string) (revoked bool, err error)
 }
@@ -184,8 +192,35 @@ func (r *repo) SaveGuildSettings(ctx context.Context, guildID, emojiID, marketCh
 	return err
 }
 
-func (r *repo) AddCoinReaction(ctx context.Context, cr CoinReaction) (bool, error) {
+func (r *repo) SaveUser(ctx context.Context, userID string, isBot bool) error {
+	_, err := r.db.Exec(ctx, `
+		INSERT INTO stonks_users (user_id, is_bot) VALUES ($1, $2)
+		ON CONFLICT (user_id) DO UPDATE SET is_bot = EXCLUDED.is_bot, updated_at = now()`,
+		userID, isBot)
+	return err
+}
+
+func (r *repo) AddCoinReaction(ctx context.Context, cr React) (bool, error) {
 	return r.inTx(ctx, func(ctx context.Context, tx database.ITransaction) (bool, error) {
+		rows, err := tx.Query(ctx, `SELECT is_bot FROM stonks_users WHERE user_id = $1`, cr.RecipientID)
+		if err != nil {
+			return false, err
+		}
+		var isBot bool
+		found := rows.Next()
+		if found {
+			err = rows.Scan(&isBot)
+		}
+		if err = errors.Join(err, rows.Err(), rows.Close()); err != nil {
+			return false, err
+		}
+		if !found {
+			return false, ErrUnknownUser
+		}
+		if isBot {
+			return false, nil
+		}
+
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO stonks_wallets (guild_id, user_id, ticker, balance)
 			VALUES ($1, $2, 'coin', $3)

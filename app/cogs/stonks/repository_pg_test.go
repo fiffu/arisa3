@@ -31,7 +31,7 @@ func openTestDB(t *testing.T) database.IDatabase {
 	reset, err := database.NewDBClient(ctx, dsn)
 	require.NoError(t, err)
 	_, err = reset.Exec(ctx, `
-		DROP TABLE IF EXISTS stonks_tickers, stonks_guilds, stonks_wallets, stonks_coin_reactions;
+		DROP TABLE IF EXISTS stonks_tickers, stonks_guilds, stonks_wallets, stonks_coin_reactions, stonks_users;
 		DELETE FROM _schema_migrations`)
 	require.NoError(t, err)
 	require.NoError(t, reset.Close(ctx))
@@ -127,9 +127,35 @@ func Test_walletRepo_postgres(t *testing.T) {
 	require.NoError(t, rows.Close())
 	assert.Equal(t, "true", done)
 
-	cr := CoinReaction{GuildID: guild, ChannelID: channel, MessageID: "600", ReactorID: reactor, RecipientID: author, Source: SourceLive}
+	cr := React{GuildID: guild, ChannelID: channel, MessageID: "600", ReactorID: reactor, RecipientID: author, Source: SourceLive}
 
-	granted, err := r.AddCoinReaction(ctx, cr)
+	// An unknown author changes nothing, not even the wallet.
+	_, err = r.AddCoinReaction(ctx, cr)
+	assert.ErrorIs(t, err, ErrUnknownUser)
+	count := func(query string, args ...any) int {
+		rows, err := db.Query(ctx, query, args...)
+		require.NoError(t, err)
+		defer rows.Close()
+		require.True(t, rows.Next())
+		var n int
+		require.NoError(t, rows.Scan(&n))
+		return n
+	}
+	assert.Equal(t, 0, count(`SELECT count(*) FROM stonks_wallets`))
+
+	// A bot author gets no wallet and no reaction row.
+	require.NoError(t, r.SaveUser(ctx, "401", true))
+	bot := cr
+	bot.MessageID, bot.RecipientID = "602", "401"
+	granted, err := r.AddCoinReaction(ctx, bot)
+	require.NoError(t, err)
+	assert.False(t, granted)
+	assert.Equal(t, 0, count(`SELECT count(*) FROM stonks_wallets`))
+	assert.Equal(t, 0, count(`SELECT count(*) FROM stonks_coin_reactions`))
+
+	require.NoError(t, r.SaveUser(ctx, author, false))
+	require.NoError(t, r.SaveUser(ctx, author, false)) // idempotent
+	granted, err = r.AddCoinReaction(ctx, cr)
 	require.NoError(t, err)
 	assert.True(t, granted)
 	granted, err = r.AddCoinReaction(ctx, cr)

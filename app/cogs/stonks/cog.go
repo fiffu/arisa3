@@ -54,7 +54,11 @@ func (c *Cog) MigrationsDir() string              { return migrationsDir }
 
 func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 	c.repo = NewRepository(c.db)
-	c.wallets = &wallets{repo: NewWalletRepository(c.db), emojis: &guildEmojis{}, now: time.Now}
+	c.wallets = &wallets{
+		repo:   NewWalletRepository(c.db),
+		emojis: &guildEmojis{},
+		now:    time.Now,
+	}
 	return nil
 }
 
@@ -62,19 +66,20 @@ func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.Cog
 	if err := engine.Bootstrap(ctx, app, rawConfig, c); err != nil {
 		return err
 	}
+
 	if err := c.loadGuildEmojis(ctx); err != nil {
 		return err
 	}
+
 	transport := instrumentation.NewHTTPTransport(http.DefaultTransport)
-	sources := tickers.All(transport, rand.New(rand.NewSource(time.Now().UnixNano())))
+	sources := tickers.Sources(transport, rand.New(rand.NewSource(time.Now().UnixNano())))
 	return c.startTicker(ctx, sources)
 }
 
 func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
-	if err := c.commands.Register(ctx, s, c.setupCommand()); err != nil {
+	if err := c.registerCommands(ctx, s); err != nil {
 		return err
 	}
-	c.commands.BindCallbacks(s)
 	c.registerEvents(s)
 	return nil
 }
@@ -90,16 +95,27 @@ func (c *Cog) loadGuildEmojis(ctx context.Context) error {
 	return nil
 }
 
-func (c *Cog) registerEvents(sess *dgo.Session) {
-	c.wallets.fetch = func(channelID, messageID string) (*dgo.Message, error) {
-		return sess.ChannelMessage(channelID, messageID)
+func (c *Cog) registerCommands(ctx context.Context, s *dgo.Session) error {
+	err := c.commands.Register(
+		ctx,
+		s,
+		c.setupCommand(),
+	)
+	if err != nil {
+		return err
 	}
-	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, _ *dgo.Session, r *dgo.MessageReactionAdd) {
-		c.wallets.onReactionAdd(ctx, r.MessageReaction)
-	}))
-	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, _ *dgo.Session, r *dgo.MessageReactionRemove) {
-		c.wallets.onReactionRemove(ctx, r.MessageReaction)
-	}))
+	c.commands.BindCallbacks(s)
+	return nil
+}
+
+func (c *Cog) registerEvents(sess *dgo.Session) {
+	onReactionAdd := engine.NewEventHandler(c.wallets.onMessageReactionAdd)
+	sess.AddHandler(func(s *dgo.Session, e *dgo.Event) {
+		if e.Type == "MESSAGE_REACTION_ADD" {
+			onReactionAdd(s, e)
+		}
+	})
+	sess.AddHandler(engine.NewEventHandler(c.wallets.onMessageReactionRemove))
 }
 
 func (c *Cog) startTicker(ctx context.Context, sources []tickers.Source) error {

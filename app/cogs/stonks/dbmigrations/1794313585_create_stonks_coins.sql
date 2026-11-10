@@ -1,3 +1,11 @@
+-- One row per author of a message with a coin react. Webhook IDs are stored as bots,
+-- because they cannot receive coins. A bot flag never changes, so rows are never refreshed.
+CREATE TABLE "stonks_users" (
+    user_id    BIGINT      PRIMARY KEY,
+    is_bot     BOOLEAN     NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- data holds the guild settings and the backfill progress, for example:
 --   {"emoji_id": "123", "market_channel_id": "456", "backfill": {"<channel_id>": {...}}}
 -- Change single keys with || or jsonb_set, never by rewriting the whole object.

@@ -11,7 +11,7 @@ const (
 )
 
 type SupportedEvents interface {
-	*dgo.Ready | *dgo.MessageCreate
+	*dgo.Ready | *dgo.MessageCreate | *dgo.MessageReactionAdd | *dgo.MessageReactionRemove
 }
 
 type EventHandler[E SupportedEvents] func(context.Context, *dgo.Session, E)

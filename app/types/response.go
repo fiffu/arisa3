@@ -30,6 +30,12 @@ func (r *Response) TTS() *Response {
 	return r
 }
 
+// Ephemeral shows the response only to the user who ran the command.
+func (r *Response) Ephemeral() *Response {
+	r.data.Data.Flags |= dgo.MessageFlagsEphemeral
+	return r
+}
+
 func (r *Response) Content(msg string) *Response {
 	r.data.Data.Content = msg
 	return r

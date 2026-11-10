@@ -4,6 +4,7 @@ package stonks
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"path/filepath"
@@ -39,10 +40,12 @@ type Cog struct {
 	ticker     *ticker
 	stopTicker context.CancelFunc
 	tickerDone chan struct{}
+	wallets    *wallets
+	commands   *engine.CommandsRegistry
 }
 
 func NewCog(a types.IApp) *Cog {
-	return &Cog{db: a.Database()}
+	return &Cog{db: a.Database(), commands: engine.NewCommandRegistry()}
 }
 
 func (c *Cog) Name() string                       { return "stonks" }
@@ -51,11 +54,15 @@ func (c *Cog) MigrationsDir() string              { return migrationsDir }
 
 func (c *Cog) Configure(ctx context.Context, cfg types.CogConfig) error {
 	c.repo = NewRepository(c.db)
+	c.wallets = &wallets{repo: NewWalletRepository(c.db), emojis: &guildEmojis{}, now: time.Now}
 	return nil
 }
 
 func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.CogConfig) error {
 	if err := engine.Bootstrap(ctx, app, rawConfig, c); err != nil {
+		return err
+	}
+	if err := c.startWallets(ctx, app.BotSession()); err != nil {
 		return err
 	}
 	transport := instrumentation.NewHTTPTransport(http.DefaultTransport)
@@ -64,6 +71,33 @@ func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.Cog
 }
 
 func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
+	if err := c.commands.Register(ctx, s, c.setupCommand()); err != nil {
+		return err
+	}
+	c.commands.BindCallbacks(s)
+	return nil
+}
+
+// startWallets adds the reaction handlers here, not in ReadyCallback, because Ready can
+// fire again after a reconnect and would add a second set.
+func (c *Cog) startWallets(ctx context.Context, sess *dgo.Session) error {
+	emojis, err := c.wallets.repo.GuildEmojis(ctx)
+	if err != nil {
+		return fmt.Errorf("load guild emojis: %w", err)
+	}
+	for guildID, emojiID := range emojis {
+		c.wallets.emojis.Set(guildID, emojiID)
+	}
+	c.wallets.fetch = func(channelID, messageID string) (*dgo.Message, error) {
+		return sess.ChannelMessage(channelID, messageID)
+	}
+
+	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, _ *dgo.Session, r *dgo.MessageReactionAdd) {
+		c.wallets.onReactionAdd(ctx, r.MessageReaction)
+	}))
+	sess.AddHandler(engine.NewEventHandler(func(ctx context.Context, _ *dgo.Session, r *dgo.MessageReactionRemove) {
+		c.wallets.onReactionRemove(ctx, r.MessageReaction)
+	}))
 	return nil
 }
 

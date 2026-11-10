@@ -41,11 +41,10 @@ type Cog struct {
 	stopTicker context.CancelFunc
 	tickerDone chan struct{}
 	wallets    *wallets
-	commands   *engine.CommandsRegistry
 }
 
 func NewCog(a types.IApp) *Cog {
-	return &Cog{db: a.Database(), commands: engine.NewCommandRegistry()}
+	return &Cog{db: a.Database()}
 }
 
 func (c *Cog) Name() string                       { return "stonks" }
@@ -77,9 +76,6 @@ func (c *Cog) OnStartup(ctx context.Context, app types.IApp, rawConfig types.Cog
 }
 
 func (c *Cog) ReadyCallback(ctx context.Context, s *dgo.Session, r *dgo.Ready) error {
-	if err := c.registerCommands(ctx, s); err != nil {
-		return err
-	}
 	c.registerEvents(s)
 	return nil
 }
@@ -92,19 +88,6 @@ func (c *Cog) loadGuildEmojis(ctx context.Context) error {
 	for guildID, emojiID := range emojis {
 		c.wallets.emojis.Set(guildID, emojiID)
 	}
-	return nil
-}
-
-func (c *Cog) registerCommands(ctx context.Context, s *dgo.Session) error {
-	err := c.commands.Register(
-		ctx,
-		s,
-		c.setupCommand(),
-	)
-	if err != nil {
-		return err
-	}
-	c.commands.BindCallbacks(s)
 	return nil
 }
 

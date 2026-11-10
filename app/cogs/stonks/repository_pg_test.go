@@ -111,14 +111,27 @@ func Test_walletRepo_postgres(t *testing.T) {
 		return b
 	}
 
-	// Settings: a second save replaces both keys and keeps other keys.
-	require.NoError(t, r.SaveGuildSettings(ctx, guild, "1", channel))
+	// seedGuild is the psql statement for adding a guild by hand. A rerun replaces
+	// both keys and keeps the others, such as backfill progress.
+	seedGuild := func(guildID, emojiID, channelID string) {
+		_, err := db.Exec(ctx, `
+			INSERT INTO stonks_guilds (guild_id, data)
+			VALUES ($1, jsonb_build_object('emoji_id', $2::text, 'market_channel_id', $3::text))
+			ON CONFLICT (guild_id) DO UPDATE
+			SET data = stonks_guilds.data || EXCLUDED.data, updated_at = now()`,
+			guildID, emojiID, channelID)
+		require.NoError(t, err)
+	}
+	seedGuild(guild, "1", channel)
 	_, err := db.Exec(ctx, `UPDATE stonks_guilds SET data = jsonb_set(data, '{backfill}', '{"200":{"done":true}}') WHERE guild_id = $1`, guild)
 	require.NoError(t, err)
-	require.NoError(t, r.SaveGuildSettings(ctx, guild, coin, channel))
+	seedGuild(guild, coin, channel)
+	_, err = db.Exec(ctx, `INSERT INTO stonks_guilds (guild_id, data) VALUES (101, '{"backfill":{}}')`)
+	require.NoError(t, err)
+
 	emojis, err := r.GuildEmojis(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]string{guild: coin}, emojis)
+	assert.Equal(t, map[string]string{guild: coin}, emojis, "a guild without emoji_id is left out")
 	rows, err := db.Query(ctx, `SELECT data->'backfill'->'200'->>'done' FROM stonks_guilds WHERE guild_id = $1`, guild)
 	require.NoError(t, err)
 	require.True(t, rows.Next())

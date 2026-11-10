@@ -61,15 +61,6 @@ func (c *Command) mustValidate() {
 	}
 }
 
-// MemberPermissions hides the command from members without perms, a dgo.Permission* bit set.
-// It also hides the command in DMs. Server admins can still grant it to other roles.
-func (c *Command) MemberPermissions(perms int64) *Command {
-	dm := false
-	c.data.DefaultMemberPermissions = &perms
-	c.data.DMPermission = &dm
-	return c
-}
-
 // Name is command name
 func (c *Command) Name() string { return c.name }
 

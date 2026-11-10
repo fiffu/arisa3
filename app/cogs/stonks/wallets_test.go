@@ -17,7 +17,6 @@ import (
 // fakeWalletRepo keeps coin balances in memory, with the same rules as the SQL.
 type fakeWalletRepo struct {
 	mu       sync.Mutex
-	settings map[string][2]string // guild -> {emoji, channel}
 	balances map[[2]string]int64  // {guild, user} -> balance
 	active   map[[2]string]*React // {message, reactor} -> reaction, if active
 	seen     map[[2]string]*React
@@ -26,7 +25,6 @@ type fakeWalletRepo struct {
 
 func newFakeWalletRepo() *fakeWalletRepo {
 	return &fakeWalletRepo{
-		settings: map[string][2]string{},
 		balances: map[[2]string]int64{},
 		active:   map[[2]string]*React{},
 		seen:     map[[2]string]*React{},
@@ -35,22 +33,8 @@ func newFakeWalletRepo() *fakeWalletRepo {
 }
 
 func (f *fakeWalletRepo) GuildEmojis(context.Context) (map[string]string, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	out := map[string]string{}
-	for g, s := range f.settings {
-		out[g] = s[0]
-	}
-	return out, nil
+	return map[string]string{}, nil
 }
-
-func (f *fakeWalletRepo) SaveGuildSettings(_ context.Context, guildID, emojiID, channelID string) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.settings[guildID] = [2]string{emojiID, channelID}
-	return nil
-}
-
 func (f *fakeWalletRepo) SaveUser(_ context.Context, userID string, isBot bool) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -318,24 +302,6 @@ func Test_messageReactionAdd_decodesAuthor(t *testing.T) {
 	assert.Equal(t, "500", r.UserID)
 	assert.Equal(t, "100", r.GuildID)
 	assert.Equal(t, "300", r.Emoji.ID)
-}
-
-func Test_parseEmojiID(t *testing.T) {
-	cases := []struct {
-		in, id string
-		ok     bool
-	}{
-		{"<:birbcoin:1234567890>", "1234567890", true},
-		{" <a:birbspin:42> ", "42", true},
-		{"🪙", "", false},
-		{":birbcoin:", "", false},
-		{"<:birbcoin:12> extra", "", false},
-	}
-	for _, tc := range cases {
-		id, ok := parseEmojiID(tc.in)
-		assert.Equal(t, tc.ok, ok, tc.in)
-		assert.Equal(t, tc.id, id, tc.in)
-	}
 }
 
 func Test_snowflakeAt(t *testing.T) {

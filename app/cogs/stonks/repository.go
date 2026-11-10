@@ -147,7 +147,6 @@ var ErrUnknownUser = errors.New("stonks: user not in stonks_users")
 type IWalletRepository interface {
 	// GuildEmojis maps each guild ID to the ID of its coin emoji.
 	GuildEmojis(ctx context.Context) (map[string]string, error)
-	SaveGuildSettings(ctx context.Context, guildID, emojiID, marketChannelID string) error
 	SaveUser(ctx context.Context, userID string, isBot bool) error
 	// AddCoinReaction grants the recipient one coin, unless the pair is already active
 	// or the recipient is a bot. It returns ErrUnknownUser and changes nothing
@@ -179,17 +178,6 @@ func (r *repo) GuildEmojis(ctx context.Context) (map[string]string, error) {
 		out[guildID] = emojiID
 	}
 	return out, rows.Err()
-}
-
-func (r *repo) SaveGuildSettings(ctx context.Context, guildID, emojiID, marketChannelID string) error {
-	// || replaces only these two keys, so it keeps backfill progress written at the same time.
-	_, err := r.db.Exec(ctx, `
-		INSERT INTO stonks_guilds (guild_id, data)
-		VALUES ($1, jsonb_build_object('emoji_id', $2::text, 'market_channel_id', $3::text))
-		ON CONFLICT (guild_id) DO UPDATE
-		SET data = stonks_guilds.data || EXCLUDED.data, updated_at = now()`,
-		guildID, emojiID, marketChannelID)
-	return err
 }
 
 func (r *repo) SaveUser(ctx context.Context, userID string, isBot bool) error {

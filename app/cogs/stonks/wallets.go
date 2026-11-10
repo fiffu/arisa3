@@ -18,7 +18,8 @@ import (
 const maxReactAge = 7 * 24 * time.Hour
 
 // guildEmojis caches stonks_guilds.data.emoji_id, so a reaction event needs no query
-// unless it uses the coin emoji. Only /stonks-setup changes it.
+// unless it uses the coin emoji. It loads at startup, so a guild added to stonks_guilds
+// by hand counts only after the next restart.
 type guildEmojis struct {
 	mu sync.RWMutex
 	m  map[string]string

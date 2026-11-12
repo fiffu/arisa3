@@ -14,7 +14,7 @@ type domain struct {
 }
 
 func NewDomain(db database.IDatabase, cfg *Config) *domain {
-	apiClient := api.NewClient(cfg.User, cfg.APIKey, cfg.APITimeoutSecs)
+	apiClient := api.NewClient(cfg.User, cfg.APIKey, cfg.UserID, cfg.APITimeoutSecs)
 	return &domain{
 		NewRepository(db),
 		apiClient,

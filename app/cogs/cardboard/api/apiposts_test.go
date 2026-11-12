@@ -37,7 +37,7 @@ func Test_GetPosts_Error(t *testing.T) {
 }
 
 func Test_GetPosts(t *testing.T) {
-	client := newClient("username", "apikey", 0)
+	client := newClient("username", "apikey", "123456", 0)
 
 	expect := []*Post{samplePost}
 	expectURL := "https://danbooru.donmai.us/posts.json?limit=100&tags=capybara+original"

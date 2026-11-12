@@ -12,7 +12,7 @@ import (
 )
 
 func Test_GetTags(t *testing.T) {
-	client := newClient("username", "apikey", 0)
+	client := newClient("username", "apikey", "123456", 0)
 
 	expect := map[string]*Tag{
 		"capybara": {
@@ -45,7 +45,7 @@ func Test_GetTags(t *testing.T) {
 }
 
 func Test_GetTags_Error(t *testing.T) {
-	client := newClient("", "", 0)
+	client := newClient("", "", "", 0)
 
 	expectURL := "https://danbooru.donmai.us/tags.json?" +
 		url.QueryEscape("search[name_comma]") +
@@ -58,7 +58,7 @@ func Test_GetTags_Error(t *testing.T) {
 }
 
 func Test_GetTags_multipleTags(t *testing.T) {
-	client := newClient("", "", 0)
+	client := newClient("", "", "", 0)
 
 	expectURL := "https://danbooru.donmai.us/tags.json?" +
 		url.QueryEscape("search[name_comma]") +
@@ -89,7 +89,7 @@ func Test_indexTagsByName(t *testing.T) {
 }
 
 func Test_GetTagsMatching(t *testing.T) {
-	client := newClient("username", "apikey", 0)
+	client := newClient("username", "apikey", "123456", 0)
 
 	expect := []*Tag{{
 		ID:        406745,
@@ -121,7 +121,7 @@ func Test_GetTagsMatching(t *testing.T) {
 }
 
 func Test_AutocompleteTag(t *testing.T) {
-	client := newClient("username", "apikey", 0)
+	client := newClient("username", "apikey", "123456", 0)
 
 	expect := []*TagSuggestion{
 		{
@@ -169,7 +169,7 @@ func Test_AutocompleteTag(t *testing.T) {
 }
 
 func Test_AutocompleteTag_maintenance(t *testing.T) {
-	client := newClient("username", "apikey", 0)
+	client := newClient("username", "apikey", "123456", 0)
 	client.fetch = lib.StubHTMLFetcher(t,
 		"https://danbooru.donmai.us/autocomplete?limit=10&search%5Bquery%5D=ting&search%5Btype%5D=tag_query&version=1",
 		http.StatusServiceUnavailable,

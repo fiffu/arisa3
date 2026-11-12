@@ -16,3 +16,4 @@ cogs:
   cardboard:
     user: username
     api_key: apikey
+    user_id: "123456"

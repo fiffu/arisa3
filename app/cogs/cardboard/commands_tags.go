@@ -36,7 +36,7 @@ func (c *Cog) tagAutocompleteSuggest(ctx context.Context, req types.ICommandEven
 		lines := functional.Map(suggestedTags, formatSuggestion)
 		desc = strings.Join(lines, "\n")
 	} else {
-		desc = fmt.Sprintf("There's no tags that match '%s'", desc)
+		desc = fmt.Sprintf("There's no tags that match '%s'", queryStr)
 	}
 
 	emb := types.NewEmbed().

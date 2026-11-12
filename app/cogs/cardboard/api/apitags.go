@@ -2,10 +2,8 @@ package api
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"net/url"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/fiffu/arisa3/app/log"
 )
 
@@ -18,72 +16,42 @@ type Tag struct {
 type TagSuggestion struct {
 	Name       string // actual, normalized name of tag
 	Antecedent string // populated if the suggestion matched on this tag's alias
-	PostCount  string // could be "13k" and so on
+	PostCount  int
 	Link       string // URL to posts with this tag
 }
 
+type autocompleteResult struct {
+	Value      string `json:"value"`
+	Antecedent string `json:"antecedent"`
+	PostCount  int    `json:"post_count"`
+}
+
 // AutocompleteTag implements api.IClient.
-// Note: This is not part of the Danbooru API proper.
-// It is undocumented, and returns a HTML response.
+// It uses the JSON form of the undocumented /autocomplete endpoint, because Cloudflare blocks the HTML form for the bot.
 func (c *client) AutocompleteTag(ctx context.Context, query string) ([]*TagSuggestion, error) {
 	ctx, cancel := c.httpContext(ctx)
 	defer cancel()
 
-	buf := new(strings.Builder)
+	var rows []autocompleteResult
 	builder := c.autocompleteEndpoint().
 		Param("search[query]", query).
 		Param("search[type]", "tag_query").
-		Param("version", "1").
 		Param("limit", "10").
-		ToWriter(buf)
+		ToJSON(&rows)
 	if err := c.fetch(ctx, builder); err != nil {
 		return nil, err
 	}
 
-	reader := strings.NewReader(buf.String())
-	doc, err := goquery.NewDocumentFromReader(reader)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*TagSuggestion
-	const selector = "li.ui-menu-item"
-	doc.Find(selector).
-		Each(func(idx int, s *goquery.Selection) {
-			suggestion, err := parseAutocompleteElem(ctx, s)
-			if err != nil {
-				log.Infof(ctx, "Failed to parse autocomplete elem at %s[%d], err: %v", selector, idx, err)
-			}
-
-			result = append(result, suggestion)
+	result := make([]*TagSuggestion, 0, len(rows))
+	for _, row := range rows {
+		result = append(result, &TagSuggestion{
+			Name:       row.Value,
+			Antecedent: row.Antecedent,
+			PostCount:  row.PostCount,
+			Link:       apiHostHTTPS + "/posts?tags=" + url.QueryEscape(row.Value),
 		})
+	}
 	return result, nil
-}
-
-func parseAutocompleteElem(ctx context.Context, s *goquery.Selection) (*TagSuggestion, error) {
-	suggest := &TagSuggestion{}
-
-	tagName, ok := s.Attr("data-autocomplete-value")
-	if !ok {
-		return nil, fmt.Errorf("missing attr: 'data-autocomplete-value'")
-	}
-	suggest.Name = tagName
-
-	if span := s.Find("span.post-count").First(); span != nil {
-		suggest.PostCount = span.Text()
-	}
-
-	if ante := s.Find("span.autocomplete-antecedent").First(); ante != nil {
-		suggest.Antecedent = ante.Text()
-	}
-
-	if a := s.Find("a"); a != nil {
-		if href, ok := a.Attr("href"); ok {
-			suggest.Link = apiHostHTTPS + href
-		}
-	}
-
-	return suggest, nil
 }
 
 // Lookup a list of tags

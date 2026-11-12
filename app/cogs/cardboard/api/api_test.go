@@ -1,11 +1,13 @@
 package api
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 
+	"github.com/carlmjohnson/requests"
 	"github.com/fiffu/arisa3/testfixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -46,7 +48,7 @@ func Test_NewClient_Auth(t *testing.T) {
 	for i, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			timeout := i
-			actual := NewClient(tc.username, tc.apiKey, timeout)
+			actual := NewClient(tc.username, tc.apiKey, "123456", timeout)
 
 			assert.Equal(t, tc.expectAuth, actual.UseAuth())
 		})
@@ -90,10 +92,34 @@ func Test_maintenanceValidator(t *testing.T) {
 }
 
 func Test_FaviconURL(t *testing.T) {
-	client := NewClient("", "", 0)
+	client := NewClient("", "", "", 0)
 
 	expect := apiHostHTTPS + faviconPath
 	actual := client.FaviconURL()
 
 	assert.Equal(t, expect, actual)
+}
+
+func Test_userAgent(t *testing.T) {
+	assert.Equal(t, "https://github.com/fiffu/arisa3 (user #123456)", userAgent("123456"))
+	assert.Equal(t, "https://github.com/fiffu/arisa3", userAgent(""))
+}
+
+func Test_baseRequest_sendsUserAgent(t *testing.T) {
+	client := newClient("username", "apikey", "123456", 0)
+
+	var gotUA string
+	err := client.baseRequest().
+		Path("tags.json").
+		Transport(requests.RoundTripFunc(func(req *http.Request) (*http.Response, error) {
+			gotUA = req.Header.Get("User-Agent")
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader("[]")),
+			}, nil
+		})).
+		Fetch(context.Background())
+
+	assert.NoError(t, err)
+	assert.Equal(t, "https://github.com/fiffu/arisa3 (user #123456)", gotUA)
 }

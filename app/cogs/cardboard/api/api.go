@@ -19,6 +19,7 @@ const (
 	apiHost           = "danbooru.donmai.us"
 	apiHostHTTPS      = "https://" + apiHost
 	faviconPath       = "/favicon.ico"
+	userAgentBase     = "https://github.com/fiffu/arisa3"
 )
 
 var (
@@ -32,15 +33,16 @@ type client struct {
 	username    string
 	apiKey      string
 	host        string
+	userAgent   string
 	timeoutSecs int
 	fetch       func(context.Context, *requests.Builder) error
 }
 
-func NewClient(username, apiKey string, timeoutSecs int) IClient {
-	return newClient(username, apiKey, timeoutSecs)
+func NewClient(username, apiKey, userID string, timeoutSecs int) IClient {
+	return newClient(username, apiKey, userID, timeoutSecs)
 }
 
-func newClient(username, apiKey string, timeoutSecs int) *client {
+func newClient(username, apiKey, userID string, timeoutSecs int) *client {
 	ctx := context.Background()
 
 	auth := false
@@ -53,6 +55,10 @@ func newClient(username, apiKey string, timeoutSecs int) *client {
 		log.Infof(ctx, "Client API key was provided, but username was not. Skipping auth...")
 	}
 
+	if userID == "" {
+		log.Infof(ctx, "Client user ID was not provided. Danbooru asks clients to include it in the User-Agent.")
+	}
+
 	if timeoutSecs == 0 {
 		timeoutSecs = 2
 	}
@@ -61,9 +67,19 @@ func newClient(username, apiKey string, timeoutSecs int) *client {
 		username,
 		apiKey,
 		apiHost,
+		userAgent(userID),
 		timeoutSecs,
 		defaultFetcher,
 	}
+}
+
+// userAgent follows Danbooru's rule that clients identify themselves with their user ID,
+// for example "https://github.com/fiffu/arisa3 (user #123456)".
+func userAgent(userID string) string {
+	if userID == "" {
+		return userAgentBase
+	}
+	return userAgentBase + " (user #" + userID + ")"
 }
 
 func commaJoin(strs []string) string {
@@ -98,6 +114,7 @@ func (c *client) httpContext(ctx context.Context) (context.Context, context.Canc
 func (c *client) baseRequest() *requests.Builder {
 	b := &requests.Builder{}
 	b.Host(c.host)
+	b.UserAgent(c.userAgent)
 	if c.UseAuth() {
 		b.BasicAuth(c.username, c.apiKey)
 	}

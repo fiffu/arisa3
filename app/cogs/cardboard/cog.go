@@ -33,6 +33,7 @@ type Cog struct {
 type Config struct {
 	User           string `mapstructure:"user" envvar:"DANBOORU_USER"`
 	APIKey         string `mapstructure:"api_key" envvar:"DANBOORU_API_KEY"`
+	UserID         string `mapstructure:"user_id" envvar:"DANBOORU_USER_ID"` // numeric Danbooru user ID, sent in the User-Agent
 	APITimeoutSecs int    `mapstructure:"api_timeout_secs"`
 }
 

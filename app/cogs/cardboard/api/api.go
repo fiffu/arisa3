@@ -19,7 +19,7 @@ const (
 	apiHost           = "danbooru.donmai.us"
 	apiHostHTTPS      = "https://" + apiHost
 	faviconPath       = "/favicon.ico"
-	userAgentBase     = "arisa3 (https://github.com/fiffu/arisa3"
+	userAgentBase     = "https://github.com/fiffu/arisa3"
 )
 
 var (
@@ -74,12 +74,12 @@ func newClient(username, apiKey, userID string, timeoutSecs int) *client {
 }
 
 // userAgent follows Danbooru's rule that clients identify themselves with their user ID,
-// for example "arisa3 (https://github.com/fiffu/arisa3; user #123456)".
+// for example "https://github.com/fiffu/arisa3 (user #123456)".
 func userAgent(userID string) string {
 	if userID == "" {
-		return userAgentBase + ")"
+		return userAgentBase
 	}
-	return userAgentBase + "; user #" + userID + ")"
+	return userAgentBase + " (user #" + userID + ")"
 }
 
 func commaJoin(strs []string) string {

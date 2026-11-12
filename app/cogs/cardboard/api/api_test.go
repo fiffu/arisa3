@@ -101,8 +101,8 @@ func Test_FaviconURL(t *testing.T) {
 }
 
 func Test_userAgent(t *testing.T) {
-	assert.Equal(t, "arisa3 (https://github.com/fiffu/arisa3; user #123456)", userAgent("123456"))
-	assert.Equal(t, "arisa3 (https://github.com/fiffu/arisa3)", userAgent(""))
+	assert.Equal(t, "https://github.com/fiffu/arisa3 (user #123456)", userAgent("123456"))
+	assert.Equal(t, "https://github.com/fiffu/arisa3", userAgent(""))
 }
 
 func Test_baseRequest_sendsUserAgent(t *testing.T) {
@@ -121,5 +121,5 @@ func Test_baseRequest_sendsUserAgent(t *testing.T) {
 		Fetch(context.Background())
 
 	assert.NoError(t, err)
-	assert.Equal(t, "arisa3 (https://github.com/fiffu/arisa3; user #123456)", gotUA)
+	assert.Equal(t, "https://github.com/fiffu/arisa3 (user #123456)", gotUA)
 }

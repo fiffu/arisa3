@@ -126,42 +126,26 @@ func Test_AutocompleteTag(t *testing.T) {
 	expect := []*TagSuggestion{
 		{
 			Name:       "naidong_(artist)",
-			Antecedent: "yin-ting tian",
-			PostCount:  "383",
+			Antecedent: "yin-ting_tian",
+			PostCount:  383,
 			Link:       "https://danbooru.donmai.us/posts?tags=naidong_%28artist%29",
 		},
 		{
 			Name:      "tingyun_(honkai:_star_rail)",
-			PostCount: "376",
+			PostCount: 376,
 			Link:      "https://danbooru.donmai.us/posts?tags=tingyun_%28honkai%3A_star_rail%29",
 		},
 	}
-	expectURL := "https://danbooru.donmai.us/autocomplete?" +
+	expectURL := "https://danbooru.donmai.us/autocomplete.json?" +
 		url.QueryEscape("search[query]") + "=ting" +
 		"&" + url.QueryEscape("search[type]") + "=tag_query" +
-		"&version=1" +
 		"&limit=10"
 
-	stubResponse := `<ul>
-		<li class="ui-menu-item" data-autocomplete-type="tag-word" data-autocomplete-value="naidong_(artist)">
-			<div class="ui-menu-item-wrapper" tabindex="-1">
-				<a class="tag-type-1" @click.prevent="" href="/posts?tags=naidong_%28artist%29">
-					<span class="autocomplete-antecedent"><span>yin</span><span>-</span><b>ting</b><span> </span><span>tian</span></span>
-					<span class="autocomplete-arrow">→</span> naidong (artist)
-				</a>
-				<span class="post-count">383</span>
-			</div>
-		</li>
-		<li class="ui-menu-item" data-autocomplete-type="tag-word" data-autocomplete-value="tingyun_(honkai:_star_rail)">
-			<div class="ui-menu-item-wrapper" tabindex="-1">
-				<a class="tag-type-4" @click.prevent="" href="/posts?tags=tingyun_%28honkai%3A_star_rail%29">
-					<b>ting</b><span>yun</span><span> (</span><span>honkai</span><span>: </span><span>star</span><span> </span><span>rail</span><span>)</span>
-				</a>
-				<span class="post-count">376</span>
-			</div>
-		</li>
-	</ul>`
-	client.fetch = lib.StubHTMLFetcher(t, expectURL, http.StatusOK, stubResponse)
+	stubJSON := `[
+		{"type":"tag-word","label":"naidong (artist)","value":"naidong_(artist)","category":1,"post_count":383,"antecedent":"yin-ting_tian","tag":{"id":1,"name":"naidong_(artist)"}},
+		{"type":"tag-word","label":"tingyun (honkai: star rail)","value":"tingyun_(honkai:_star_rail)","category":4,"post_count":376,"tag":{"id":2,"name":"tingyun_(honkai:_star_rail)"}}
+	]`
+	client.fetch = lib.StubJSONFetcher(t, expectURL, http.StatusOK, stubJSON)
 
 	actual, err := client.AutocompleteTag(context.Background(), "ting")
 	assert.NoError(t, err)
@@ -171,11 +155,23 @@ func Test_AutocompleteTag(t *testing.T) {
 func Test_AutocompleteTag_maintenance(t *testing.T) {
 	client := newClient("username", "apikey", "123456", 0)
 	client.fetch = lib.StubHTMLFetcher(t,
-		"https://danbooru.donmai.us/autocomplete?limit=10&search%5Bquery%5D=ting&search%5Btype%5D=tag_query&version=1",
+		"https://danbooru.donmai.us/autocomplete.json?limit=10&search%5Bquery%5D=ting&search%5Btype%5D=tag_query",
 		http.StatusServiceUnavailable,
 		testfixtures.Downbooru,
 	)
 
 	_, err := client.AutocompleteTag(context.Background(), "ting")
 	assert.Equal(t, ErrUnderMaintenance, err)
+}
+
+func Test_AutocompleteTag_blocked(t *testing.T) {
+	client := newClient("username", "apikey", "123456", 0)
+	client.fetch = lib.StubHTMLFetcher(t,
+		"https://danbooru.donmai.us/autocomplete.json?limit=10&search%5Bquery%5D=ting&search%5Btype%5D=tag_query",
+		http.StatusForbidden,
+		"<html><title>Just a moment...</title></html>",
+	)
+
+	_, err := client.AutocompleteTag(context.Background(), "ting")
+	assert.Error(t, err)
 }

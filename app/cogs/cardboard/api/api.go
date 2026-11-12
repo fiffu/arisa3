@@ -118,7 +118,9 @@ func (c *client) baseRequest() *requests.Builder {
 	if c.UseAuth() {
 		b.BasicAuth(c.username, c.apiKey)
 	}
+	// Adding any validator turns off requests.DefaultValidator, so the status check must be added back.
 	b.AddValidator(c.maintenanceValidator)
+	b.AddValidator(requests.DefaultValidator)
 	return b
 }
 
@@ -169,5 +171,5 @@ func (c *client) tagsResource() *requests.Builder {
 
 // Not a REST endpoint.
 func (c *client) autocompleteEndpoint() *requests.Builder {
-	return c.baseRequest().Path("autocomplete")
+	return c.baseRequest().Path("autocomplete.json")
 }
